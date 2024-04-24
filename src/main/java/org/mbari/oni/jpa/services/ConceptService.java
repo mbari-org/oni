@@ -1,8 +1,8 @@
 package org.mbari.oni.jpa.services;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import org.mbari.kb.core.knowledgebase.Concept;
 import org.mbari.oni.jpa.VARSPersistenceException;
 
 import java.util.*;
@@ -17,18 +17,22 @@ import org.mbari.oni.jpa.entities.ConceptEntity;
  * Time: 4:43:41 PM
  * To change this template use File | Settings | File Templates.
  */
+@ApplicationScoped
 public class ConceptService extends Service {
 
     private static final Logging log = new Logging(ConceptService.class);
 
-    @Inject
     public ConceptService(EntityManager entityManager) {
         super(entityManager);
     }
 
+    public ConceptService() {
+        super();
+    }
 
-    public Optional<Concept> findRoot() {
-        List<Concept> roots = findByNamedQuery("Concept.findRoot");
+
+    public Optional<ConceptEntity> findRoot() {
+        List<ConceptEntity> roots = findByNamedQuery("Concept.findRoot");
         if (roots.size() > 1) {
             log.atError().log("ERROR!! More than one root was found in the knowedgebase");
             throw new VARSPersistenceException("ERROR!! More than one root was found in the knowedgebase");
@@ -46,7 +50,7 @@ public class ConceptService extends Service {
         return concepts.stream().findFirst();
     }
 
-    public List<Concept> findAllByNameContaining(final String nameGlob) {
+    public List<ConceptEntity> findAllByNameContaining(final String nameGlob) {
         final String name = "%" + nameGlob + "%";
         return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name.toLowerCase()));
     }
@@ -57,13 +61,13 @@ public class ConceptService extends Service {
 
     }
 
-    public List<Concept> findAllByNameEndingWith(final String nameGlob) {
+    public List<ConceptEntity> findAllByNameEndingWith(final String nameGlob) {
         final String name = '%' + nameGlob;
         return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name.toLowerCase()));
     }
 
 
-    public Collection<Concept> findAll(int limit, int offset) {
+    public Collection<ConceptEntity> findAll(int limit, int offset) {
         return findByNamedQuery("Concept.findAll", limit, offset);
     }
 

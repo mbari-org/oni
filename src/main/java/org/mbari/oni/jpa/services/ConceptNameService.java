@@ -2,8 +2,6 @@ package org.mbari.oni.jpa.services;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.mbari.kb.core.knowledgebase.ConceptNameDAO;
-import org.mbari.kb.core.knowledgebase.ConceptName;
 
 import java.util.List;
 
@@ -11,6 +9,7 @@ import java.util.Collection;
 import java.util.Map;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
+import org.mbari.oni.jpa.entities.ConceptNameEntity;
 
 /**
  * Created by IntelliJ IDEA.
@@ -22,26 +21,29 @@ import jakarta.persistence.Query;
 @ApplicationScoped
 public class ConceptNameService extends Service {
 
-    @Inject
     public ConceptNameService(EntityManager entityManager) {
         super(entityManager);
     }
 
-    public ConceptName findByName(final String name) {
-        List<ConceptName> names = findByNamedQuery("ConceptName.findByName", Map.of("name", name));
+    public ConceptNameService() {
+        super();
+    }
+
+    public ConceptNameEntity findByName(final String name) {
+        List<ConceptNameEntity> names = findByNamedQuery("ConceptName.findByName", Map.of("name", name));
         return names.isEmpty() ? null : names.getFirst();
     }
 
-    public Collection<ConceptName> findAll() {
+    public Collection<ConceptNameEntity> findAll() {
         return findByNamedQuery("ConceptName.findAll");
     }
 
-    public Collection<ConceptName> findByNameContaining(final String substring) {
+    public Collection<ConceptNameEntity> findByNameContaining(final String substring) {
         Map<String, Object> params = Map.of("name", "%" + substring.toLowerCase() + "%");
         return findByNamedQuery("ConceptName.findByNameLike", params);
     }
 
-    public Collection<ConceptName> findByNameStartingWith(final String s) {
+    public Collection<ConceptNameEntity> findByNameStartingWith(final String s) {
         Map<String, Object> params = Map.of("name", s.toLowerCase() + "%");
         return findByNamedQuery("ConceptName.findByNameLike", params);
     }

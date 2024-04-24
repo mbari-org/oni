@@ -12,9 +12,12 @@ import java.util.Map;
 
 public abstract class Service {
 
-    final EntityManager entityManager;
-
     @Inject
+    EntityManager entityManager;
+
+    public Service() {
+    }
+
     public Service(EntityManager entityManager) {
         this.entityManager = entityManager;
     }

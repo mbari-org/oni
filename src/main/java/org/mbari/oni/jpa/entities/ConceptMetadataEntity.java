@@ -36,7 +36,6 @@ import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Version;
 
-import org.mbari.kb.core.knowledgebase.*;
 import org.mbari.oni.domain.MediaTypes;
 import org.mbari.oni.jpa.KeyNullifier;
 import org.mbari.oni.jpa.TransactionLogger;
@@ -139,13 +138,13 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
 
     public void addLinkRealization(LinkRealizationEntity linkRealization) {
         if (getLinkRealizations().add(linkRealization)) {
-            ((LinkRealizationEntity) linkRealization).setConceptMetadata(this);
+            linkRealization.setConceptMetadata(this);
         }
     }
 
     public void addLinkTemplate(LinkTemplateEntity linkTemplate) {
         if (getLinkTemplates().add(linkTemplate)) {
-            ((LinkTemplateEntity) linkTemplate).setConceptMetadata(this);
+            linkTemplate.setConceptMetadata(this);
         }
     }
 
@@ -250,25 +249,25 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
 
     public void removeHistory(HistoryEntity history) {
         if (getHistories().remove(history)) {
-            ((HistoryEntity) history).setConceptMetadata(null);
+            history.setConceptMetadata(null);
         }
     }
 
     public void removeLinkRealization(LinkRealizationEntity linkRealization) {
         if (getLinkRealizations().remove(linkRealization)) {
-            ((LinkRealizationEntity) linkRealization).setConceptMetadata(null);
+            linkRealization.setConceptMetadata(null);
         }
     }
 
-    public void removeLinkTemplate(LinkTemplate linkTemplate) {
+    public void removeLinkTemplate(LinkTemplateEntity linkTemplate) {
         if (getLinkTemplates().remove(linkTemplate)) {
-            ((LinkTemplateEntity) linkTemplate).setConceptMetadata(null);
+            linkTemplate.setConceptMetadata(null);
         }
     }
 
     public void removeMedia(MediaEntity media) {
         if (getMedias().remove(media)) {
-            ((MediaEntity) media).setConceptMetadata(null);
+            media.setConceptMetadata(null);
         }
     }
 

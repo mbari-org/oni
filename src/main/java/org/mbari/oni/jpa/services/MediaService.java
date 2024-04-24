@@ -19,12 +19,11 @@ import java.util.*;
 @ApplicationScoped
 public class MediaService extends Service {
 
-    private final FastPhylogenyService fastPhylogenyService;
-
     @Inject
-    public MediaService(EntityManager entityManager, FastPhylogenyService fastPhylogenyService) {
-        super(entityManager);
-        this.fastPhylogenyService = fastPhylogenyService;
+    FastPhylogenyService fastPhylogenyService;
+
+    public MediaService() {
+        super();
     }
 
     /**

@@ -1,8 +1,9 @@
 package org.mbari.oni.jpa.services;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
-import org.mbari.kb.core.knowledgebase.History;
+import org.mbari.oni.jpa.entities.HistoryEntity;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -14,23 +15,27 @@ import java.util.HashSet;
  * Time: 4:45:43 PM
  * To change this template use File | Settings | File Templates.
  */
+@ApplicationScoped
 public class HistoryService extends Service {
 
 
-    @Inject
     public HistoryService(EntityManager entityManager) {
         super(entityManager);
     }
 
-    public Set<History> findAll() {
+    public HistoryService() {
+        super();
+    }
+
+    public Set<HistoryEntity> findAll() {
         return new HashSet<>(findByNamedQuery("History.findAll"));
     }
 
-    public Set<History> findPendingHistories() {
+    public Set<HistoryEntity> findPendingHistories() {
         return new HashSet<>(findByNamedQuery("History.findPendingApproval"));
     }
 
-    public Set<History> findApprovedHistories() {
+    public Set<HistoryEntity> findApprovedHistories() {
         return new HashSet<>(findByNamedQuery("History.findApproved"));
     }
 }

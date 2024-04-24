@@ -16,6 +16,7 @@ package org.mbari.oni.jpa.services;
 
 import java.util.*;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.UserAccountEntity;
@@ -28,11 +29,15 @@ import org.mbari.oni.jpa.entities.UserAccountEntity;
  * Time: 3:09:01 PM
  * To change this template use File | Settings | File Templates.
  */
+@ApplicationScoped
 public class UserAccountService extends Service {
 
-    @Inject
     public UserAccountService(EntityManager entityManager) {
         super(entityManager);
+    }
+
+    public UserAccountService() {
+        super();
     }
 
     public Collection<UserAccountEntity> findAll() {

@@ -25,8 +25,7 @@ import jakarta.persistence.EntityManager;
 
 import org.mbari.oni.domain.ILink;
 import org.mbari.oni.domain.LinkComparator;
-import org.mbari.kb.core.knowledgebase.Concept;
-import org.mbari.kb.core.knowledgebase.LinkTemplate;
+
 import org.mbari.oni.jpa.entities.ConceptEntity;
 import org.mbari.oni.jpa.entities.LinkTemplateEntity;
 
@@ -91,7 +90,7 @@ public class LinkTemplateService extends Service {
     }
 
     /**
-     * Find {@link LinkTemplate}s containing 'linkName' that are applicable to the
+     * Find {@link LinkTemplateEntity}s containing 'linkName' that are applicable to the
      * provided concept. You should call this within a transaction
      *
      * @param linkName

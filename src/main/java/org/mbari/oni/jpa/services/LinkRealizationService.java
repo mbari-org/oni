@@ -1,5 +1,6 @@
 package org.mbari.oni.jpa.services;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.LinkRealizationEntity;
@@ -14,11 +15,15 @@ import java.util.Collection;
  * Time: 4:46:22 PM
  * To change this template use File | Settings | File Templates.
  */
+@ApplicationScoped
 public class LinkRealizationService extends Service {
 
-    @Inject
     public LinkRealizationService(EntityManager entityManager) {
         super(entityManager);
+    }
+
+    public LinkRealizationService() {
+        super();
     }
 
     public Collection<LinkRealizationEntity> findAllByLinkName(String linkName) {
