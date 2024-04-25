@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<persistence version="1.0" xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd">
+    <persistence-unit name="oni" transaction-type="RESOURCE_LOCAL">
+        <description>Annosaurus Data Model</description>
+        <!-- Converters -->
+
+        <!-- Entities -->
+        <class>org.mbari.oni.jpa.entities.ConceptEntity</class>
+        <class>org.mbari.oni.jpa.entities.ConceptMetadataEntity</class>
+        <class>org.mbari.oni.jpa.entities.ConceptNameEntity</class>
+        <class>org.mbari.oni.jpa.entities.HistoryEntity</class>
+        <class>org.mbari.oni.jpa.entities.LinkRealizationEntity</class>
+        <class>org.mbari.oni.jpa.entities.LinkTemplateEntity</class>
+        <class>org.mbari.oni.jpa.entities.MediaEntity</class>
+        <class>org.mbari.oni.jpa.entities.PreferenceNodeEntity</class>
+        <class>org.mbari.oni.jpa.entities.UserAccountEntity</class>
+
+        <properties>
+            <property name="hibernate.batch_versioned_data" value="true" />
+            <property name="jakarta.persistence.provider" value="org.hibernate.jpa.HibernatePersistenceProvider" />
+        </properties>
+    </persistence-unit>
+</persistence>
