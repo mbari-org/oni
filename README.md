@@ -1,14 +1,16 @@
-# oni
+# oni - Organism Naming Infrastructure
 
 ![Build](https://github.com/mbari-org/oni/actions/workflows/test.yml/badge.svg)
 
 ![MBARI logo](src/docs/images/logo-mbari-3b.png)
 
-MBARI [sbt](https://www.scala-sbt.org) project compiled with [Scala 3](https://www.scala-lang.org)
+## Overview
+
+This is a project to create a RESTful API for managing the naming of organisms. Currently in development, it is meant to be a replacement for <https://github.com/mbari-org/vars-kb-server> and <https://github.com/mbari-org/vars-user-server>. 
 
 ## Usage
 
-This is a normal sbt project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
+This is a normal [sbt](https://www.scala-sbt.org) project. You can compile code with `sbt compile`, run it with `sbt run`, and `sbt console` will start a Scala 3 REPL.
 
 ## Useful Commands
 
@@ -17,14 +19,6 @@ This is a normal sbt project. You can compile code with `sbt compile`, run it wi
 3. `scaladoc` - Build documentation, including API docs to `target/docs/site`
 4. `compile` then `scalafmtAll` - Will convert all syntax to new-style, indent based Scala 3.
 
-## Libraries
-
-- [circe](https://circe.github.io/circe/) for JSON handling
-- [Methanol](https://github.com/mizosoft/methanol) with [Java's HttpClient](https://docs.oracle.com/en/java/javase/17/docs/api/java.net.http/java/net/http/HttpClient.html) for HTTP client
-- [munit](https://github.com/scalameta/munit) for testing
-- [picocli](https://picocli.info/) for command line arg parsing
-- [slf4j](http://www.slf4j.org/) with [logback](http://logback.qos.ch/) for logging. Use java.lang.System.Logger
-- [ZIO](https://zio.dev/) for effects
 
 ## Notes
 
