@@ -1,6 +1,15 @@
 import Dependencies._
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
+Compile / doc / scalacOptions ++= Seq(
+    "-groups",
+    "-project-footer",
+    "Monterey Bay Aquarium Research Institute",
+    "-siteroot",
+    "src/docs",
+    "-doc-root-content",
+    "./src/docs/index.md"
+)
 
 ThisBuild / javacOptions ++= Seq("-target", "21", "-source", "21")
 ThisBuild / licenses         := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
