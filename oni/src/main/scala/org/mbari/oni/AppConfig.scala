@@ -18,10 +18,12 @@ object AppConfig:
 
     val Name: String = "oni"
 
-    val Version: String = Try(getClass.getPackage.getImplementationVersion).getOrElse("0.0.0-SNAPSHOT")
+    val Version: String =
+        val default = "0.0.0-SNAPSHOT"
+        try Option(getClass.getPackage.getImplementationVersion).getOrElse(default)
+        catch case _: Exception => default
 
     val Description: String = "Organism Naming Infrastructure: Knowledge-base and User Accounts"
-
 
     lazy val DefaultJwtConfig: JwtConfig = JwtConfig(
         issuer = Config.getString("basicjwt.issuer"),

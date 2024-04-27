@@ -19,4 +19,3 @@ object Uris:
 
     def encode(uri: URI): String =
         URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.toString())
-

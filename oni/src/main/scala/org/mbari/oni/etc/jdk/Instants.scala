@@ -35,4 +35,3 @@ object Instants:
     def from(timestamp: java.sql.Timestamp): Instant =
         if timestamp == null then null
         else timestamp.toInstant()
-

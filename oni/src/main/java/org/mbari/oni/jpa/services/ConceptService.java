@@ -94,7 +94,7 @@ public class ConceptService extends Service {
 
 
     /**
-     * Delete a concept and all of its descendents
+     * Delete a concept and allImpl of its descendents
      */
     public int deleteBranchByName(String conceptName) {
 

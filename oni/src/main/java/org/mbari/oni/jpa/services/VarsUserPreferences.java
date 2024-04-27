@@ -227,7 +227,7 @@ public class VarsUserPreferences extends AbstractPreferences {
     }
 
     /**
-     * Returns all of the keys that have an associated value in this preference node.  The returned array will
+     * Returns allImpl of the keys that have an associated value in this preference node.  The returned array will
      * have size of zero if this node has no preferences.
      *
      * @return  String[] that contains the keys of the preferences that have associated values at this node
@@ -336,7 +336,7 @@ public class VarsUserPreferences extends AbstractPreferences {
                 destination.put(prefKeys[i], source.get(prefKeys[i], ""));
             }
 
-            // Now grab all the names of the children nodes
+            // Now grab allImpl the names of the children nodes
             String[] childrenNames = source.childrenNames();
 
             // Recursively copy the preference nodes

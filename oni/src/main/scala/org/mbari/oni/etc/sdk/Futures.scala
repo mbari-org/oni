@@ -15,7 +15,7 @@ import scala.util.Try
 import scala.jdk.DurationConverters.*
 
 object Futures:
-  val DefaultTimeout = JDuration.ofSeconds(10)
+    val DefaultTimeout = JDuration.ofSeconds(10)
 
     /**
      * Run a Future and return the result or an Exception if the Future fails or does not complete within the timeout
@@ -33,8 +33,8 @@ object Futures:
         Try(Await.result(f, timeout.toScala)).toEither
 
     extension [T](f: Future[T])
-        def join: T                      = join(DefaultTimeout)
-        def join(duration: JDuration): T = join(duration.toScala)
-        def join(duration: SDuration): T  = Await.result(f, duration)
+        def join: T                                                                                            = join(DefaultTimeout)
+        def join(duration: JDuration): T                                                                       = join(duration.toScala)
+        def join(duration: SDuration): T                                                                       = Await.result(f, duration)
         def safeRunSync(timeout: JDuration = DefaultTimeout)(using ec: ExecutionContext): Either[Throwable, T] =
             Futures.safeRunSync(f, timeout)

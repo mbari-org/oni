@@ -17,7 +17,6 @@ object EntityManagers:
     private val log = System.getLogger(getClass.getName)
 
     extension (entityManager: EntityManager)
-
         def runTransaction[R](fn: EntityManager => R): Either[Throwable, R] =
 
             val transaction = entityManager.getTransaction
@@ -26,9 +25,14 @@ object EntityManagers:
                 val n = fn.apply(entityManager)
                 transaction.commit()
                 Right(n)
-            catch case NonFatal(e) => 
-                log.atError.withCause(e).log("Error in transaction")
-                Left(e)
-            finally if transaction.isActive then 
-                log.atWarn.log("A JPA transaction was still active after commit. This is likely due to an exception during the transaction. Rolling back")
-                transaction.rollback()
+            catch
+                case NonFatal(e) =>
+                    log.atError.withCause(e).log("Error in transaction")
+                    Left(e)
+            finally
+                if transaction.isActive then
+                    log.atWarn
+                        .log(
+                            "A JPA transaction was still active after commit. This is likely due to an exception during the transaction. Rolling back"
+                        )
+                    transaction.rollback()

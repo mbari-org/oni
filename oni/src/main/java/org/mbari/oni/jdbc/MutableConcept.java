@@ -111,7 +111,7 @@ public class MutableConcept {
     /**
      * Convert a list of ConceptRow objects to a tree of MutableConcept objects.
      * @param rows List of ConceptRow objects, basiclly the rows from the database table
-     * @return A Pair of the root MutableConcept and a list of all MutableConcepts
+     * @return A Pair of the root MutableConcept and a list of allImpl MutableConcepts
      */
     public static TreeData toTree(List<ConceptRow> rows) {
         var nodes = new ArrayList<MutableConcept>();

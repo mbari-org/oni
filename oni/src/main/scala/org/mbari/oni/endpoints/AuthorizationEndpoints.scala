@@ -63,6 +63,6 @@ class AuthorizationEndpoints()(using jwtService: JwtService) extends Endpoints:
             )
             .serverLogic(bearerAuth => Unit => Right(bearerAuth))
 
-    override val all: List[Endpoint[?, ?, ?, ?, ?]]         = List(authEndpoint)
+    override val all: List[Endpoint[?, ?, ?, ?, ?]]     = List(authEndpoint)
     override val allImpl: List[ServerEndpoint[Any, Id]] =
         List(authEndpointImpl)

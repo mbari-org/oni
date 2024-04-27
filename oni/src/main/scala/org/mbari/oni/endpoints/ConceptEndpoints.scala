@@ -7,7 +7,6 @@
 
 package org.mbari.oni.endpoints
 
-
 import sttp.model.StatusCode
 import sttp.tapir.*
 import sttp.tapir.Endpoint
@@ -20,6 +19,5 @@ import sttp.tapir.server.nima.Id
 
 class ConceptEndpoints extends Endpoints:
 
-
-  override val all: List[Endpoint[?, ?, ?, ?, ?]]         = ???
-  override val allImpl: List[ServerEndpoint[Any, Id]] = ???
+    override val all: List[Endpoint[?, ?, ?, ?, ?]]     = ???
+    override val allImpl: List[ServerEndpoint[Any, Id]] = ???

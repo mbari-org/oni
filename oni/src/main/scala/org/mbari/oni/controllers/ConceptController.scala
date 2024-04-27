@@ -9,8 +9,4 @@ package org.mbari.oni.controllers
 
 import jakarta.persistence.EntityManagerFactory
 
-class ConceptController(entityManagerFactory: EntityManagerFactory) {
-
-    
-  
-}
+class ConceptController(entityManagerFactory: EntityManagerFactory) {}

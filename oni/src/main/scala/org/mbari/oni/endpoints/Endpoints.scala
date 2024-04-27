@@ -23,24 +23,28 @@ import sttp.tapir.server.nima.Id
 import org.mbari.oni.etc.jdk.Loggers.given
 import scala.concurrent.ExecutionContext
 import org.mbari.oni.etc.jwt.JwtService
-
+import org.mbari.oni.AppConfig
 
 case class Paging(offset: Option[Int] = Some(0), limit: Option[Int] = Some(100))
 
 object CustomTapirJsonCirce extends TapirJsonCirce:
     override def jsonPrinter: Printer = CirceCodecs.CustomPrinter
 
-trait Endpoints {
+trait Endpoints:
 
     import CustomTapirJsonCirce.*
 
     val log: System.Logger = System.getLogger(getClass.getName)
 
+    // --- Schemas
+    implicit lazy val sConcept: Schema[Concept] = Schema.derived[Concept]
+
+    // --- Abstract methods
     def all: List[Endpoint[?, ?, ?, ?, ?]]
     def allImpl: List[ServerEndpoint[Any, Id]]
 
-        // hard coded ATM, but could be configurable
-    val baseEndpoint: Endpoint[Unit, Unit, Unit, Unit, Any] = endpoint.in("v1")
+    // hard coded ATM, but could be configurable
+    val baseEndpoint: Endpoint[Unit, Unit, Unit, Unit, Any] = endpoint.in(AppConfig.DefaultHttpConfig.contextPath)
 
     val secureEndpoint: Endpoint[Option[String], Unit, ErrorMsg, Unit, Any] = baseEndpoint
         .securityIn(auth.bearer[Option[String]](WWWAuthenticateChallenge.bearer))
@@ -66,14 +70,24 @@ trait Endpoints {
         )
     )
 
+    def handleErrors[T](f: => Either[Throwable, T]): Either[ErrorMsg, T] =
+        f.fold(
+            e =>
+                log.atError.withCause(e).log("Error")
+                Left(ServerError(e.getMessage)),
+            Right(_)
+        )
+
+    def handleOption[T](f: => Option[T]): Either[ErrorMsg, T] =
+        f match
+            case Some(t) => Right(t)
+            case None    => Left(NotFound("Not found"))
+
     def verify(
         jwtOpt: Option[String]
-    )(using jwtService: JwtService, ec: ExecutionContext): Either[Unauthorized, Unit] =
+    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
         jwtOpt match
             case None      => Left(Unauthorized("Missing token"))
             case Some(jwt) =>
                 if jwtService.verify(jwt) then Right(())
                 else Left(Unauthorized("Invalid token"))
-
-  
-}
