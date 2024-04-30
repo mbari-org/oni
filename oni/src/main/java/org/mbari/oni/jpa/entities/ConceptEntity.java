@@ -13,24 +13,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Version;
+
+import jakarta.persistence.*;
 
 import org.mbari.oni.domain.ConceptNameTypes;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -122,7 +106,10 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         optional = true,
         targetEntity = ConceptEntity.class
     )
-    @JoinColumn(name = "ParentConceptID_FK")
+    @JoinColumn(
+            name = "ParentConceptID_FK",
+            foreignKey = @ForeignKey(name = "fk_Concept__Concept_id")
+    )
     private ConceptEntity parentConcept;
 
     @Column(name = "RankLevel", length = 20)

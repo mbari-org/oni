@@ -11,24 +11,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.*;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 
 import org.mbari.oni.domain.MediaTypes;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -62,7 +45,11 @@ import org.mbari.oni.jpa.IPersistentObject;
 public class ConceptMetadataEntity implements Serializable, IPersistentObject {
 
     @OneToOne(optional = false, targetEntity = ConceptEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.LAZY)
-    @JoinColumn(name = "ConceptID_FK", nullable = false)
+    @JoinColumn(
+            name = "ConceptID_FK",
+            nullable = false,
+            foreignKey = @ForeignKey(name = "fk_ConceptDelegage__Concept_id")
+    )
     private ConceptEntity concept;
 
     @OneToMany(

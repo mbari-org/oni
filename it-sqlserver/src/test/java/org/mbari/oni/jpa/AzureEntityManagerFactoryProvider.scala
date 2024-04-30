@@ -17,15 +17,19 @@
 package org.mbari.oni.jpa
 
 import jakarta.persistence.EntityManagerFactory
-import org.testcontainers.containers.PostgreSQLContainer
+import org.mbari.oni.etc.tc.AzureSqlEdgeContainerProvider
+import org.testcontainers.containers.JdbcDatabaseContainerProvider
 
-object EntityManagerFactoryProvider {
+object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
 
-  val container = new PostgreSQLContainer("postgres:16")
+  val container = new AzureSqlEdgeContainerProvider().newInstance()
+
+  // The image name must match the one in src/test/resources/container-license-acceptance.txt
+  // val container = new MSSQLServerContainer(DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-latest"))
+  // container.acceptLicense()
   container.withInitScript("sql/02_m3_kb.sql")
   container.withReuse(true)
   container.start()
-
 
   // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
   // I'm using a shutdown hook to close the container at the end of the tests.
@@ -34,7 +38,7 @@ object EntityManagerFactoryProvider {
 
   val testProps: Map[String, String] =
       Map(
-        "hibernate.dialect" -> "org.hibernate.dialect.PostgreSQLDialect",
+        "hibernate.dialect" -> "org.hibernate.dialect.SQLServerDialect",
         "hibernate.hbm2ddl.auto" -> "validate",
         "hibernate.hikari.idleTimeout" -> "1000",
         "hibernate.hikari.maxLifetime" -> "3000",
@@ -44,7 +48,7 @@ object EntityManagerFactoryProvider {
       )
 
   lazy val entityManagerFactory: EntityManagerFactory =
-    val driver = "org.postgresql.Driver"
+    val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
     Class.forName(driver)
     EntityManagerFactories(
       container.getJdbcUrl,

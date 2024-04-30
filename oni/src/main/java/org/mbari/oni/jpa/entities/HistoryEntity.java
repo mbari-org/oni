@@ -14,23 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import org.mbari.oni.jpa.KeyNullifier;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.TransactionLogger;
@@ -154,7 +138,10 @@ public class HistoryEntity implements Serializable, IPersistentObject {
     private Short approved = 0;
 
     @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
-    @JoinColumn(name = "ConceptDelegateID_FK")
+    @JoinColumn(
+            name = "ConceptDelegateID_FK",
+            foreignKey = @ForeignKey(name = "fk_History__ConceptDelegate_id")
+    )
     ConceptMetadataEntity conceptMetadata;
 
     private static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");

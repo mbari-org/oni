@@ -10,22 +10,8 @@ package org.mbari.oni.jpa.entities;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Transient;
-import jakarta.persistence.Version;
+
+import jakarta.persistence.*;
 import org.mbari.oni.domain.ILink;
 import org.mbari.oni.domain.LinkUtilities;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -95,7 +81,10 @@ public class LinkRealizationEntity implements Serializable, ILink, IPersistentOb
     String linkValue;
 
     @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
-    @JoinColumn(name = "ConceptDelegateID_FK")
+    @JoinColumn(
+            name = "ConceptDelegateID_FK",
+            foreignKey = @ForeignKey(name = "fk_LinkRealization__ConceptDelegate_id")
+    )
     ConceptMetadataEntity conceptMetadata;
 
     public LinkRealizationEntity() {}

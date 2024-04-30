@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.repository
+package org.mbari.oni.jpa.repositories
 
 import org.mbari.oni.jpa.repositories.TestRepository
 

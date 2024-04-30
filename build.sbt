@@ -115,7 +115,8 @@ lazy val integrationTests = (project in file("it"))
             junit,
             munit,
             tapirServerStub,
-            testcontainersCore
+            testcontainersCore,
+            testcontainersJdbc
         )
     )
 
