@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 
 
@@ -28,12 +28,12 @@ import org.mbari.oni.jpa.entities.LinkTemplateEntity;
  * Time: 4:47:25 PM
  * To change this template use File | Settings | File Templates.
  */
-public class LinkTemplateService extends Service {
+public class LinkTemplateRepository extends Repository {
 
     private static final Comparator<ILink> linkComparator = new LinkComparator();
 
 
-    public LinkTemplateService(EntityManager entityManager) {
+    public LinkTemplateRepository(EntityManager entityManager) {
         super(entityManager);
     }
 
@@ -104,7 +104,7 @@ public class LinkTemplateService extends Service {
 
 
     public void validateToConcept(LinkTemplateEntity object) {
-        var conceptDAO = new ConceptService(entityManager);
+        var conceptDAO = new ConceptRepository(entityManager);
         var opt = conceptDAO.findByName(object.getToConcept());
         if (opt.isPresent()) {
             var concept = opt.get();

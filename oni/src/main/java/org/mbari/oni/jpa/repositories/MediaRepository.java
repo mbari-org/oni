@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.domain.NamedMedia;
@@ -21,11 +21,11 @@ import java.util.*;
  * Time: 4:48:03 PM
  * To change this template use File | Settings | File Templates.
  */
-public class MediaService extends Service {
+public class MediaRepository extends Repository {
 
     FastPhylogenyService fastPhylogenyService;
 
-    public MediaService(EntityManager entityManager, FastPhylogenyService fastPhylogenyService) {
+    public MediaRepository(EntityManager entityManager, FastPhylogenyService fastPhylogenyService) {
         super(entityManager);
     }
 

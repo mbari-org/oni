@@ -74,7 +74,8 @@ trait Endpoints:
         f.fold(
             e =>
                 log.atError.withCause(e).log("Error")
-                Left(ServerError(e.getMessage)),
+                Left(ServerError(e.getMessage))
+            ,
             Right(_)
         )
 

@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 import jakarta.persistence.EntityManagerFactory;
 

@@ -164,6 +164,8 @@ public class HistoryEntity implements Serializable, IPersistentObject {
     }
 
 
+
+
     public boolean isAdd() {
         return ACTION_ADD.equalsIgnoreCase(action);
     }

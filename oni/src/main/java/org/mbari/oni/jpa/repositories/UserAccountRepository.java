@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 import java.util.*;
 
@@ -20,9 +20,9 @@ import org.mbari.oni.jpa.entities.UserAccountEntity;
  * Time: 3:09:01 PM
  * To change this template use File | Settings | File Templates.
  */
-public class UserAccountService extends Service {
+public class UserAccountRepository extends Repository {
 
-    public UserAccountService(EntityManager entityManager) {
+    public UserAccountRepository(EntityManager entityManager) {
         super(entityManager);
     }
 

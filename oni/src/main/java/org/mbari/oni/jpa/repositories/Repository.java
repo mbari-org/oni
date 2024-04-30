@@ -5,9 +5,8 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
-import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.mbari.oni.etc.jdk.Logging;
@@ -17,17 +16,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public abstract class Service {
+public abstract class Repository {
 
 
     final EntityManager entityManager;
 
-    public Service(EntityManager entityManager) {
+    public Repository(EntityManager entityManager) {
         this.entityManager = entityManager;
     }
 
 
-    protected static final Logging log = new Logging(Service.class);
+    protected static final Logging log = new Logging(Repository.class);
 
     public <T> List<T> findByNamedQuery(String name,
                                         Map<String, Object> namedParams) {

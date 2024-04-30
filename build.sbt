@@ -111,6 +111,7 @@ lazy val integrationTests = (project in file("it"))
     )
     .settings(
         libraryDependencies ++= Seq(
+            gson,
             junit,
             munit,
             tapirServerStub,

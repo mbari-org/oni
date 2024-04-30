@@ -97,6 +97,15 @@ public class LinkTemplateEntity implements Serializable, ILink, IPersistentObjec
     @Column(name = "LAST_UPDATED_TIME")
     private Timestamp updatedTime;
 
+    public LinkTemplateEntity() {
+    }
+
+    public LinkTemplateEntity(String linkName, String toConcept, String linkValue) {
+        this.linkName = linkName;
+        this.linkValue = linkValue;
+        this.toConcept = toConcept;
+    }
+
     public ConceptMetadataEntity getConceptMetadata() {
         return conceptMetadata;
     }

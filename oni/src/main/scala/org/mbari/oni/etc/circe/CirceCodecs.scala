@@ -60,6 +60,21 @@ object CirceCodecs:
     given Decoder[HealthStatus] = deriveDecoder
     given Encoder[HealthStatus] = deriveEncoder
 
+    given Decoder[RawConcept] = deriveDecoder
+    given Encoder[RawConcept] = deriveEncoder
+
+    given Decoder[RawConceptMetadata] = deriveDecoder
+    given Encoder[RawConceptMetadata] = deriveEncoder
+
+    given Decoder[RawConceptName] = deriveDecoder
+    given Encoder[RawConceptName] = deriveEncoder
+
+    given Decoder[RawLink] = deriveDecoder
+    given Encoder[RawLink] = deriveEncoder
+
+    given Decoder[RawMedia] = deriveDecoder
+    given Encoder[RawMedia] = deriveEncoder
+
     val CustomPrinter: Printer = Printer(
         dropNullValues = true,
         indent = ""

@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.LinkRealizationEntity;
@@ -20,9 +20,9 @@ import java.util.Collection;
  * Time: 4:46:22 PM
  * To change this template use File | Settings | File Templates.
  */
-public class LinkRealizationService extends Service {
+public class LinkRealizationRepository extends Repository {
 
-    public LinkRealizationService(EntityManager entityManager) {
+    public LinkRealizationRepository(EntityManager entityManager) {
         super(entityManager);
     }
 
@@ -32,7 +32,7 @@ public class LinkRealizationService extends Service {
     }
 
     public void validateToConcept(LinkRealizationEntity object) {
-        var conceptDAO = new ConceptService(entityManager);
+        var conceptDAO = new ConceptRepository(entityManager);
         var opt = conceptDAO.findByName(object.getToConcept());
         if (opt.isPresent()) {
             var concept = opt.get();

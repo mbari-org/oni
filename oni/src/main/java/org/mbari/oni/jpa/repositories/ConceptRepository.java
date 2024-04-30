@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.VARSPersistenceException;
@@ -23,11 +23,11 @@ import org.mbari.oni.jpa.entities.ConceptEntity;
  * To change this template use File | Settings | File Templates.
  */
 
-public class ConceptService extends Service {
+public class ConceptRepository extends Repository {
 
-    private static final Logging log = new Logging(ConceptService.class);
+    private static final Logging log = new Logging(ConceptRepository.class);
 
-    public ConceptService(EntityManager entityManager) {
+    public ConceptRepository(EntityManager entityManager) {
         super(entityManager);
     }
 

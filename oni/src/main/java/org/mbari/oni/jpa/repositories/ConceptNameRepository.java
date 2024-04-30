@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 
 import java.util.List;
@@ -24,9 +24,9 @@ import org.mbari.oni.jpa.entities.ConceptNameEntity;
  * To change this template use File | Settings | File Templates.
  */
 
-public class ConceptNameService extends Service {
+public class ConceptNameRepository extends Repository {
 
-    public ConceptNameService(EntityManager entityManager) {
+    public ConceptNameRepository(EntityManager entityManager) {
         super(entityManager);
     }
 

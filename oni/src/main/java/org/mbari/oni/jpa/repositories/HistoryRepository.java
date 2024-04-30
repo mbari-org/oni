@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
-package org.mbari.oni.jpa.services;
+package org.mbari.oni.jpa.repositories;
 
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.HistoryEntity;
@@ -20,10 +20,10 @@ import java.util.HashSet;
  * Time: 4:45:43 PM
  * To change this template use File | Settings | File Templates.
  */
-public class HistoryService extends Service {
+public class HistoryRepository extends Repository {
 
 
-    public HistoryService(EntityManager entityManager) {
+    public HistoryRepository(EntityManager entityManager) {
         super(entityManager);
     }
 
