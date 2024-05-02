@@ -17,6 +17,8 @@
 package org.mbari.oni.jpa
 
 import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.jpa.entities.ConceptEntity
+import org.mbari.oni.jpa.repositories.TestRepository
 import org.testcontainers.containers.{JdbcDatabaseContainerProvider, PostgreSQLContainer}
 
 object PostgresEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
@@ -53,5 +55,7 @@ object PostgresEntityManagerFactoryProvider extends EntityManagerFactoryProvider
       container.getDriverClassName,
       testProps
     )
+
+  lazy val init: ConceptEntity = TestRepository.init(entityManagerFactory)
 
 }

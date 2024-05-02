@@ -16,9 +16,26 @@
 
 package org.mbari.oni.endpoints
 
-class PhylogenyEndpointsSuite extends EndpointsSuite:
+import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.jpa.DatabaseFunSuite
+import org.mbari.oni.etc.jdk.Loggers.given
 
-    test("up") {}
+trait PhylogenyEndpointsSuite extends EndpointsSuite with DatabaseFunSuite:
+
+    private val log = System.getLogger(getClass.getName)
+
+    private lazy val endpoints = new PhylogenyEndpoints(entityManagerFactory)
+
+    test("up") {
+        runGet(
+            endpoints.upEndpointImpl,
+            s"http://test.com/v1/pylogeny/up/Nanomia",
+            response => {
+                log.atInfo.log(response.body.toString)
+                assert(response.body.contains("Nanomia"))
+            }
+        )
+    }
 
     test("down") {}
 
@@ -27,3 +44,5 @@ class PhylogenyEndpointsSuite extends EndpointsSuite:
     test("basic") {}
 
     test("taxa") {}
+
+    override def entityManagerFactory: EntityManagerFactory = ???

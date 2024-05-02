@@ -14,10 +14,13 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.jpa
+package org.mbari.oni.endpoints
+import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
-trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {
+class SqlServerPhylogenyEndpointsSuite extends PhylogenyEndpointsSuite {
 
+  override given entityManagerFactory: EntityManagerFactory = AzureEntityManagerFactoryProvider.entityManagerFactory
+  AzureEntityManagerFactoryProvider.init
 
 }
-

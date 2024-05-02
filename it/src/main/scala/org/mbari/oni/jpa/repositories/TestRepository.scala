@@ -41,6 +41,7 @@ object TestRepository:
       read(path) match
         case None => throw new RuntimeException("Failed to read test data");
         case Some(rawConcept) =>
+          log.atInfo.log(s"Inserting a kb tree from $path")
           val conceptEntity = rawConcept.toEntity
           val entityManager = entityManagerFactory.createEntityManager()
           val transaction = entityManager.getTransaction

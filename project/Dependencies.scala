@@ -36,7 +36,7 @@ object Dependencies {
     lazy val tapirSwagger    = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle"  % tapirVersion
     lazy val tapirVertex     = "com.softwaremill.sttp.tapir" %% "tapir-vertx-server"       % tapirVersion
 
-    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.5"
+    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.6"
     val testcontainersVersion        = "1.19.7"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion

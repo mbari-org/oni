@@ -17,8 +17,11 @@
 package org.mbari.oni.jpa
 
 import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.etc.jdbc.{Resources, Scripts}
+import org.mbari.oni.etc.jdk.Files
 import org.mbari.oni.etc.tc.AzureSqlEdgeContainerProvider
-import org.testcontainers.containers.JdbcDatabaseContainerProvider
+import org.mbari.oni.jpa.entities.ConceptEntity
+import org.mbari.oni.jpa.repositories.TestRepository
 
 object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
 
@@ -27,8 +30,9 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
   // The image name must match the one in src/test/resources/container-license-acceptance.txt
   // val container = new MSSQLServerContainer(DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-latest"))
   // container.acceptLicense()
-  container.withInitScript("sql/02_m3_kb.sql")
-  container.withReuse(true)
+
+//  container.withInitScript("sql/init.sql")
+  container.withReuse(false)
   container.start()
 
   // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
@@ -57,5 +61,8 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
       container.getDriverClassName,
       testProps
     )
+
+  lazy val init: ConceptEntity = TestRepository.init(entityManagerFactory)
+
 
 }
