@@ -39,9 +39,7 @@ object EntityManagerFactories:
         "hibernate.hikari.idleTimeout"        -> "30000",
         "hibernate.jdbc.batch_size"           -> "100",
         "hibernate.hikari.maximumPoolSize"    -> "16", // Same as vertx worker pool threads
-        "hibernate.hikari.minimumIdle"        -> "2",
-        "hibernate.order_inserts"             -> "true",
-        "hibernate.order_updates"             -> "true"
+        "hibernate.hikari.minimumIdle"        -> "2"
     )
 
     def apply(properties: Map[String, String]): EntityManagerFactory =

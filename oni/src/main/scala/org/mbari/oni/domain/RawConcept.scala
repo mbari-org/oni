@@ -19,19 +19,34 @@ case class RawConcept(
     rankLevel: Option[String] = None,
     rankName: Option[String] = None,
     reference: Option[String] = None,
-    structureType: Option[String] = None
+    structureType: Option[String] = None,
 ):
 
-    def toEntity: ConceptEntity =
-        val entity = new ConceptEntity()
+    def toEntity: ConceptEntity = toEntityWithId(1)
 
-        names.map(_.toEntity) foreach (entity.addConceptName)
+    /**
+     * Every Concept has to have an ID before it's added to a parent concept entity. A concept's hashcode
+     * is based on this id and adding to parent will results in hash collisions. The outcome is that
+     * only one child concept is added to the parent entity.
+     * @param id
+     * @return
+     */
+    private def toEntityWithId(id: Long): ConceptEntity =
+        val entity = new ConceptEntity()
+        entity.setId(id)
+        var nextId = id + 1
+
+        names.map(_.toEntity).foreach(entity.addConceptName)
         entity.setOriginator(originator.orNull)
         metadata.map(_.toEntity).foreach(entity.setConceptMetadata)
-        children.map(_.toEntity).foreach(entity.addChildConcept)
         aphiaId.foreach(v => entity.setAphiaId(v.longValue()))
         entity.setRankLevel(rankLevel.orNull)
         entity.setRankName(rankName.orNull)
         entity.setReference(reference.orNull)
         entity.setStructureType(structureType.orNull)
+//        children.map(_.toEntity).foreach(entity.addChildConcept)
+        children.foreach(c =>
+            nextId = nextId + 1
+            entity.addChildConcept(c.toEntityWithId(nextId))
+        )
         entity

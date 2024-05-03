@@ -34,6 +34,10 @@ class DatabaseContainerSuite extends munit.FunSuite  {
     val q = em.createNativeQuery("SELECT COUNT(*) FROM Media")
     val r = q.getResultList().asScala.toList.head.asInstanceOf[Number].longValue()
     assert(r >= 0)
+
+//  test("init"):
+//    val entity = AzureEntityManagerFactoryProvider.init
+//    assert(entity != null)
     
 }
 

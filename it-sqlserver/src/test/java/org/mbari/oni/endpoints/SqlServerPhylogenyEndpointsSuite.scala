@@ -21,6 +21,6 @@ import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 class SqlServerPhylogenyEndpointsSuite extends PhylogenyEndpointsSuite {
 
   override given entityManagerFactory: EntityManagerFactory = AzureEntityManagerFactoryProvider.entityManagerFactory
-  AzureEntityManagerFactoryProvider.init
+//  AzureEntityManagerFactoryProvider.init
 
 }

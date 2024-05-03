@@ -31,8 +31,8 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
   // val container = new MSSQLServerContainer(DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-latest"))
   // container.acceptLicense()
 
-//  container.withInitScript("sql/init.sql")
-  container.withReuse(false)
+  container.withInitScript("sql/init.sql")
+  container.withReuse(true)
   container.start()
 
   // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
@@ -62,7 +62,7 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
       testProps
     )
 
-  lazy val init: ConceptEntity = TestRepository.init(entityManagerFactory)
+//  lazy val init: ConceptEntity = TestRepository.init(entityManagerFactory)
 
 
 }
