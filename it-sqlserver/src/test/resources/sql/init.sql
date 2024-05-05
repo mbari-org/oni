@@ -1,13 +1,20 @@
 -- Drop stuff
-alter table Concept drop constraint if exists fk_Concept__Concept_id;
-alter table ConceptName drop constraint if exists uc_ConceptName_name;
-alter table ConceptDelegate drop constraint if exists fk_ConceptDelegage__Concept_id;
-alter table ConceptName drop constraint if exists fk_ConceptName__Concept_id;
-alter table History drop constraint if exists fk_History__ConceptDelegate_id;
-alter table LinkRealization drop constraint if exists fk_LinkRealization__ConceptDelegate_id;
-alter table LinkTemplate drop constraint if exists fk_LinkTempate__ConceptDelegate_id;
-alter table Media drop constraint if exists fk_Media__ConceptDelegate_id;
-alter table UserAccount drop constraint if exists uc_UserAccount_UserName;
+BEGIN TRY
+    alter table Concept drop constraint if exists fk_Concept__Concept_id;
+    alter table ConceptName drop constraint if exists uc_ConceptName_name;
+    alter table ConceptDelegate drop constraint if exists fk_ConceptDelegage__Concept_id;
+    alter table ConceptName drop constraint if exists fk_ConceptName__Concept_id;
+    alter table History drop constraint if exists fk_History__ConceptDelegate_id;
+    alter table LinkRealization drop constraint if exists fk_LinkRealization__ConceptDelegate_id;
+    alter table LinkTemplate drop constraint if exists fk_LinkTempate__ConceptDelegate_id;
+    alter table Media drop constraint if exists fk_Media__ConceptDelegate_id;
+    alter table UserAccount drop constraint if exists uc_UserAccount_UserName;
+END TRY
+BEGIN CATCH
+    DECLARE @errorMessage NVARCHAR(MAX)
+    SELECT @errorMessage = ERROR_MESSAGE()
+    PRINT 'Error occurred: ' + @errorMessage;
+END CATCH
 drop table if exists Artifact;
 drop table if exists Concept;
 drop table if exists ConceptDelegate;
@@ -32628,8 +32635,6 @@ INSERT INTO Media(id, ConceptDelegateID_FK, Url, MediaType, PrimaryMedia, Credit
 INSERT INTO Media(id, ConceptDelegateID_FK, Url, MediaType, PrimaryMedia, Credit, Caption, LAST_UPDATED_TIME)
   VALUES(1426, 2464, 'http://dsg.mbari.org/images/dsg/external/Cnidaria/Medusae/Scrippsia_pacifica_03.png', 'Image', 0, 'MBARI 2008: V3194-01', '', '20150421 15:53:21.400');
 INSERT INTO Media(id, ConceptDelegateID_FK, Url, MediaType, PrimaryMedia, Credit, Caption, LAST_UPDATED_TIME)
-  VALUES(1427, NULL, 'http://sundog.shore.mbari.org/images/dsg/Equipment/DEIMOS.png', 'Image', 1, '', '', '20110111 08:03:37.0');
-INSERT INTO Media(id, ConceptDelegateID_FK, Url, MediaType, PrimaryMedia, Credit, Caption, LAST_UPDATED_TIME)
   VALUES(1428, 5448, 'http://dsg.mbari.org/images/dsg/external/Equipment/DEIMOS_01.png', 'Image', 1, '', '', '20140317 09:35:43.057');
 INSERT INTO Media(id, ConceptDelegateID_FK, Url, MediaType, PrimaryMedia, Credit, Caption, LAST_UPDATED_TIME)
   VALUES(1429, 2479, 'http://dsg.mbari.org/images/dsg/external/Cnidaria/Medusae/Eutonina_indicans_01.png', 'Image', 1, 'MBARI 2006: T961-03', '', '20211222 13:19:46.070');
@@ -36438,5 +36443,5 @@ INSERT INTO useraccount(id, username, password, role, last_updated_time, affilia
   VALUES(1, 'admin', 'j5BLowjV73immQbiMAdqXzXkXaoqMgRY', NULL, '2022-10-06 01:15:44.592', 'MBARI', 'admin', 'admin', 'nowhere@mbari.org');
 
 -- Fix schema
-alter table Concept
-    drop column NodcCode;
+--alter table Concept
+ --   drop column if exists NodcCode;

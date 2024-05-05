@@ -33,14 +33,14 @@ public enum ConceptTypes {
 
     LITHOLOGY("lithology"), TAXONOMY("taxonomy"), UNSPECIFIED("unspecified");
 
-    private final String name;
+    private final String type;
 
-    ConceptTypes(String name) {
-        this.name = name;
+    ConceptTypes(String type) {
+        this.type = type;
     }
 
-    public String getName() {
-        return name;
+    public String getType() {
+        return type;
     }
 
 

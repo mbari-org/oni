@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.jpa
+package org.mbari.oni.etc.jdk
 
-trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {}
+import scala.util.Random
+
+object Strings:
+
+    private val chars  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    private val random = new Random
+
+    def random(length: Int): String =
+        val xs = for (_ <- 0 until length) yield chars.charAt(random.nextInt(chars.length))
+        new String(xs.toArray)

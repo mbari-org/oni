@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.jpa
+package org.mbari.oni
 
-trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {}
+import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
+
+trait DbMixin {
+  def entityManagerFactory: EntityManagerFactory = AzureEntityManagerFactoryProvider.entityManagerFactory
+}

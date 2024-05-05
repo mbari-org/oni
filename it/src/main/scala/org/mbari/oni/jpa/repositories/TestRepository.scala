@@ -38,82 +38,76 @@ object TestRepository:
 
     private val log = System.getLogger(getClass.getName)
 
-    def init(entityManagerFactory: EntityManagerFactory): ConceptEntity = {
-      val url = getClass.getResource("/kb/kb-dump.json.zip")
-      val path = Paths.get(url.toURI)
-      read(path) match
-        case None => throw new RuntimeException("Failed to read test data");
-        case Some(rawConcept) =>
-          log.atInfo.log(s"Inserting a kb tree from $path")
-          val conceptEntity = rawConcept.toEntity
-          cascadeInsert(null, conceptEntity, entityManagerFactory)
-          conceptEntity
-    }
+    def init(entityManagerFactory: EntityManagerFactory): ConceptEntity =
+        val url  = getClass.getResource("/kb/kb-dump.json.zip")
+        val path = Paths.get(url.toURI)
+        read(path) match
+            case None             => throw new RuntimeException("Failed to read test data");
+            case Some(rawConcept) =>
+                log.atInfo.log(s"Inserting a kb tree from $path")
+                val conceptEntity = rawConcept.toEntity
+                cascadeInsert(null, conceptEntity, entityManagerFactory)
+                conceptEntity
 
-    private def cascadeInsert(parent: ConceptEntity, child: ConceptEntity, entityManagerFactory: EntityManagerFactory): Unit =
+    private def cascadeInsert(
+        parent: ConceptEntity,
+        child: ConceptEntity,
+        entityManagerFactory: EntityManagerFactory
+    ): Unit =
 
-      // Detach the children so they can be processed separately
-      val children = new util.HashSet(child.getChildConcepts)
-      children.forEach(c => child.removeChildConcept(c))
-      val childNames = children.asScala.map(_.getPrimaryConceptName.getName).mkString(", ")
-      val entityManager = entityManagerFactory.createEntityManager
-      child.setId(null)
+        // Detach the children so they can be processed separately
+        val children      = new util.HashSet(child.getChildConcepts)
+        children.forEach(c => child.removeChildConcept(c))
+        val childNames    = children.asScala.map(_.getPrimaryConceptName.getName).mkString(", ")
+        val entityManager = entityManagerFactory.createEntityManager
+        child.setId(null)
 
-      entityManager.runTransaction { em =>
+        entityManager.runTransaction { em =>
 
-        log.atInfo.log(s"Inserting ${child.getPrimaryConceptName.getName} which has children: $childNames")
+            log.atInfo.log(s"Inserting ${child.getPrimaryConceptName.getName} which has children: $childNames")
 
-        if (parent != null) {
-          em.find(classOf[ConceptEntity], parent.getId) match {
-            case null => throw new RuntimeException(s"Parent ${parent.getPrimaryConceptName.getName} not found")
-            case p => p.addChildConcept(child)
-          }
+            if parent != null then
+                em.find(classOf[ConceptEntity], parent.getId) match
+                    case null => throw new RuntimeException(s"Parent ${parent.getPrimaryConceptName.getName} not found")
+                    case p    => p.addChildConcept(child)
+            else em.persist(child)
+            em.flush()
         }
-        else {
-          em.persist(child)
-        }
-        em.flush()
-      }
-      entityManager.close()
+        entityManager.close()
 
-      log.atInfo.log(s"Inserted ${child.getPrimaryConceptName.getName} with id of ${child.getId}")
-      children.forEach(cascadeInsert(child, _, entityManagerFactory))
+        log.atInfo.log(s"Inserted ${child.getPrimaryConceptName.getName} with id of ${child.getId}")
+        children.forEach(cascadeInsert(child, _, entityManagerFactory))
 
     def read(path: Path): Option[RawConcept] =
-       log.atDebug.log(s"Reading file: $path")
-        if path.getFileName.toString.endsWith(".zip") then
-            readZip(path)
-        else {
+        log.atDebug.log(s"Reading file: $path")
+        if path.getFileName.toString.endsWith(".zip") then readZip(path)
+        else
             Using(Files.newInputStream(path)) { stream =>
                 read(stream)
             }.toOption.flatten
-        }
 
     def readZip(path: Path): Option[RawConcept] =
-      var opt = Option.empty[RawConcept]
-      log.atDebug.log(s"Reading zip file: $path")
-      Using(new ZipFile(path.toFile)) { zipFile =>
-        val entries = zipFile.entries()
-        while(entries.hasMoreElements) {
-          val entry = entries.nextElement()
-          if (!entry.isDirectory && opt.isEmpty) {
-            Using(zipFile.getInputStream(entry)) { stream =>
-              log.atInfo.log(s"Reading kb from $path using entry ${entry.getName}")
-              opt = read(stream)
-            }
-          }
+        var opt = Option.empty[RawConcept]
+        log.atDebug.log(s"Reading zip file: $path")
+        Using(new ZipFile(path.toFile)) { zipFile =>
+            val entries = zipFile.entries()
+            while entries.hasMoreElements do
+                val entry = entries.nextElement()
+                if !entry.isDirectory && opt.isEmpty then
+                    Using(zipFile.getInputStream(entry)) { stream =>
+                        log.atInfo.log(s"Reading kb from $path using entry ${entry.getName}")
+                        opt = read(stream)
+                    }
         }
-      }
-      opt
-
+        opt
 
     private def read(stream: InputStream): Option[RawConcept] =
         val scanner = Scanner(stream).useDelimiter("\\A")
-        val json = if scanner.hasNext then scanner.next() else ""
-        val e = json.reify[RawConcept]
+        val json    = if scanner.hasNext then scanner.next() else ""
+        val e       = json.reify[RawConcept]
         e match
             case Right(rawConcept) => Some(rawConcept)
-            case Left(error) =>
+            case Left(error)       =>
                 println(s"Failed to parse json: $error")
                 error.printStackTrace()
                 None

@@ -14,35 +14,24 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.endpoints
+package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.jpa.DatabaseFunSuite
-import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.jpa.entities.{EntityUtilities, TestEntityFactory}
 
-trait PhylogenyEndpointsSuite extends EndpointsSuite with DatabaseFunSuite:
+trait ConceptServiceSuite extends DatabaseFunSuite:
 
-    private val log = System.getLogger(getClass.getName)
+    lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
 
-    private lazy val endpoints = new PhylogenyEndpoints(entityManagerFactory)
+//  override def beforeEach(context: BeforeEach): Unit =
+//    conceptService.
 
-    test("up") {
-
-        runGet(
-            endpoints.upEndpointImpl,
-            s"http://test.com/v1/pylogeny/up/Nanomia",
-            response =>
-                log.atInfo.log(response.body.toString)
-                assert(response.body.contains("Nanomia"))
-        )
+    test("init") {
+        val root = TestEntityFactory.buildRoot(3, 3)
+        conceptService.init(root) match
+            case Left(_)  => fail("Failed to init")
+            case Right(e) =>
+                assert(root.getId != null)
+                println(EntityUtilities.buildTextTree(e))
     }
-
-    test("down") {}
-
-    test("siblings") {}
-
-    test("basic") {}
-
-    test("taxa") {}
-
-    override def entityManagerFactory: EntityManagerFactory = ???

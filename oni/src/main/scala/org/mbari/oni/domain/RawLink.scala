@@ -16,3 +16,10 @@ case class RawLink(linkName: String, toConcept: String, linkValue: String):
 
     def toLinkTemplateEntity: LinkTemplateEntity =
         LinkTemplateEntity(linkName, toConcept, linkValue)
+
+object RawLink:
+    def fromLinRealizationEntity(entity: LinkRealizationEntity): RawLink =
+        RawLink(entity.getLinkName, entity.getToConcept, entity.getLinkValue)
+
+    def fromLinkTemplateEntity(entity: LinkTemplateEntity): RawLink =
+        RawLink(entity.getLinkName, entity.getToConcept, entity.getLinkValue)

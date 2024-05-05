@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.jpa
+package org.mbari.oni.services
+import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.DbMixin
+import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
-trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {}
+class SqlServerConceptServiceSuite extends ConceptServiceSuite with DbMixin{
+
+
+}

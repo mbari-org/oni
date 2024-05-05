@@ -13,25 +13,24 @@ import scala.util.Using
 
 import java.nio.file.Files as JFiles
 
-object Files {
+object Files:
 
-  /**
-   * Concatenate files into a single file
-   * @param files THE files to concatenate
-   * @param output the output file
-   */
-  def concatenate(files: Seq[Path], output: Path): Unit = {
-    Using(BufferedOutputStream(JFiles.newOutputStream(output))) { out =>
-      files.foreach { file =>
-        Using(JFiles.newInputStream(file)) { in =>
-          val buffer = new Array[Byte](1024)
-          var bytesRead = in.read(buffer)
-          while (bytesRead != -1) {
-            out.write(buffer, 0, bytesRead)
-            bytesRead = in.read(buffer)
-          }
+    /**
+     * Concatenate files into a single file
+     * @param files
+     *   THE files to concatenate
+     * @param output
+     *   the output file
+     */
+    def concatenate(files: Seq[Path], output: Path): Unit =
+        Using(BufferedOutputStream(JFiles.newOutputStream(output))) { out =>
+            files.foreach { file =>
+                Using(JFiles.newInputStream(file)) { in =>
+                    val buffer    = new Array[Byte](1024)
+                    var bytesRead = in.read(buffer)
+                    while bytesRead != -1 do
+                        out.write(buffer, 0, bytesRead)
+                        bytesRead = in.read(buffer)
+                }
+            }
         }
-      }
-    }
-  }
-}

@@ -9,8 +9,6 @@ package org.mbari.oni.jpa
 
 import jakarta.persistence.EntityManagerFactory
 
-trait EntityManagerFactoryProvider {
-  
-  def entityManagerFactory: EntityManagerFactory
+trait EntityManagerFactoryProvider:
 
-}
+    def entityManagerFactory: EntityManagerFactory

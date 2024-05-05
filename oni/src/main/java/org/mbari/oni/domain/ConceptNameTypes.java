@@ -18,20 +18,20 @@ public enum ConceptNameTypes {
 
     PRIMARY("primary"), ALTERNATE("alternate"), COMMON("common"), FORMER("former"), SYNONYM("synonym");
 
-    private final String name;
+    private final String type;
 
-    ConceptNameTypes(String name) {
-        this.name = name;
+    ConceptNameTypes(String type) {
+        this.type = type;
     }
 
 
-    public String getName() {
-        return name;
+    public String getType() {
+        return type;
     }
 
     @Override
     public String toString() {
-        return getName();
+        return getType();
     }
 
 

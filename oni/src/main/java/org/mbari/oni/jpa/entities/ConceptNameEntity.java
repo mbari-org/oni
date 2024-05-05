@@ -96,6 +96,14 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
     @Column(name = "LAST_UPDATED_TIME")
     private Timestamp updatedTime;
 
+    public ConceptNameEntity() {
+    }
+
+    public ConceptNameEntity(String name, String nameType) {
+        this.name = name;
+        this.nameType = nameType;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {

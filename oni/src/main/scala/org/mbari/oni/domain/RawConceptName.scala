@@ -16,3 +16,7 @@ case class RawConceptName(name: String, nameType: String, author: Option[String]
         entity.setNameType(nameType)
         author.foreach(entity.setAuthor)
         entity
+
+object RawConceptName:
+    def fromEntity(entity: ConceptNameEntity): RawConceptName =
+        RawConceptName(entity.getName, entity.getNameType, Option(entity.getAuthor))

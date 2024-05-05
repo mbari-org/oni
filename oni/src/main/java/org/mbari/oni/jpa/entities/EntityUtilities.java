@@ -14,11 +14,11 @@ package org.mbari.oni.jpa.entities;
  */
 public class EntityUtilities {
 
-    public String buildTextTree(ConceptEntity concept) {
+    public static String buildTextTree(ConceptEntity concept) {
         return buildTextTree(concept, 0);
     }
 
-    private String buildTextTree(ConceptEntity concept, int depth) {
+    private static String buildTextTree(ConceptEntity concept, int depth) {
         final StringBuilder sb = new StringBuilder();
         String a = "";
         for (int i = 0; i < depth; i++) {

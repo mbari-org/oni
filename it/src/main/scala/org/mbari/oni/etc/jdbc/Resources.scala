@@ -20,32 +20,22 @@ import java.io.{BufferedReader, InputStream, InputStreamReader}
 import java.nio.file.{Path, Paths}
 import scala.util.Using
 
-object Resources {
+object Resources:
 
-  def getResourceFiles(path: String): List[String] = {
-    Using(BufferedReader(InputStreamReader(getResourceAsStream(path)))) { reader =>
-      Iterator.continually(reader.readLine()).takeWhile(_ != null).toList
-    }.get
-  }
+    def getResourceFiles(path: String): List[String] =
+        Using(BufferedReader(InputStreamReader(getResourceAsStream(path)))) { reader =>
+            Iterator.continually(reader.readLine()).takeWhile(_ != null).toList
+        }.get
 
-  def getResourcePath(path: String): Path =
-    val url = getClass.getResource(path)
-    Paths.get(url.toURI.getPath)
+    def getResourcePath(path: String): Path =
+        val url = getClass.getResource(path)
+        Paths.get(url.toURI.getPath)
 
+    def getResourcePaths(path: String): List[Path] =
+        for file <- getResourceFiles(path)
+        yield getResourcePath(s"$path/$file")
 
-  def getResourcePaths(path: String): List[Path] =
-    for
-      file <- getResourceFiles(path)
-    yield
-      getResourcePath(s"$path/$file")
-
-  def getResourceAsStream(resource: String): InputStream =
-    val inputStream = Thread.currentThread().getContextClassLoader.getResourceAsStream(resource)
-    if (inputStream == null)
-      getClass.getResourceAsStream(resource)
-    else
-      inputStream
-
-
-
-}
+    def getResourceAsStream(resource: String): InputStream =
+        val inputStream = Thread.currentThread().getContextClassLoader.getResourceAsStream(resource)
+        if inputStream == null then getClass.getResourceAsStream(resource)
+        else inputStream

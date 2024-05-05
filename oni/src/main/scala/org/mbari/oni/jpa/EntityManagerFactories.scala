@@ -8,11 +8,12 @@
 package org.mbari.oni.jpa
 
 import com.typesafe.config.ConfigFactory
-import jakarta.persistence.{EntityManagerFactory, Persistence}
+import jakarta.persistence.{EntityManager, EntityManagerFactory, Persistence}
 import org.mbari.oni.AppConfig
 
 import scala.jdk.CollectionConverters.*
 import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.etc.jpa.EntityManagers.*
 
 import java.lang.System.Logger.Level
 
@@ -79,3 +80,10 @@ object EntityManagerFactories:
         val url      = config.getString(configNode + ".url")
         val user     = config.getString(configNode + ".user")
         apply(url, user, password, driver)
+
+    extension (emf: EntityManagerFactory)
+        def transaction[T](f: EntityManager => T): Either[Throwable, T] =
+            val em     = emf.createEntityManager()
+            val either = em.runTransaction(f)
+            em.close()
+            either

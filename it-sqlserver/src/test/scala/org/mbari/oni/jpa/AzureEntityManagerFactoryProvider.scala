@@ -31,7 +31,7 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
   // val container = new MSSQLServerContainer(DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-latest"))
   // container.acceptLicense()
 
-  container.withInitScript("sql/init.sql")
+  container.withInitScript("sql/init_min.sql")
   container.withReuse(true)
   container.start()
 

@@ -9,6 +9,8 @@ package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.ConceptMetadataEntity
 
+import scala.jdk.CollectionConverters.*
+
 case class RawConceptMetadata(
     linkRealizations: Option[Seq[RawLink]] = None,
     linkTemplates: Option[Seq[RawLink]] = None,
@@ -28,3 +30,11 @@ case class RawConceptMetadata(
         ms.foreach(entity.addMedia)
 
         entity
+
+object RawConceptMetadata:
+    def fromEntity(entity: ConceptMetadataEntity): RawConceptMetadata =
+        RawConceptMetadata(
+            linkRealizations = Some(entity.getLinkRealizations.asScala.map(RawLink.fromLinRealizationEntity).toSeq),
+            linkTemplates = Some(entity.getLinkTemplates.asScala.map(RawLink.fromLinkTemplateEntity).toSeq),
+            medias = Some(entity.getMedias.asScala.map(RawMedia.fromEntity).toSeq)
+        )

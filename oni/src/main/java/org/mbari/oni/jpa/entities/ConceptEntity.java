@@ -9,10 +9,7 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import jakarta.persistence.*;
 
@@ -58,7 +55,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         fetch = FetchType.LAZY,
         cascade = { CascadeType.ALL }
     )
-    private Set<ConceptEntity> childConcepts;
+    private List<ConceptEntity> childConcepts;
 
 //    @SerializedName("metadata")
     @OneToOne(
@@ -162,9 +159,9 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         conceptName.setConcept(this);
     }
 
-    public Set<ConceptEntity> getChildConcepts() {
+    public List<ConceptEntity> getChildConcepts() {
         if (childConcepts == null) {
-            childConcepts = new HashSet<>();
+            childConcepts = new ArrayList<>();
         }
 
         return childConcepts;

@@ -9,7 +9,7 @@ package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.MediaEntity
 
-import java.net.URL
+import java.net.{URI, URL}
 
 case class RawMedia(
     url: URL,
@@ -27,3 +27,13 @@ case class RawMedia(
         entity.setType(`type`.orNull)
         entity.setUrl(url.toExternalForm)
         entity
+
+object RawMedia:
+    def fromEntity(entity: MediaEntity): RawMedia =
+        RawMedia(
+            url = URI.create(entity.getUrl).toURL,
+            caption = Option(entity.getCaption),
+            credit = Option(entity.getCredit),
+            primaryMedia = Option(entity.isPrimary),
+            `type` = Option(entity.getType)
+        )

@@ -97,6 +97,7 @@ public class FastPhylogenyService {
     }
 
     public Instant findLastUpdate() {
+        log.atInfo().log("Running findLastUpdate");
         try(var entityManager = entityManagerFactory.createEntityManager()) {
             var query = entityManager.createNativeQuery(LAST_UPDATE_SQL);
             var last = (Timestamp) query.getSingleResult();
@@ -121,6 +122,7 @@ public class FastPhylogenyService {
         var lastUpdateInDb = findLastUpdate();
         lock.lock();
         if (cache == null || lastUpdateInDb.isAfter(cache.lastUpdate())) {
+            log.atInfo().log("Loading cache");
             var rows = findAll();
             var lastUpdate = rows.stream()
                     .max(Comparator.comparing(ConceptRow::lastUpdate))
@@ -128,6 +130,7 @@ public class FastPhylogenyService {
                     .orElse(Instant.MIN);
             var treeData = MutableConcept.toTree(rows);
             cache = new FastCache(lastUpdate, treeData.root(), treeData.nodes());
+            log.atInfo().log("Cache loaded");
         }
         lock.unlock();
     }
