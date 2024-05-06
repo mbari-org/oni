@@ -24,8 +24,11 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
 
     lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
 
-//  override def beforeEach(context: BeforeEach): Unit =
-//    conceptService.
+    override def beforeEach(context: BeforeEach): Unit =
+        for
+            root <- conceptService.findRoot()
+        do
+            conceptService.deleteByName(root.name)
 
     test("init") {
         val root = TestEntityFactory.buildRoot(3, 3)
@@ -34,4 +37,46 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
             case Right(e) =>
                 assert(root.getId != null)
                 println(EntityUtilities.buildTextTree(e))
+    }
+
+    test("nonAcidInit") {
+        val root = TestEntityFactory.buildRoot(4, 2)
+        conceptService.nonAcidInit(root) match
+            case Left(_)  => fail("Failed to init")
+            case Right(e) =>
+                assert(root.getId != null)
+                println(EntityUtilities.buildTextTree(e))
+    }
+
+    test("deleteByName") {
+        val root = TestEntityFactory.buildRoot(4, 1)
+        for
+            rootEntity <- conceptService.init(root)
+            n <- conceptService.deleteByName(rootEntity.getPrimaryConceptName.getName)
+        do
+            assertEquals(n, 4)
+    }
+
+    test("findByName") {
+        fail("Not implemented yet")
+    }
+
+    test("findParentByChildName") {
+        fail("Not implemented yet")
+    }
+
+    test("findChildrenByParentName") {
+        fail("Not implemented yet")
+    }
+
+    test("findRoot") {
+        fail("Not implemented yet")
+    }
+
+    test("findByGlob") {
+        fail("Not implemented yet")
+    }
+
+    test("tree") {
+        fail("Not implemented yet")
     }

@@ -31,6 +31,7 @@ import scala.util.control.NonFatal
 import scala.jdk.CollectionConverters.*
 import Loggers.given
 import org.mbari.oni.etc.jpa.EntityManagers.{*, given}
+import org.mbari.oni.services.ConceptService
 
 import java.util
 
@@ -46,37 +47,9 @@ object TestRepository:
             case Some(rawConcept) =>
                 log.atInfo.log(s"Inserting a kb tree from $path")
                 val conceptEntity = rawConcept.toEntity
-                cascadeInsert(null, conceptEntity, entityManagerFactory)
+                val conceptService = new ConceptService(entityManagerFactory)
+                conceptService.nonAcidInit(conceptEntity)
                 conceptEntity
-
-    private def cascadeInsert(
-        parent: ConceptEntity,
-        child: ConceptEntity,
-        entityManagerFactory: EntityManagerFactory
-    ): Unit =
-
-        // Detach the children so they can be processed separately
-        val children      = new util.HashSet(child.getChildConcepts)
-        children.forEach(c => child.removeChildConcept(c))
-        val childNames    = children.asScala.map(_.getPrimaryConceptName.getName).mkString(", ")
-        val entityManager = entityManagerFactory.createEntityManager
-        child.setId(null)
-
-        entityManager.runTransaction { em =>
-
-            log.atInfo.log(s"Inserting ${child.getPrimaryConceptName.getName} which has children: $childNames")
-
-            if parent != null then
-                em.find(classOf[ConceptEntity], parent.getId) match
-                    case null => throw new RuntimeException(s"Parent ${parent.getPrimaryConceptName.getName} not found")
-                    case p    => p.addChildConcept(child)
-            else em.persist(child)
-            em.flush()
-        }
-        entityManager.close()
-
-        log.atInfo.log(s"Inserted ${child.getPrimaryConceptName.getName} with id of ${child.getId}")
-        children.forEach(cascadeInsert(child, _, entityManagerFactory))
 
     def read(path: Path): Option[RawConcept] =
         log.atDebug.log(s"Reading file: $path")

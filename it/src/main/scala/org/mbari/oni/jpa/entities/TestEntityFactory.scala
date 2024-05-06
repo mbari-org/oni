@@ -38,28 +38,28 @@ object TestEntityFactory:
 
     def buildTree(depth: Int = 0, maxBreadth: Int = 0): ConceptEntity =
         val entity = createConcept()
-        if depth > 0 then
-            val breadth = random.nextInt(maxBreadth - 1) + 1
+        if depth > 0 && maxBreadth > 0 then
+            val breadth = random.nextInt(maxBreadth)
             for _ <- 0 until breadth do
                 val child    = buildTree(depth - 1, maxBreadth)
                 val metadata = child.getConceptMetadata
 
-                val mediaBreadth = random.nextInt(maxBreadth - 1) + 1
+                val mediaBreadth = random.nextInt(maxBreadth)
                 for _ <- 0 until mediaBreadth do
                     val media = createMedia()
                     metadata.addMedia(media)
 
-                val linkTemplateBreadth = random.nextInt(maxBreadth - 1) + 1
+                val linkTemplateBreadth = random.nextInt(maxBreadth)
                 for _ <- 0 until linkTemplateBreadth do
                     val linkTemplate = createLinkTemplate()
                     metadata.addLinkTemplate(linkTemplate)
 
-                val linkRealizationBreadth = random.nextInt(maxBreadth - 1) + 1
+                val linkRealizationBreadth = random.nextInt(maxBreadth)
                 for _ <- 0 until linkRealizationBreadth do
                     val linkRealization = createLinkRealization()
                     metadata.addLinkRealization(linkRealization)
 
-                val historyBreadth = random.nextInt(maxBreadth - 1) + 1
+                val historyBreadth = random.nextInt(maxBreadth)
                 for _ <- 0 until historyBreadth do
                     val history = createHistory()
                     metadata.addHistory(history)
