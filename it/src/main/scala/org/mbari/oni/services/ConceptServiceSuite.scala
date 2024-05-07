@@ -80,7 +80,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
 
     test("findParentByChildName") {
         val root  = TestEntityFactory.buildRoot(2, 0)
-        val child = root.getChildConcepts.get(0)
+        val child = root.getChildConcepts.iterator().next()
         for
             rootEntity <- conceptService.init(root)
             found      <- conceptService.findParentByChildName(child.getPrimaryConceptName.getName)
@@ -98,7 +98,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
         do
             assert(rootEntity.getId != null)
             assert(found.nonEmpty)
-            val orderedFound    = found.sortBy(_.name)
+            val orderedFound    = found.toSeq.sortBy(_.name)
             val orderedExpected = children.asScala.map(ConceptMetadata.from).toSeq.sortBy(_.name).toSeq
             assertEquals(orderedFound, orderedExpected)
     }
@@ -131,8 +131,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
         do
             assert(rootEntity.getId != null)
             assert(found.nonEmpty)
-            val orderedFound    = found.sortBy(_.name)
-            val orderedExpected = renamed.map(ConceptMetadata.from).sortBy(_.name).toSeq
+            val orderedFound    = found.toSeq.sortBy(_.name)
+            val orderedExpected = renamed.map(ConceptMetadata.from).toSeq.sortBy(_.name).toSeq
             assertEquals(orderedFound, orderedExpected)
 
     }
