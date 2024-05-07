@@ -28,43 +28,53 @@ object TestEntityFactory:
     private val random        = new scala.util.Random
     private val nextConceptId = new AtomicLong(0)
 
-    def buildRoot(depth: Int = 0, maxBreadth: Int = 0): ConceptEntity =
-        val root    = buildTree(depth, maxBreadth)
+    def buildRoot(depth: Int = 1, maxBreadth: Int = 0): ConceptEntity =
+        val root    = buildNode(maxBreadth)
         val synonym = new ConceptNameEntity("root", ConceptNameTypes.SYNONYM.getType)
         val common  = new ConceptNameEntity("object", ConceptNameTypes.COMMON.getType)
         root.addConceptName(synonym)
         root.addConceptName(common)
+        if depth > 1 then buildTree(root, depth - 1, maxBreadth)
         root
 
-    def buildTree(depth: Int = 0, maxBreadth: Int = 0): ConceptEntity =
-        val entity = createConcept()
-        if depth > 0 && maxBreadth > 0 then
-            val breadth = random.nextInt(maxBreadth)
-            for _ <- 0 until breadth do
-                val child    = buildTree(depth - 1, maxBreadth)
-                val metadata = child.getConceptMetadata
+    def buildTree(parent: ConceptEntity, depth: Int = 0, maxBreadth: Int = 0): ConceptEntity =
+        if depth == 0 then parent
+        else
+            val entity = buildNode(maxBreadth)
+            parent.addChildConcept(entity)
+            buildTree(entity, depth - 1, maxBreadth)
 
-                val mediaBreadth = random.nextInt(maxBreadth)
-                for _ <- 0 until mediaBreadth do
-                    val media = createMedia()
-                    metadata.addMedia(media)
+    def buildNode(maxBreadth: Int): ConceptEntity =
+        val entity   = createConcept()
+        val metadata = entity.getConceptMetadata
 
-                val linkTemplateBreadth = random.nextInt(maxBreadth)
-                for _ <- 0 until linkTemplateBreadth do
-                    val linkTemplate = createLinkTemplate()
-                    metadata.addLinkTemplate(linkTemplate)
+        if maxBreadth > 0 then
 
-                val linkRealizationBreadth = random.nextInt(maxBreadth)
-                for _ <- 0 until linkRealizationBreadth do
-                    val linkRealization = createLinkRealization()
-                    metadata.addLinkRealization(linkRealization)
+            val conceptNameBreadth = random.between(1, maxBreadth + 1)
+            for _ <- 0 until conceptNameBreadth do
+                val conceptName = createConceptName(false)
+                entity.addConceptName(conceptName)
 
-                val historyBreadth = random.nextInt(maxBreadth)
-                for _ <- 0 until historyBreadth do
-                    val history = createHistory()
-                    metadata.addHistory(history)
+            val mediaBreadth = random.between(1, maxBreadth + 1)
+            for _ <- 0 until mediaBreadth do
+                val media = createMedia()
+                metadata.addMedia(media)
 
-                entity.addChildConcept(child)
+            val linkTemplateBreadth = random.between(1, maxBreadth + 1)
+            for _ <- 0 until linkTemplateBreadth do
+                val linkTemplate = createLinkTemplate()
+                metadata.addLinkTemplate(linkTemplate)
+
+            val linkRealizationBreadth = random.between(1, maxBreadth + 1)
+            for _ <- 0 until linkRealizationBreadth do
+                val linkRealization = createLinkRealization()
+                metadata.addLinkRealization(linkRealization)
+
+            val historyBreadth = random.between(1, maxBreadth + 1)
+            for _ <- 0 until historyBreadth do
+                val history = createHistory()
+                metadata.addHistory(history)
+
         entity
 
     def createConceptName(isPrimary: Boolean = true): ConceptNameEntity =

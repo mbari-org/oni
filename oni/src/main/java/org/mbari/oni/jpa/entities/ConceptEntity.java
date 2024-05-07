@@ -55,7 +55,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         fetch = FetchType.LAZY,
         cascade = { CascadeType.ALL }
     )
-    private List<ConceptEntity> childConcepts;
+    private Set<ConceptEntity> childConcepts;
 
 //    @SerializedName("metadata")
     @OneToOne(
@@ -101,7 +101,8 @@ public class ConceptEntity implements Serializable, IPersistentObject {
     @ManyToOne(
         fetch = FetchType.LAZY,
         optional = true,
-        targetEntity = ConceptEntity.class
+        targetEntity = ConceptEntity.class,
+        cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH }
     )
     @JoinColumn(
             name = "ParentConceptID_FK",
@@ -159,9 +160,9 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         conceptName.setConcept(this);
     }
 
-    public List<ConceptEntity> getChildConcepts() {
+    public Set<ConceptEntity> getChildConcepts() {
         if (childConcepts == null) {
-            childConcepts = new ArrayList<>();
+            childConcepts = new HashSet<>();
         }
 
         return childConcepts;
@@ -268,7 +269,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
      * @return
      */
     public boolean hasChildConcepts() {
-        return getChildConcepts().size() > 0;
+        return !getChildConcepts().isEmpty();
     }
 
     /**

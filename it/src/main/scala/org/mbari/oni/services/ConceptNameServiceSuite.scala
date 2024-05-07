@@ -16,12 +16,27 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.jpa.DatabaseFunSuite
+import org.mbari.oni.domain.RawConcept
+import org.mbari.oni.jpa.entities.ConceptEntity
+import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
+import org.mbari.oni.jpa.EntityManagerFactories.*
 
-trait ConceptNameServiceSuite extends DatabaseFunSuite {
+import scala.jdk.CollectionConverters.*
+
+trait ConceptNameServiceSuite extends DataInitializer:
+
+    lazy val conceptNameService: ConceptNameService = new ConceptNameService(entityManagerFactory)
 
     test("findAllNames") {
-        fail("Not implemented yet")
-    }
+        val root     = atomicRoot.get()
+        assert(root != null)
+        val rawRoot  = RawConcept.fromEntity(root)
+        val expected = rawRoot.descendantNames.toSeq.sorted
+        conceptNameService.findAllNames() match
+            case Right(names) =>
+                val obtained = names.sorted
+                assertEquals(obtained, expected)
+            case Left(error)  =>
+                fail(error.toString)
 
-}
+    }

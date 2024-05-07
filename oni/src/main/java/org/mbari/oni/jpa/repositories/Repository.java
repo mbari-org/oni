@@ -46,6 +46,10 @@ public abstract class Repository {
         return (List<T>) query.getResultList();
     }
 
+    public void delete(Object object) {
+        entityManager.remove(object);
+    }
+
 
     public <T> List<T> findByNamedQuery(String name) {
         Query query = entityManager.createNamedQuery(name);

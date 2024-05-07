@@ -18,22 +18,20 @@ package org.mbari.oni.services
 
 import org.mbari.oni.jpa.DatabaseFunSuite
 
-trait LinkServiceSuite extends DatabaseFunSuite {
-    
+trait LinkServiceSuite extends DatabaseFunSuite:
+
     test("findAllLinkTemplates") {
         fail("Not implemented yet")
     }
-    
+
     test("findAllLinkTemplatesForConcept") {
         fail("Not implemented yet")
     }
-    
+
     test("findLinkTemplatesByNameForConcept") {
         fail("Not implemented yet")
     }
-    
+
     test("findLinkRealizationsByLinkName") {
         fail("Not implemented yet")
     }
-
-}

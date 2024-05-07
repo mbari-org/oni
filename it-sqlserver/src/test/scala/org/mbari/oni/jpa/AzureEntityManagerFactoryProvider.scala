@@ -62,7 +62,5 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
       testProps
     )
 
-//  lazy val init: ConceptEntity = TestRepository.init(entityManagerFactory)
-
 
 }

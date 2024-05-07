@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.endpoints
+package org.mbari.oni
+
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
-class SqlServerPhylogenyEndpointsSuite extends PhylogenyEndpointsSuite {
-
-  override given entityManagerFactory: EntityManagerFactory = AzureEntityManagerFactoryProvider.entityManagerFactory
-//  AzureEntityManagerFactoryProvider.init
-
+trait SqlServerMixin {
+  def entityManagerFactory: EntityManagerFactory = AzureEntityManagerFactoryProvider.entityManagerFactory
 }

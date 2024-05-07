@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.jpa
+package org.mbari.oni.services
 
-import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
-import org.mbari.oni.services.ConceptService
-import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.SqlServerMixin
 
-import java.util.concurrent.atomic.AtomicReference
+class SqlServerConceptNameServiceSuite extends ConceptNameServiceSuite with SqlServerMixin {
 
-trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {}
+}

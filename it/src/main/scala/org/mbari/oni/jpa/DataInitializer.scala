@@ -14,28 +14,24 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.endpoints
+package org.mbari.oni.jpa
 
-import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.DatabaseFunSuite
-import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
 import org.mbari.oni.services.ConceptService
+import org.mbari.oni.etc.jdk.Loggers.given
 
 import java.util.concurrent.atomic.AtomicReference
 
-trait PhylogenyEndpointsSuite extends EndpointsSuite with DatabaseFunSuite:
+trait DataInitializer extends DatabaseFunSuite:
 
     private val log = System.getLogger(getClass.getName)
 
-    private lazy val endpoints = new PhylogenyEndpoints(entityManagerFactory)
-    private lazy val service   = new ConceptService(entityManagerFactory)
-    private val atomicRoot     = new AtomicReference[ConceptEntity]()
+    lazy val conceptService: ConceptService        = new ConceptService(entityManagerFactory)
+    val atomicRoot: AtomicReference[ConceptEntity] = new AtomicReference[ConceptEntity]()
 
     override def beforeEach(context: BeforeEach): Unit =
         val root = TestEntityFactory.buildRoot(5, 1)
-        service.init(root) match
+        conceptService.init(root) match
             case Right(entity) =>
                 atomicRoot.set(entity)
             case Left(error)   =>
@@ -43,42 +39,8 @@ trait PhylogenyEndpointsSuite extends EndpointsSuite with DatabaseFunSuite:
 
     override def afterEach(context: AfterEach): Unit =
         val root = atomicRoot.get()
-        service.deleteByName(root.getPrimaryConceptName.getName) match
+        conceptService.deleteByName(root.getPrimaryConceptName.getName) match
             case Right(_)    =>
                 log.atInfo.log("Deleted test data")
             case Left(error) =>
                 log.atError.withCause(error).log("Failed to delete test data")
-
-    test("up") {
-        val root = atomicRoot.get()
-        val last = root
-            .getChildConcepts
-            .iterator()
-            .next()
-            .getChildConcepts
-            .iterator()
-            .next()
-            .getChildConcepts
-            .iterator()
-            .next()
-            .getChildConcepts
-            .iterator()
-            .next()
-        val name = last.getPrimaryConceptName.getName
-
-//        runGet(
-//            endpoints.upEndpointImpl,
-//            s"http://test.com/v1/phylogeny/up/$name",
-//            response =>
-//                log.atInfo.log(response.body.toString)
-//                assert(response.body.contains(name))
-//        )
-    }
-
-    test("down") {}
-
-    test("siblings") {}
-
-    test("basic") {}
-
-    test("taxa") {}

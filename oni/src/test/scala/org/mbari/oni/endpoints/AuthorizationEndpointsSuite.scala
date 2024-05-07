@@ -47,7 +47,6 @@ class AuthorizationEndpointsSuite extends munit.FunSuite:
         )
 
         val customOptions: CustomiseInterceptors[Id, NimaServerOptions] =
-            import scala.concurrent.ExecutionContext.Implicits.global
             NimaServerOptions
                 .customiseInterceptors
                 .exceptionHandler(exceptionHandler)

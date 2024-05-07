@@ -16,19 +16,20 @@
 
 package org.mbari.oni.services
 
-import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.domain.{ConceptMetadata, RawConcept}
 import org.mbari.oni.jpa.DatabaseFunSuite
 import org.mbari.oni.jpa.entities.{EntityUtilities, TestEntityFactory}
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+
+import scala.jdk.CollectionConverters.*
 
 trait ConceptServiceSuite extends DatabaseFunSuite:
 
     lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
 
     override def beforeEach(context: BeforeEach): Unit =
-        for
-            root <- conceptService.findRoot()
-        do
-            conceptService.deleteByName(root.name)
+        for root <- conceptService.findRoot()
+        do conceptService.deleteByName(root.name)
 
     test("init") {
         val root = TestEntityFactory.buildRoot(3, 3)
@@ -44,39 +45,105 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
         conceptService.nonAcidInit(root) match
             case Left(_)  => fail("Failed to init")
             case Right(e) =>
-                assert(root.getId != null)
-                println(EntityUtilities.buildTextTree(e))
+                assert(e.children.nonEmpty)
+                println(e.stringify)
     }
 
     test("deleteByName") {
-        val root = TestEntityFactory.buildRoot(4, 1)
+        val root = TestEntityFactory.buildRoot(4, 0)
         for
             rootEntity <- conceptService.init(root)
-            n <- conceptService.deleteByName(rootEntity.getPrimaryConceptName.getName)
-        do
-            assertEquals(n, 4)
+            n          <- conceptService.deleteByName(rootEntity.getPrimaryConceptName.getName)
+        do assertEquals(n, 4)
     }
 
     test("findByName") {
-        fail("Not implemented yet")
+        val root            = TestEntityFactory.buildRoot(4, 0)
+        val greatGrandChild = root
+            .getChildConcepts
+            .iterator()
+            .next()
+            .getChildConcepts
+            .iterator()
+            .next()
+            .getChildConcepts
+            .iterator()
+            .next()
+        for
+            rootEntity <- conceptService.init(root)
+            found      <- conceptService.findByName(greatGrandChild.getPrimaryConceptName.getName)
+        do
+            assert(rootEntity.getId != null)
+            assertEquals(found, ConceptMetadata.from(greatGrandChild))
+
     }
 
     test("findParentByChildName") {
-        fail("Not implemented yet")
+        val root  = TestEntityFactory.buildRoot(2, 0)
+        val child = root.getChildConcepts.get(0)
+        for
+            rootEntity <- conceptService.init(root)
+            found      <- conceptService.findParentByChildName(child.getPrimaryConceptName.getName)
+        do
+            assert(rootEntity.getId != null)
+            assertEquals(found, ConceptMetadata.from(rootEntity))
     }
 
     test("findChildrenByParentName") {
-        fail("Not implemented yet")
+        val root     = TestEntityFactory.buildRoot(2, 3)
+        val children = root.getChildConcepts
+        for
+            rootEntity <- conceptService.init(root)
+            found      <- conceptService.findChildrenByParentName(root.getPrimaryConceptName.getName)
+        do
+            assert(rootEntity.getId != null)
+            assert(found.nonEmpty)
+            val orderedFound    = found.sortBy(_.name)
+            val orderedExpected = children.asScala.map(ConceptMetadata.from).toSeq.sortBy(_.name).toSeq
+            assertEquals(orderedFound, orderedExpected)
     }
 
     test("findRoot") {
-        fail("Not implemented yet")
+        val root = TestEntityFactory.buildRoot(2, 0)
+        for
+            rootEntity <- conceptService.init(root)
+            found      <- conceptService.findRoot()
+        do
+            assert(rootEntity.getId != null)
+            assertEquals(found, ConceptMetadata.from(rootEntity))
     }
 
     test("findByGlob") {
-        fail("Not implemented yet")
+        val glob = "XXX"
+
+        // Insert our search token into a few names
+        val root    = TestEntityFactory.buildRoot(4, 2)
+        val renamed = root.getChildConcepts.asScala ++ root.getChildConcepts.iterator().next().getChildConcepts.asScala
+        renamed.foreach(c =>
+            val name    = c.getPrimaryConceptName.getName
+            val newName = name.substring(0, 5) + glob + name.substring(5 + glob.length)
+            c.getPrimaryConceptName.setName(name)
+        )
+
+        for
+            rootEntity <- conceptService.init(root)
+            found      <- conceptService.findByGlob(glob)
+        do
+            assert(rootEntity.getId != null)
+            assert(found.nonEmpty)
+            val orderedFound    = found.sortBy(_.name)
+            val orderedExpected = renamed.map(ConceptMetadata.from).sortBy(_.name).toSeq
+            assertEquals(orderedFound, orderedExpected)
+
     }
 
     test("tree") {
-        fail("Not implemented yet")
+        val root = TestEntityFactory.buildRoot(4, 2)
+        for
+            rootEntity <- conceptService.init(root)
+            obtained   <- conceptService.tree()
+        do
+            assert(rootEntity.getId != null)
+            val expected = RawConcept.fromEntity(rootEntity)
+            assertEquals(obtained, expected)
     }

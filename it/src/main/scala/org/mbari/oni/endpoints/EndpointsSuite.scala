@@ -23,7 +23,6 @@ import sttp.client3.testing.SttpBackendStub
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.stub.TapirStubInterpreter
 
-import scala.concurrent.Future
 import sttp.tapir.server.nima.{Id, NimaServerOptions}
 import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.interceptor.CustomiseInterceptors

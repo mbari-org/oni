@@ -16,10 +16,10 @@
 
 package org.mbari.oni.services
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.DbMixin
+import org.mbari.oni.SqlServerMixin
 import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
-class SqlServerConceptServiceSuite extends ConceptServiceSuite with DbMixin{
+class SqlServerConceptServiceSuite extends ConceptServiceSuite with SqlServerMixin {
 
 
 }

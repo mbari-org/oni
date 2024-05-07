@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.domain
@@ -27,6 +27,7 @@ case class RawConceptMetadata(
         lts.foreach(entity.addLinkTemplate)
 
         val ms = medias.map(_.map(_.toEntity)).getOrElse(Seq.empty)
+
         ms.foreach(entity.addMedia)
 
         entity
@@ -34,7 +35,28 @@ case class RawConceptMetadata(
 object RawConceptMetadata:
     def fromEntity(entity: ConceptMetadataEntity): RawConceptMetadata =
         RawConceptMetadata(
-            linkRealizations = Some(entity.getLinkRealizations.asScala.map(RawLink.fromLinRealizationEntity).toSeq),
-            linkTemplates = Some(entity.getLinkTemplates.asScala.map(RawLink.fromLinkTemplateEntity).toSeq),
-            medias = Some(entity.getMedias.asScala.map(RawMedia.fromEntity).toSeq)
+            linkRealizations = Some(
+                entity
+                    .getLinkRealizations
+                    .asScala
+                    .map(RawLink.fromLinRealizationEntity)
+                    .toSeq
+                    .sortBy(_.toString)
+            ), // HACK
+            linkTemplates = Some(
+                entity
+                    .getLinkTemplates
+                    .asScala
+                    .map(RawLink.fromLinkTemplateEntity)
+                    .toSeq
+                    .sortBy(_.toString)
+            ), // HACK
+            medias = Some(
+                entity
+                    .getMedias
+                    .asScala
+                    .map(RawMedia.fromEntity)
+                    .toSeq
+                    .sortBy(_.url.toExternalForm)
+            )
         )

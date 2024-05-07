@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.domain
@@ -17,9 +17,9 @@ import org.mbari.oni.jpa.entities.ConceptEntity
  */
 case class ConceptMetadata(
     name: String,
-    alternateNames: Seq[String] = Nil,
-    media: Seq[Media] = Nil,
-    descriptors: Seq[Link] = Nil,
+    alternateNames: Set[String] = Set.empty,
+    media: Set[Media] = Set.empty,
+    descriptors: Set[Link] = Set.empty,
     rank: Option[String] = None,
     author: Option[String] = None
 ) {}
@@ -29,11 +29,26 @@ object ConceptMetadata:
     def from(concept: ConceptEntity): ConceptMetadata =
         val name = concept.getPrimaryConceptName.getName
 
-        val alternateNames = concept.getConceptNames.asScala.toSeq.map(_.getName).filter(_ != name)
+        val alternateNames = concept
+            .getConceptNames
+            .asScala
+            .filter(_.getNameType != ConceptNameTypes.PRIMARY.getType)
+            .toSet
+            .map(_.getName)
 
-        val media = concept.getConceptMetadata.getMedias.asScala.toSeq.map(Media.from)
+        val media = concept
+            .getConceptMetadata
+            .getMedias
+            .asScala
+            .toSet
+            .map(Media.from)
 
-        val descriptors = concept.getConceptMetadata.getLinkRealizations.asScala.toSeq.map(Link.from(_))
+        val descriptors = concept
+            .getConceptMetadata
+            .getLinkRealizations
+            .asScala
+            .toSet
+            .map(Link.from(_))
 
         val rankLevel    = concept.getRankLevel
         val rankName     = concept.getRankName

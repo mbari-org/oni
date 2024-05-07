@@ -18,7 +18,7 @@ package org.mbari.oni.services
 
 import org.mbari.oni.jpa.DatabaseFunSuite
 
-trait HistoryServiceSuite extends DatabaseFunSuite {
+trait HistoryServiceSuite extends DatabaseFunSuite:
 
     lazy val historyService = new HistoryService(entityManagerFactory)
 
@@ -29,5 +29,3 @@ trait HistoryServiceSuite extends DatabaseFunSuite {
     test("findAllApproved") {
         fail("Not implemented yet")
     }
-
-}
