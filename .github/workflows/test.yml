@@ -22,7 +22,7 @@ jobs:
           distribution: "temurin"
           cache: "sbt"
       - name: Run unit tests
-        run: sbt test
+        run: sbt oni/test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MUNIT_FLAKY_OK: "true"
