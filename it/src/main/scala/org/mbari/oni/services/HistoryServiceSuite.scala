@@ -16,16 +16,42 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.jpa.DatabaseFunSuite
+import org.mbari.oni.domain.{ExtendedHistory, RawConcept}
+import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
 
-trait HistoryServiceSuite extends DatabaseFunSuite:
+import scala.jdk.CollectionConverters.*
+
+trait HistoryServiceSuite extends DataInitializer:
 
     lazy val historyService = new HistoryService(entityManagerFactory)
 
     test("findAllPending") {
-        fail("Not implemented yet")
+        val root     = init(3, 6)
+        assert(root != null)
+        val expected = root
+            .getDescendants
+            .asScala
+            .flatMap(ExtendedHistory.from)
+            .toSet
+            .filter(_.processedTimestamp.isEmpty)
+        historyService.findAllPending() match
+            case Left(e)         => fail(e.getMessage)
+            case Right(obtained) =>
+                assertEquals(expected.size, obtained.size)
+//                assertEquals(expected, obtained)
     }
 
     test("findAllApproved") {
-        fail("Not implemented yet")
+        val root     = init(3, 6)
+        assert(root != null)
+        val expected = root
+            .getDescendants
+            .asScala
+            .flatMap(ExtendedHistory.from)
+            .toSet
+            .filter(_.approved)
+        historyService.findAllApproved() match
+            case Left(e)         => fail(e.getMessage)
+            case Right(obtained) =>
+                assertEquals(expected.size, obtained.size)
     }

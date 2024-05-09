@@ -125,6 +125,10 @@ object TestEntityFactory:
         entity.setAction(HistoryEntity.ACTION_REPLACE)
         entity.setOldValue(Strings.random(20))
         entity.setNewValue(Strings.random(20))
+        if random.nextBoolean() then
+            entity.setApproved(random.nextBoolean())
+            entity.setProcessedDate(Date.from(Instant.now()))
+            entity.setProcessorName(Strings.random(20))
         entity
 
     def createConceptMetadata(): ConceptMetadataEntity =

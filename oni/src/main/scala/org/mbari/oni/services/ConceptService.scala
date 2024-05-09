@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.services
@@ -65,7 +65,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                             val repo = new ConceptRepository(entityManager)
                             repo.findRoot().toScala match
                                 case None    => throw MissingRootConcept
-                                case Some(c) => RawConcept.fromEntity(c)
+                                case Some(c) => RawConcept.from(c)
                         )
                     case Some(_) => Left(RootAlreadyExists)
 
@@ -111,7 +111,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             val root = repo.findRoot().toScala match
                 case None    => throw MissingRootConcept
                 case Some(c) => c
-            RawConcept.fromEntity(root)
+            RawConcept.from(root)
         )
 
     // -- Helper methods --

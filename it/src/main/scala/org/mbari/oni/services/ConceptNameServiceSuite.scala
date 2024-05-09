@@ -28,10 +28,10 @@ trait ConceptNameServiceSuite extends DataInitializer:
     lazy val conceptNameService: ConceptNameService = new ConceptNameService(entityManagerFactory)
 
     test("findAllNames") {
-        val root     = atomicRoot.get()
+        val root     = init(3, 3)
         assert(root != null)
-        val rawRoot  = RawConcept.fromEntity(root)
-        val expected = rawRoot.descendantNames.toSeq.sorted
+        val rawRoot  = RawConcept.from(root)
+        val expected = rawRoot.descendantNames
         conceptNameService.findAllNames() match
             case Right(names) =>
                 val obtained = names.sorted

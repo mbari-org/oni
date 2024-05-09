@@ -144,6 +144,6 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
             obtained   <- conceptService.tree()
         do
             assert(rootEntity.getId != null)
-            val expected = RawConcept.fromEntity(rootEntity)
+            val expected = RawConcept.from(rootEntity)
             assertEquals(obtained, expected)
     }

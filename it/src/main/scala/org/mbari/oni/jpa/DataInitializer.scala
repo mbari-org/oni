@@ -20,27 +20,20 @@ import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
 import org.mbari.oni.services.ConceptService
 import org.mbari.oni.etc.jdk.Loggers.given
 
-import java.util.concurrent.atomic.AtomicReference
-
 trait DataInitializer extends DatabaseFunSuite:
 
     private val log = System.getLogger(getClass.getName)
 
-    lazy val conceptService: ConceptService        = new ConceptService(entityManagerFactory)
-    val atomicRoot: AtomicReference[ConceptEntity] = new AtomicReference[ConceptEntity]()
+    lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
 
-    override def beforeEach(context: BeforeEach): Unit =
-        val root = TestEntityFactory.buildRoot(5, 1)
+    def init(depth: Int, breadth: Int): ConceptEntity =
+        val root = TestEntityFactory.buildRoot(depth, breadth)
         conceptService.init(root) match
-            case Right(entity) =>
-                atomicRoot.set(entity)
+            case Right(entity) => entity
             case Left(error)   =>
                 log.atError.withCause(error).log("Failed to initialize test data")
+                throw error
 
-    override def afterEach(context: AfterEach): Unit =
-        val root = atomicRoot.get()
-        conceptService.deleteByName(root.getPrimaryConceptName.getName) match
-            case Right(_)    =>
-                log.atInfo.log("Deleted test data")
-            case Left(error) =>
-                log.atError.withCause(error).log("Failed to delete test data")
+    override def beforeEach(context: BeforeEach): Unit =
+        for root <- conceptService.findRoot()
+        do conceptService.deleteByName(root.name)

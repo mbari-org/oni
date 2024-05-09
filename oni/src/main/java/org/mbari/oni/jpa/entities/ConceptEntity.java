@@ -277,6 +277,24 @@ public class ConceptEntity implements Serializable, IPersistentObject {
      * childconcepts in a JPA transaction first.
      * @return
      */
+    public Set<ConceptEntity> getDescendants() {
+       var accum = new HashSet<ConceptEntity>();
+       getDescendants(this, accum);
+         return accum;
+    }
+
+    private void getDescendants(ConceptEntity concept, Set<ConceptEntity> accum) {
+        accum.add(concept);
+        for (ConceptEntity child : concept.getChildConcepts()) {
+            getDescendants(child, accum);
+        }
+    }
+
+    /**
+     * WARNING! Due to lazy loading you will need to explicitly load the
+     * childconcepts in a JPA transaction first.
+     * @return
+     */
     public boolean hasDescendent(String child) {
         return hasDescendent(child, this);
     }

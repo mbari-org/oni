@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.domain
@@ -27,7 +27,12 @@ case class RawConcept(
     /**
      * @return
      */
-    lazy val descendantNames: Set[String] = names.map(_.name) ++ children.flatMap(_.descendantNames)
+    lazy val descendantNames: Seq[String] = descendants
+        .flatMap(_.names.map(_.name))
+        .toSeq
+        .sorted
+
+    lazy val descendants: Set[RawConcept] = children ++ children.flatMap(_.descendants) + this
 
     def toEntity: ConceptEntity = toEntityWithId(1)
 
@@ -59,12 +64,12 @@ case class RawConcept(
         entity
 
 object RawConcept:
-    def fromEntity(entity: ConceptEntity): RawConcept =
+    def from(entity: ConceptEntity): RawConcept =
         RawConcept(
-            names = entity.getConceptNames.asScala.map(RawConceptName.fromEntity).toSet,
+            names = entity.getConceptNames.asScala.map(RawConceptName.from).toSet,
             originator = Option(entity.getOriginator),
-            metadata = Option(entity.getConceptMetadata).map(RawConceptMetadata.fromEntity),
-            children = entity.getChildConcepts.asScala.map(RawConcept.fromEntity).toSet,
+            metadata = Option(entity.getConceptMetadata).map(RawConceptMetadata.from),
+            children = entity.getChildConcepts.asScala.map(RawConcept.from).toSet,
             aphiaId = Option(entity.getAphiaId).map(_.toLong),
             rankLevel = Option(entity.getRankLevel),
             rankName = Option(entity.getRankName),

@@ -10,6 +10,7 @@ package org.mbari.oni.jpa.repositories;
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.HistoryEntity;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
@@ -36,6 +37,6 @@ public class HistoryRepository extends Repository {
     }
 
     public Set<HistoryEntity> findApprovedHistories() {
-        return new HashSet<>(findByNamedQuery("History.findApproved"));
+        return new HashSet<>(findByNamedQuery("History.findByApproved", Map.of("approved", 1)));
     }
 }

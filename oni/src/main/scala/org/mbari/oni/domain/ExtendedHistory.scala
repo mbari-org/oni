@@ -2,14 +2,15 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.domain
 
-import org.mbari.oni.jpa.entities.HistoryEntity
+import org.mbari.oni.jpa.entities.{ConceptEntity, HistoryEntity}
 
 import java.time.Instant
+import scala.jdk.CollectionConverters.*
 
 case class ExtendedHistory(
     concept: String,
@@ -38,3 +39,12 @@ object ExtendedHistory:
             Option(entity.getProcessedDate).map(_.toInstant),
             Option(entity.getProcessorName)
         )
+
+    def from(concept: ConceptEntity): Set[ExtendedHistory] =
+        val name = concept.getPrimaryConceptName.getName
+        concept
+            .getConceptMetadata
+            .getHistories
+            .asScala
+            .map(h => from(name, h))
+            .toSet

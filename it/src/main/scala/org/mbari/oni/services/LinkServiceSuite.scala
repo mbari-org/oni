@@ -16,22 +16,82 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.jpa.DatabaseFunSuite
+import org.mbari.oni.domain.{ExtendedLink, Link}
+import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
 
-trait LinkServiceSuite extends DatabaseFunSuite:
+import scala.jdk.CollectionConverters.*
+
+trait LinkServiceSuite extends DataInitializer:
+
+    lazy val linkService = new LinkService(entityManagerFactory)
 
     test("findAllLinkTemplates") {
-        fail("Not implemented yet")
+        val root     = init(3, 3)
+        assert(root != null)
+        val expected = root
+            .getDescendants
+            .asScala
+            .flatMap(_.getConceptMetadata.getLinkTemplates.asScala)
+            .toSeq
+            .sortBy(_.getLinkName)
+            .map(Link.from)
+        linkService.findAllLinkTemplates() match
+            case Left(e)       => fail(e.getMessage)
+            case Right(actual) =>
+                val obtained = actual.sortBy(_.linkName)
+                assertEquals(expected.size, obtained.size)
+                assertEquals(expected, obtained)
     }
 
     test("findAllLinkTemplatesForConcept") {
-        fail("Not implemented yet")
+        val root     = init(3, 3)
+        assert(root != null)
+        val expected = root.getConceptMetadata.getLinkTemplates.asScala.map(Link.from).toSeq.sortBy(_.linkName)
+        linkService.findAllLinkTemplatesForConcept(root.getPrimaryConceptName.getName) match
+            case Left(e)       => fail(e.getMessage)
+            case Right(actual) =>
+                val obtained = actual.sortBy(_.linkName)
+                assertEquals(expected.size, obtained.size)
+                assertEquals(expected, obtained)
     }
 
     test("findLinkTemplatesByNameForConcept") {
-        fail("Not implemented yet")
+        val root = init(3, 3)
+        assert(root != null)
+        val opt  = root
+            .getDescendants
+            .asScala
+            .flatMap(_.getConceptMetadata.getLinkTemplates.asScala)
+            .toSeq
+            .sortBy(_.getLinkName)
+            .map(ExtendedLink.from)
+            .headOption
+        opt match
+            case Some(expected) =>
+                linkService.findLinkTemplatesByNameForConcept(expected.concept, expected.linkName) match
+                    case Left(e)       => fail(e.getMessage)
+                    case Right(actual) =>
+                        assertEquals(expected.toLink, actual.head)
+            case None           => fail("No link templates found")
     }
 
     test("findLinkRealizationsByLinkName") {
-        fail("Not implemented yet")
+        val root = init(3, 3)
+        assert(root != null)
+        val opt  = root
+            .getDescendants
+            .asScala
+            .flatMap(_.getConceptMetadata.getLinkTemplates.asScala)
+            .toSeq
+            .sortBy(_.getLinkName)
+            .map(ExtendedLink.from)
+            .headOption
+            .map(_.toLink)
+        opt match
+            case Some(expected) =>
+                linkService.findLinkRealizationsByLinkName(expected.linkName) match
+                    case Left(e)       => fail(e.getMessage)
+                    case Right(actual) =>
+                        assertEquals(expected, actual.head)
+            case None           => fail("No link templates found")
     }

@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.domain
@@ -18,5 +18,5 @@ case class RawConceptName(name: String, nameType: String, author: Option[String]
         entity
 
 object RawConceptName:
-    def fromEntity(entity: ConceptNameEntity): RawConceptName =
+    def from(entity: ConceptNameEntity): RawConceptName =
         RawConceptName(entity.getName, entity.getNameType, Option(entity.getAuthor))
