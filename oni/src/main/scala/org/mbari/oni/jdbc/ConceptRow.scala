@@ -24,9 +24,10 @@ package org.mbari.oni.jdbc
  */
 
 import java.time.Instant
-
+import org.mbari.oni.domain.ConceptNameTypes
 
 import scala.collection.mutable
+
 
 /**
  * @author Brian Schlining
@@ -36,11 +37,11 @@ case class ConceptRow(
                          id: Long,
                          parentId: Option[Long],
                          name: String,
-                         rankLevel: Option[String],
-                         rankName: Option[String],
-                         nameType: String,
-                         conceptTimestamp: Instant,
-                         conceptNameTimestamp: Instant
+                         rankLevel: Option[String] = None,
+                         rankName: Option[String] = None,
+                         nameType: String = ConceptNameTypes.PRIMARY.getType,
+                         conceptTimestamp: Instant = Instant.EPOCH,
+                         conceptNameTimestamp: Instant = Instant.EPOCH
                      ) {
 
     lazy val rank: Option[String] = rankName.map(n => rankLevel.getOrElse("") + n)
