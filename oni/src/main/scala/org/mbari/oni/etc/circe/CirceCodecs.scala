@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential.
+ * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
 package org.mbari.oni.etc.circe
@@ -54,8 +54,8 @@ object CirceCodecs:
     given Decoder[Authorization] = deriveDecoder
     given Encoder[Authorization] = deriveEncoder
 
-    given Decoder[Concept] = deriveDecoder
-    given Encoder[Concept] = deriveEncoder
+    given Decoder[SerdeConcept] = deriveDecoder
+    given Encoder[SerdeConcept] = deriveEncoder
 
     given Decoder[HealthStatus] = deriveDecoder
     given Encoder[HealthStatus] = deriveEncoder

@@ -2,40 +2,29 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential.
+ * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
 package org.mbari.oni.domain
 
-import org.mbari.oni.jdbc.{ImmutableConcept, SimpleConcept}
+case class Concept(
+                      name: String,
+                      rank: Option[String],
+                      alternativeNames: Seq[String],
+                      children: Seq[Concept]
+                  ) {
+    def containsName(n: String): Boolean = name.equals(n) ||
+        alternativeNames.contains(n)
 
-import scala.annotation.tailrec
-import scala.jdk.CollectionConverters.*
+    lazy val names: Seq[String] = name +: alternativeNames
 
-final case class Concept(
-    name: String,
-    alternativeNames: Option[Seq[String]] = None,
-    rank: Option[String] = None,
-    children: Option[Set[Concept]] = None
-)
+    lazy val descendantNames: Seq[String] = descendants
+        .flatMap(_.names)
+        .toSeq
+        .sorted
 
-object Concept:
+    lazy val descendants: Set[Concept] = children.toSet.flatMap(_.descendants) + this
 
-    def from(c: ImmutableConcept): Concept =
-        val alternativeNames =
-            if c.alternativeNames.isEmpty then None else Some(c.alternativeNames.asScala.toSeq.sorted)
-        val children         = if c.children.isEmpty then None else Some(c.children.asScala.map(from).toSet)
-        Concept(c.name, alternativeNames, Option(c.rank), children)
+}
 
-    def from(c: SimpleConcept): Concept =
-        val alternativeNames = if c.alternativeNames.isEmpty then None else Some(c.alternativeNames.asScala.toSeq)
-        Concept(c.name, alternativeNames, Option(c.rank), None)
 
-    def flatten(c: ImmutableConcept): Seq[Concept] =
-        @tailrec
-        def builder(node: ImmutableConcept, stack: List[Concept] = Nil): Seq[Concept] =
-            val next = Concept(node.name, rank = Option(node.rank)) :: stack
-            node.children.asScala.headOption match
-                case None        => next
-                case Some(child) => builder(child, next)
-        builder(c).reverse

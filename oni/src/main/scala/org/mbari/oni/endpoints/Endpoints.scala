@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential.
+ * via any medium is strictly prohibited. Proprietary and confidential. 
  */
 
 package org.mbari.oni.endpoints
@@ -37,7 +37,7 @@ trait Endpoints:
     val log: System.Logger = System.getLogger(getClass.getName)
 
     // --- Schemas
-    implicit lazy val sConcept: Schema[Concept] = Schema.derived[Concept]
+    implicit lazy val sConcept: Schema[SerdeConcept] = Schema.derived[SerdeConcept]
 
     // --- Abstract methods
     def all: List[Endpoint[?, ?, ?, ?, ?]]

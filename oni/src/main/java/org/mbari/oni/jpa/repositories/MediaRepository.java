@@ -56,7 +56,7 @@ public class MediaRepository extends Repository {
     }
 
     public List<NamedMedia> findDescendantMedia(String conceptName) {
-        var conceptNames = fastPhylogenyService.findDescendantNames(conceptName);
+        var conceptNames = fastPhylogenyService.findDescendantNamesAsJava(conceptName);
         var media = new ArrayList<NamedMedia>();
         for (var name : conceptNames) {
             List<MediaEntity> xs = findByNamedQuery("Media.findByConceptName", Map.of("name", name));

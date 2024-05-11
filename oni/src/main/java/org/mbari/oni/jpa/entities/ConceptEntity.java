@@ -278,9 +278,9 @@ public class ConceptEntity implements Serializable, IPersistentObject {
      * @return
      */
     public Set<ConceptEntity> getDescendants() {
-       var accum = new HashSet<ConceptEntity>();
-       getDescendants(this, accum);
-         return accum;
+        var accum = new HashSet<ConceptEntity>();
+        getDescendants(this, accum);
+        return accum;
     }
 
     private void getDescendants(ConceptEntity concept, Set<ConceptEntity> accum) {
