@@ -104,8 +104,11 @@ object MutableConcept {
                 }
             })
 
+            if (concept.rank.isEmpty && row.rank.isDefined) {
+                concept.rank = row.rank
+            }
+
             val cn = CName(row.name, row.nameType)
-            concept.rank = row.rank
             concept.names = concept.names :+ cn
 
         }

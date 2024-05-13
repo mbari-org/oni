@@ -28,7 +28,7 @@ object Dependencies {
     lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
     lazy val slf4jSystem = "org.slf4j"               % "slf4j-jdk-platform-logging" % "2.0.13"
 
-    private val tapirVersion = "1.10.6"
+    private val tapirVersion = "1.10.7"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion
     lazy val tapirHelidon    = "com.softwaremill.sttp.tapir" %% "tapir-nima-server"        % tapirVersion
     lazy val tapirPrometheus = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % tapirVersion
@@ -37,7 +37,8 @@ object Dependencies {
     lazy val tapirVertex     = "com.softwaremill.sttp.tapir" %% "tapir-vertx-server"       % tapirVersion
 
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.6"
-    val testcontainersVersion        = "1.19.7"
+
+    val testcontainersVersion        = "1.19.8"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "mssqlserver"    % testcontainersVersion
