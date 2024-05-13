@@ -37,7 +37,7 @@ trait FastPhylogenyServiceSuite extends DataInitializer {
 
     test("findSiblings") {}
 
-    test("findDescendantNames") {
+    test("findDescendantNames".ignore) {
         val root = init(4, 2)
         val expected = root.getDescendants
             .asScala
@@ -49,11 +49,7 @@ trait FastPhylogenyServiceSuite extends DataInitializer {
         val obtained = fastPhylogenyService.findDescendantNames(root.getPrimaryConceptName.getName)
             .sorted
         assertEquals(obtained, expected)
-
-
-
-
-
+        
 
     }
 

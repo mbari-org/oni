@@ -24,7 +24,7 @@ class MutableConceptSuite extends munit.FunSuite {
                 |- 6 - child6
                 `- 7 - child7
     */
-    val rows = Seq(
+    val rows: Seq[ConceptRow] = Seq(
         ConceptRow(1, None, "root", rankLevel = Some("super"), rankName = Some("family")),
         ConceptRow(1, None, "object", nameType = ConceptNameTypes.ALTERNATE.getType),
         ConceptRow(2, Some(1), "child2"),
@@ -42,7 +42,7 @@ class MutableConceptSuite extends munit.FunSuite {
         ConceptRow(10, Some(9), "child10f", nameType = ConceptNameTypes.FORMER.getType)
     )
 
-    val (rootOpt, nodes) = MutableConcept.toTree(rows)
+    val (rootOpt: Option[MutableConcept], nodes: Seq[MutableConcept]) = MutableConcept.toTree(rows)
 
 
 

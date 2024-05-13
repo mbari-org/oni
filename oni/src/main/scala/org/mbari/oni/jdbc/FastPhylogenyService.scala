@@ -99,7 +99,7 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory) {
       val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
         val transaction = entityManager.getTransaction
         transaction.begin()
-        val query = entityManager.createNamedQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
+        val query = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
         val lastUpdate = query.getSingleResult.asInstanceOf[Timestamp]
         if (lastUpdate == null) {
             Instant.now()
@@ -120,7 +120,7 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory) {
       val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
           val transaction = entityManager.getTransaction
           transaction.begin()
-          val query = entityManager.createNamedQuery(FastPhylogenyDAO.SQL)
+          val query = entityManager.createNativeQuery(FastPhylogenyDAO.SQL)
           val results = query.getResultList
           transaction.commit()
           for
