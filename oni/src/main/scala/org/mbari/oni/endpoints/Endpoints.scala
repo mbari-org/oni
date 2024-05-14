@@ -21,9 +21,14 @@ import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.nima.Id
 import org.mbari.oni.etc.jdk.Loggers.given
+
 import scala.concurrent.ExecutionContext
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.AppConfig
+
+import java.net.URI
+import java.time.Instant
+import java.net.URL
 
 case class Paging(offset: Option[Int] = Some(0), limit: Option[Int] = Some(100))
 
@@ -37,7 +42,18 @@ trait Endpoints:
     val log: System.Logger = System.getLogger(getClass.getName)
 
     // --- Schemas
-    implicit lazy val sConcept: Schema[SerdeConcept] = Schema.derived[SerdeConcept]
+    implicit lazy val sLink: Schema[Link] = Schema.derived[Link]
+    implicit lazy val sURI: Schema[URI] = Schema.string
+    implicit lazy val sURL: Schema[URL] = Schema.string
+    implicit lazy val sInstant: Schema[Instant] = Schema.string
+    implicit lazy val sMedia: Schema[Media] = Schema.derived[Media]
+    implicit lazy val sPaging: Schema[Paging] = Schema.derived[Paging]
+    implicit lazy val sConceptMetadata: Schema[ConceptMetadata] = Schema.derived[ConceptMetadata]
+
+    // Make Tapir recursive types happy by using `implicit def`, not lazy val
+    // https://tapir.softwaremill.com/en/latest/endpoint/schemas.html#derivation-for-recursive-types-in-scala3
+    implicit def sConcept: Schema[Concept] = Schema.derived[Concept]
+    implicit def sSerdeConcept: Schema[SerdeConcept] = Schema.derived[SerdeConcept]
 
     // --- Abstract methods
     def all: List[Endpoint[?, ?, ?, ?, ?]]

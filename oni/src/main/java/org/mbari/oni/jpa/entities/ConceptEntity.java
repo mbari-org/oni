@@ -41,7 +41,8 @@ import org.mbari.oni.jpa.IPersistentObject;
     @NamedQuery(name = "Concept.findRoot", query = "SELECT c FROM Concept c WHERE c.parentConcept IS NULL") ,
     @NamedQuery(name = "Concept.findAll", query = "SELECT c FROM Concept c"),
     @NamedQuery(name = "Concept.findByName", query = "SELECT c FROM Concept c, IN (c.conceptNames) AS n WHERE n.name = :name"),
-    @NamedQuery(name = "Concept.findAllByNameGlob", query = "SELECT DISTINCT c FROM Concept c, IN (c.conceptNames) AS n WHERE lower(n.name) LIKE :name ORDER BY n.name"),
+    @NamedQuery(name = "Concept.findAllByNameGlob", query = "SELECT DISTINCT c FROM Concept c, IN (c.conceptNames) AS n WHERE LOWER(n.name) LIKE :name"),
+    @NamedQuery(name = "Concept.findAllByNameGlobNew", query = "SELECT c FROM Concept c JOIN FETCH c.conceptNames n WHERE LOWER(n.name) LIKE :name"),
     @NamedQuery(name = "Concept.eagerFindById", query = "SELECT c FROM Concept c JOIN FETCH c.conceptMetadata m WHERE c.id = :id")
 
 })
@@ -232,9 +233,18 @@ public class ConceptEntity implements Serializable, IPersistentObject {
     public ConceptNameEntity getPrimaryConceptName() {
 
         return getConceptNames().stream()
-                .filter(cn -> cn.getNameType().equalsIgnoreCase(ConceptNameTypes.PRIMARY.toString()))
+                .filter(cn -> cn.getNameType().equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType()))
                 .findFirst()
                 .orElse(null);
+
+    }
+
+    public List<ConceptNameEntity> getAlternativeConceptNames() {
+
+        return getConceptNames().stream()
+                .filter(cn -> !cn.getNameType().equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType()))
+                .sorted(Comparator.comparing(ConceptNameEntity::getName))
+                .toList();
 
     }
 
@@ -244,6 +254,15 @@ public class ConceptEntity implements Serializable, IPersistentObject {
 
     public String getRankName() {
         return rankName;
+    }
+
+    public String getRank() {
+        if (rankName == null && rankLevel == null) {
+            return null;
+        }
+        var a = rankLevel == null ? "" : rankLevel;
+        var b = rankName == null ? "" : rankName;
+        return a + b;
     }
 
     public String getReference() {
@@ -393,25 +412,28 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         return taxonomyType;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final ConceptEntity other = (ConceptEntity) obj;
-        if (this.hashCode() != other.hashCode()) {
-            return false;
-        }
-        return true;
-    }
+    // WARNING: Using id for equals and hashcode breaks adding child concepts. They are in a set and the id is not set
+    // until the entity is persisted. We'll just use object identity for now
 
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
+//    @Override
+//    public boolean equals(Object obj) {
+//        if (obj == null) {
+//            return false;
+//        }
+//        if (getClass() != obj.getClass()) {
+//            return false;
+//        }
+//        final ConceptEntity other = (ConceptEntity) obj;
+//        if (this.hashCode() != other.hashCode()) {
+//            return false;
+//        }
+//        return true;
+//    }
+//
+//    @Override
+//    public int hashCode() {
+//        return toString().hashCode();
+//    }
 
 
 

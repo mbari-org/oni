@@ -23,6 +23,10 @@ class MutableConcept {
         names.find(n => n.nameType.equals("primary"))
             .map(_.name)
 
+    def alternativeNames: Seq[String] =
+        names.filter(n => !n.nameType.equals("primary"))
+            .map(_.name)
+
     def copyUp(): MutableConcept = copyUp(Nil)
 
     private def copyUp(newChildren: Seq[MutableConcept]): MutableConcept = {

@@ -23,7 +23,7 @@
   <logger name="org.hibernate.SQL" level="INFO" />
   <!-- <logger name="org.hibernate.orm.jdbc.bind" level="trace" /> -->
   <!-- <logger name="org.hibernate.stat" level="debug" /> -->
-  <logger name="org.hibernate.SQL_SLOW" level="info" />
+  <logger name="org.hibernate.SQL_SLOW" level="INFO" />
   <!-- <logger name="org.hibernate.cache" level="debug" /> -->
 
   <root level="${LOGBACK_LEVEL}">

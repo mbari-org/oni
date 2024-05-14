@@ -52,19 +52,19 @@ public class ConceptRepository extends Repository {
     }
 
     public List<ConceptEntity> findAllByNameContaining(final String nameGlob) {
-        final String name = "%" + nameGlob + "%";
-        return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name.toLowerCase()));
+        final String name = "%" + nameGlob.toLowerCase() + "%";
+        return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name));
     }
 
     public List<ConceptEntity> findAllByNameStartingWith(final String nameGlob) {
-        final String name = nameGlob + "%";
-        return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name.toLowerCase()));
+        final String name = nameGlob.toLowerCase() + "%";
+        return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name));
 
     }
 
     public List<ConceptEntity> findAllByNameEndingWith(final String nameGlob) {
-        final String name = '%' + nameGlob;
-        return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name.toLowerCase()));
+        final String name = '%' + nameGlob.toLowerCase();
+        return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name));
     }
 
 

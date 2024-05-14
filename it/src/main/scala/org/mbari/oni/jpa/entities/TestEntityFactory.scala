@@ -37,12 +37,16 @@ object TestEntityFactory:
         if depth > 1 then buildTree(root, depth - 1, maxBreadth)
         root
 
-    def buildTree(parent: ConceptEntity, depth: Int = 0, maxBreadth: Int = 0): ConceptEntity =
-        if depth == 0 then parent
-        else
-            val entity = buildNode(maxBreadth)
-            parent.addChildConcept(entity)
-            buildTree(entity, depth - 1, maxBreadth)
+    private def buildTree(parent: ConceptEntity, depth: Int = 0, maxBreadth: Int = 0): Unit =
+        if (depth > 0) then
+            val numberChildren = if (maxBreadth > 1) random.between(1, maxBreadth + 1) else 1
+            for _ <- 0 until numberChildren do
+                val entity = buildNode(maxBreadth)
+                if entity.getRankLevel != null then // Add a numbert depth to the rank level
+                    entity.setRankLevel(s"$depth--${entity.getRankLevel}")
+//                println(s"------- Adding " + entity.getPrimaryConceptName.getName + " to " + parent.getPrimaryConceptName.getName)
+                parent.addChildConcept(entity)
+                buildTree(entity, depth - 1, maxBreadth)
 
     def buildNode(maxBreadth: Int): ConceptEntity =
         val entity   = createConcept()
@@ -50,10 +54,11 @@ object TestEntityFactory:
 
         if maxBreadth > 0 then
 
-            val conceptNameBreadth = random.between(1, maxBreadth + 1)
-            for _ <- 0 until conceptNameBreadth do
-                val conceptName = createConceptName(false)
-                entity.addConceptName(conceptName)
+            val conceptNameBreadth = random.between(0, maxBreadth + 1)
+            if (conceptNameBreadth > 0) then
+                for _ <- 0 until conceptNameBreadth do
+                    val conceptName = createConceptName(false)
+                    entity.addConceptName(conceptName)
 
             val mediaBreadth = random.between(1, maxBreadth + 1)
             for _ <- 0 until mediaBreadth do
@@ -139,5 +144,10 @@ object TestEntityFactory:
         val entity = new ConceptEntity()
         entity.addConceptName(createConceptName())
         entity.setConceptMetadata(createConceptMetadata())
-//    entity.setId(nextConceptId.incrementAndGet())
+        if random.nextBoolean() then
+            entity.setRankLevel(Strings.random(6))
+            entity.setRankName(Strings.random(12))
+
+        // DON'T DO THIS. The ID should be assigned by the database. Otherwise inserts will fail.
+//        entity.setId(nextConceptId.incrementAndGet())
         entity

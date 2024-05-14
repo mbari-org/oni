@@ -54,8 +54,17 @@ object CirceCodecs:
     given Decoder[Authorization] = deriveDecoder
     given Encoder[Authorization] = deriveEncoder
 
-    given Decoder[SerdeConcept] = deriveDecoder
-    given Encoder[SerdeConcept] = deriveEncoder
+    given Decoder[Concept] = deriveDecoder
+    given Encoder[Concept] = deriveEncoder
+
+    given Decoder[Link] = deriveDecoder
+    given Encoder[Link] = deriveEncoder
+
+    given Decoder[Media] = deriveDecoder
+    given Encoder[Media] = deriveEncoder
+
+    given Decoder[ConceptMetadata] = deriveDecoder
+    given Encoder[ConceptMetadata] = deriveEncoder
 
     given Decoder[HealthStatus] = deriveDecoder
     given Encoder[HealthStatus] = deriveEncoder
@@ -74,6 +83,12 @@ object CirceCodecs:
 
     given Decoder[RawMedia] = deriveDecoder
     given Encoder[RawMedia] = deriveEncoder
+
+    given Decoder[SerdeConcept] = deriveDecoder
+    given Encoder[SerdeConcept] = deriveEncoder
+
+    given Decoder[SimpleConcept] = deriveDecoder
+    given Encoder[SimpleConcept] = deriveEncoder
 
     val CustomPrinter: Printer = Printer(
         dropNullValues = true,

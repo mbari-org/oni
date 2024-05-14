@@ -37,7 +37,10 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
             case Left(_)  => fail("Failed to init")
             case Right(e) =>
                 assert(root.getId != null)
-                println(EntityUtilities.buildTextTree(e))
+                assert(e.getId != null)
+                assert(!e.getChildConcepts.isEmpty)
+                assertEquals(e.getPrimaryConceptName.getName, root.getPrimaryConceptName.getName)
+//                println(EntityUtilities.buildTextTree(e))
     }
 
     test("nonAcidInit") {
@@ -46,11 +49,11 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
             case Left(_)  => fail("Failed to init")
             case Right(e) =>
                 assert(e.children.nonEmpty)
-                println(e.stringify)
+//                println(e.stringify)
     }
 
     test("deleteByName") {
-        val root = TestEntityFactory.buildRoot(4, 0)
+        val root = TestEntityFactory.buildRoot(4)
         for
             rootEntity <- conceptService.init(root)
             n          <- conceptService.deleteByName(rootEntity.getPrimaryConceptName.getName)
@@ -58,7 +61,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     }
 
     test("findByName") {
-        val root            = TestEntityFactory.buildRoot(4, 0)
+        val root            = TestEntityFactory.buildRoot(4)
         val greatGrandChild = root
             .getChildConcepts
             .iterator()
@@ -99,30 +102,33 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
             assert(rootEntity.getId != null)
             assert(found.nonEmpty)
             val orderedFound    = found.toSeq.sortBy(_.name)
-            val orderedExpected = children.asScala.map(ConceptMetadata.from).toSeq.sortBy(_.name).toSeq
+            val orderedExpected = children.asScala.map(ConceptMetadata.from).toSeq.sortBy(_.name)
             assertEquals(orderedFound, orderedExpected)
     }
 
     test("findRoot") {
-        val root = TestEntityFactory.buildRoot(2, 0)
-        for
-            rootEntity <- conceptService.init(root)
-            found      <- conceptService.findRoot()
-        do
-            assert(rootEntity.getId != null)
-            assertEquals(found, ConceptMetadata.from(rootEntity))
+        val root = TestEntityFactory.buildRoot(2)
+        conceptService.init(root) match
+            case Left(_) => fail("Failed to init")
+            case Right(rootEntity) =>
+                conceptService.findRoot() match
+                    case Left(_) => fail("Failed to find root")
+                    case Right(found) =>
+                        assert(rootEntity.getId != null)
+                        assertEquals(found, ConceptMetadata.from(rootEntity))
     }
 
     test("findByGlob") {
-        val glob = "XXX"
+        val glob = "XXXX"
 
         // Insert our search token into a few names
         val root    = TestEntityFactory.buildRoot(4, 2)
         val renamed = root.getChildConcepts.asScala ++ root.getChildConcepts.iterator().next().getChildConcepts.asScala
         renamed.foreach(c =>
-            val name    = c.getPrimaryConceptName.getName
+            val primary = c.getPrimaryConceptName
+            val name    = primary.getName
             val newName = name.substring(0, 5) + glob + name.substring(5 + glob.length)
-            c.getPrimaryConceptName.setName(name)
+            primary.setName(name)
         )
 
         for
@@ -132,7 +138,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
             assert(rootEntity.getId != null)
             assert(found.nonEmpty)
             val orderedFound    = found.toSeq.sortBy(_.name)
-            val orderedExpected = renamed.map(ConceptMetadata.from).toSeq.sortBy(_.name).toSeq
+            val orderedExpected = renamed.map(ConceptMetadata.from).toSeq.sortBy(_.name)
             assertEquals(orderedFound, orderedExpected)
 
     }

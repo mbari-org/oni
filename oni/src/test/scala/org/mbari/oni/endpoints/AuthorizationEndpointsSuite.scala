@@ -23,14 +23,9 @@ import sttp.tapir.server.stub.TapirStubInterpreter
 import sttp.tapir.server.nima.NimaServerOptions
 import sttp.tapir.server.nima.Id
 
-import scala.concurrent.Await
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.concurrent.duration.Duration
 
 class AuthorizationEndpointsSuite extends munit.FunSuite:
 
-    given ExecutionContext     = ExecutionContext.global
     given jwtService: JwtService            = new JwtService("mbari", "foo", "bar")
     val authorizationEndpoints = new AuthorizationEndpoints()
 

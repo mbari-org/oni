@@ -22,7 +22,7 @@ import org.mbari.oni.etc.jdk.Loggers.given
 
 trait DataInitializer extends DatabaseFunSuite:
 
-    private val log = System.getLogger(getClass.getName)
+    protected val log = System.getLogger(getClass.getName)
 
     lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
 

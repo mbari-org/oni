@@ -29,8 +29,11 @@ import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.model.StatusCode
 import sttp.client3.SttpBackend
 import sttp.tapir.server.model.ValuedEndpointOutput
+import org.mbari.oni.etc.jdk.Loggers.given
 
 trait EndpointsSuite extends munit.FunSuite:
+
+    private val log: System.Logger = System.getLogger(getClass.getName)
 
     def runDelete(
         ep: ServerEndpoint[Any, Id],
@@ -99,7 +102,9 @@ trait EndpointsSuite extends munit.FunSuite:
         val backendStub = newBackendStub(ep)
         val u           = uri"$uri"
         val request     = basicRequest.get(u)
+        log.atDebug.log("--REQUEST: " + request)
         val response    = request.send(backendStub)
+        log.atDebug.log("--RESPONSE: " + response)
         assertions(response)
 
     def checkResponse[T: Decoder](responseBody: Either[String, String]): T =

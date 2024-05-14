@@ -8,7 +8,7 @@
 package org.mbari.oni.jdbc
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.Concept
+import org.mbari.oni.domain.{Concept, SimpleConcept}
 import org.mbari.oni.etc.jdk.Loggers
 
 import java.sql.{ResultSet, Timestamp}
@@ -51,12 +51,11 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory) {
       mc.map(_.toImmutable)
   }
 
-  def findSiblings(name: String): Seq[Concept] = {
+  def findSiblings(name: String): Seq[SimpleConcept] = {
       load()
       findMutableNode(name)
-        .flatMap(n => n.parent.map(p => p.children.map(_.toImmutable)))
+        .flatMap(n => n.parent.map(p => p.children.map(SimpleConcept.from)))
         .getOrElse(Nil)
-        .map(node => node.copy(children = Nil))
   }
 
   private def findMutableNode(name: String): Option[MutableConcept] =
@@ -75,7 +74,7 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory) {
   }
 
   private def load(): Unit = {
-    val lastUpdateInDb = executeLastUpdateQuery()
+    val lastUpdateInDb = findLastUpdate()
     if (lastUpdateInDb.isAfter(lastUpdate)) {
 
         lock.lock()
@@ -94,14 +93,14 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory) {
 
     }
 
-
-  private def executeLastUpdateQuery(): Instant =
+    def findLastUpdate(): Instant =
       val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
         val transaction = entityManager.getTransaction
         transaction.begin()
         val query = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
         val lastUpdate = query.getSingleResult.asInstanceOf[Timestamp]
         if (lastUpdate == null) {
+            log.atWarn.log("No timestamps found in the database! This indicates a serious database issue. Falling back to the current timestamp.")
             Instant.now()
         }
         else {
@@ -127,14 +126,14 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory) {
               result <- results.toArray
           yield
               val row = result.asInstanceOf[Array[Object]]
-              val id = row(1).asLong.getOrElse(-1L)
-              val parentId = row(2).asLong
-              val name = row(3).asString.orNull
-              val rankLevel =row(4).asString
-              val rankName = row(5).asString
-              val nameType = row(6).asString.orNull
-              val conceptTimestamp = row(7).asInstant.getOrElse(Instant.now())
-              val conceptNameTimestamp = row(8).asInstant.getOrElse(Instant.now())
+              val id = row(0).asLong.getOrElse(-1L)
+              val parentId = row(1).asLong
+              val name = row(2).asString.orNull
+              val rankLevel =row(3).asString
+              val rankName = row(4).asString
+              val nameType = row(5).asString.orNull
+              val conceptTimestamp = row(6).asInstant.getOrElse(Instant.now())
+              val conceptNameTimestamp = row(7).asInstant.getOrElse(Instant.now())
               ConceptRow(id, parentId, name, rankLevel, rankName, nameType, conceptTimestamp, conceptNameTimestamp)
       }
       attempt match

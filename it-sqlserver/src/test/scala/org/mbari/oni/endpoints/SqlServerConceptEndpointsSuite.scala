@@ -15,10 +15,9 @@
  */
 
 package org.mbari.oni.endpoints
-import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.SqlServerMixin
-import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
-class SqlServerPhylogenyEndpointsSuite extends PhylogenyEndpointsSuite with SqlServerMixin{
+import org.mbari.oni.SqlServerMixin
+
+class SqlServerConceptEndpointsSuite extends ConceptEndpointsSuite with SqlServerMixin {
 
 }

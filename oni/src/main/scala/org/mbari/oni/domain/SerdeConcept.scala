@@ -19,7 +19,7 @@ final case class SerdeConcept(
 ) {
 
     def containsName(n: String): Boolean = name.equals(n) ||
-        alternativeNames.contains(n)
+        alternativeNames.getOrElse(Nil).contains(n)
 
     lazy val flatten: Seq[SerdeConcept] =
         children match

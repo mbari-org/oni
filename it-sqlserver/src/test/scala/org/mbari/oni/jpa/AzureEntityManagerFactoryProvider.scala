@@ -22,10 +22,12 @@ import org.mbari.oni.etc.jdk.Files
 import org.mbari.oni.etc.tc.AzureSqlEdgeContainerProvider
 import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.jpa.repositories.TestRepository
+import org.mbari.oni.etc.jdk.Loggers.given
 
 object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
 
   val container = new AzureSqlEdgeContainerProvider().newInstance()
+  private final val log = System.getLogger(getClass.getName)
 
   // The image name must match the one in src/test/resources/container-license-acceptance.txt
   // val container = new MSSQLServerContainer(DockerImageName.parse("mcr.microsoft.com/mssql/server:2019-latest"))
@@ -54,6 +56,7 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
   lazy val entityManagerFactory: EntityManagerFactory =
     val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
     Class.forName(driver)
+    log.atInfo.log(s"Creating entity manager factory using ${container.getJdbcUrl}")
     EntityManagerFactories(
       container.getJdbcUrl,
       container.getUsername,

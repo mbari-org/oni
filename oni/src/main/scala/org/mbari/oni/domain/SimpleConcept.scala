@@ -19,7 +19,6 @@ case class SimpleConcept(name: String, rank: Option[String], alternativeNames: S
 object SimpleConcept {
     def from(c: MutableConcept): SimpleConcept = {
         val primaryName = c.primaryName.getOrElse("")
-        val alternativeNames = c.names.map(_.name).filter(_ != primaryName)
-        SimpleConcept(c.primaryName.getOrElse(""), c.rank, alternativeNames)
+        SimpleConcept(c.primaryName.getOrElse(""), c.rank, c.alternativeNames)
     }
 }

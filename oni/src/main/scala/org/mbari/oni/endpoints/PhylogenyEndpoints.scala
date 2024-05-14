@@ -7,41 +7,41 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{SerdeConcept, ErrorMsg, Phylogeny}
+import org.mbari.oni.domain.{Concept, ErrorMsg, Phylogeny, SerdeConcept}
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.*
-import sttp.tapir.generic.auto.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.nima.Id
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import CustomTapirJsonCirce.*
 
-import scala.jdk.OptionConverters.*
-import scala.jdk.CollectionConverters.*
 import scala.util.Try
 import jakarta.persistence.EntityManagerFactory
 
 class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
     private val service = FastPhylogenyService(entityManagerFactory)
-
     private val base = "phylogeny"
     private val tag  = "Phylogeny"
 
-    val upEndpoint = openEndpoint
+    val upEndpoint: Endpoint[Unit, String, ErrorMsg, SerdeConcept, Any] = openEndpoint
         .get
         .in(base / "up" / path[String]("name"))
         .out(jsonBody[SerdeConcept])
+        .name("phylogenyUp")
+        .description("Find the branch from a given concept up to the root")
         .tag(tag)
 
     val upEndpointImpl: ServerEndpoint[Any, Id] = upEndpoint.serverLogic { name =>
         handleOption(service.findUp(name).map(SerdeConcept.from))
     }
 
+
     val downEndpoint: Endpoint[Unit, String, ErrorMsg, SerdeConcept, Any] = openEndpoint
         .get
         .in(base / "down" / path[String]("name"))
         .out(jsonBody[SerdeConcept])
+        .description("Find the branch from the root down to a given concept")
         .tag(tag)
 
     val downEndpointImpl: ServerEndpoint[Any, Id] = downEndpoint.serverLogic { name =>
@@ -62,7 +62,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         )
     }
 
-    val basicEndpoint =
+    val basicEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[SerdeConcept], Any] =
         openEndpoint
             .get
             .in(base / "basic" / path[String]("name"))
@@ -70,10 +70,10 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
             .tag(tag)
 
     val basicEndpointImpl: ServerEndpoint[Any, Id] = basicEndpoint.serverLogic { name =>
-        handleOption(service.findUp(name).map(c => SerdeConcept.from(c).flatten))
+        handleOption(service.findUp(name).map(c => SerdeConcept.from(c).flatten.map(_.copy(children = None))))
     }
 
-    val taxaEndpoint =
+    val taxaEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[SerdeConcept], Any] =
         openEndpoint
             .get
             .in(base / "taxa" / path[String]("name"))
@@ -81,8 +81,12 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
             .tag(tag)
 
     val taxaEndpointImpl: ServerEndpoint[Any, Id] = taxaEndpoint.serverLogic { name =>
-        handleOption(service.findDown(name).map(c => SerdeConcept.from(c).flatten))
+        handleOption(service.findDown(name).map(c => SerdeConcept.from(c)
+            .flatten
+            .map(_.copy(children = None))
+            .sortBy(_.name)))
     }
+
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
         upEndpoint,
