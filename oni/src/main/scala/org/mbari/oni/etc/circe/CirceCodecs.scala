@@ -56,6 +56,9 @@ object CirceCodecs:
 
     given Decoder[Concept] = deriveDecoder
     given Encoder[Concept] = deriveEncoder
+    
+    given Decoder[ExtendedHistory] = deriveDecoder
+    given Encoder[ExtendedHistory] = deriveEncoder
 
     given Decoder[Link] = deriveDecoder
     given Encoder[Link] = deriveEncoder
