@@ -17,6 +17,7 @@ import scala.jdk.CollectionConverters.*
 
 class PrefNodeService(entityManagerFactory: EntityManagerFactory) {
 
+    def create(prefNode: PrefNode): Either[Throwable, PrefNode] = create(prefNode.name, prefNode.key, prefNode.value)
 
     def create(name: String, key: String, value: String): Either[Throwable, PrefNode] = {
         val entity = new PreferenceNodeEntity()
@@ -28,8 +29,9 @@ class PrefNodeService(entityManagerFactory: EntityManagerFactory) {
             repo.create(entity)
             PrefNode.from(entity)
         )
-
     }
+
+    def update(prefNode: PrefNode): Either[Throwable, PrefNode] = update(prefNode.name, prefNode.key, prefNode.value)
 
     def update(name: String, key: String, value: String): Either[Throwable, PrefNode] = {
         entityManagerFactory.transaction(entityManager =>

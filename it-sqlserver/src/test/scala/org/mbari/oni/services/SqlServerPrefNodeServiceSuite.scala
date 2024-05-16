@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.endpoints
+package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerHistoryEndpointsSuite extends HistoryEndpointsSuite with SqlServerMixin {
-
+class SqlServerPrefNodeServiceSuite extends PrefNodeServiceSuite with SqlServerMixin {
+  
 }

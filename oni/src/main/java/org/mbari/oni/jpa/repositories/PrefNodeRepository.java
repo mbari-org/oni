@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.PreferenceNodeEntity;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class PrefNodeRepository extends Repository {
@@ -22,21 +23,25 @@ public class PrefNodeRepository extends Repository {
     public Optional<PreferenceNodeEntity> findByNodeNameAndPrefKey(String name, String key) {
         return findByNamedQuery("PreferenceNode.findByNodeNameAndPrefKey", Map.of("nodeName", name, "prefKey", key))
                 .stream()
+                .map(PreferenceNodeEntity.class::cast)
                 .findFirst();
     }
 
     public PreferenceNodeEntity create(String name, String key, String value) {
         var prefNode = new PreferenceNodeEntity();
-        prefNode.setName(name);
-        prefNode.setKey(key);
-        prefNode.setValue(value);
-        return entityManager.persist(prefNode);
+        prefNode.setNodeName(name);
+        prefNode.setPrefKey(key);
+        prefNode.setPrefValue(value);
+        entityManager.persist(prefNode);
+        return prefNode;
     }
 
     public Optional<PreferenceNodeEntity> update(String name, String key, String value) {
-        var prefNode = findByNodeNameAndPrefKey(name, key);
-        prefNode.setValue(value);
-        return entityManager.merge(prefNode);
+        return findByNodeNameAndPrefKey(name, key).map(prefNode -> {
+            prefNode.setPrefValue(value);
+            return entityManager.merge(prefNode);
+        });
+
     }
 
     public void delete(String name, String key) {

@@ -128,7 +128,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         child.setId(null)
 
         entityManagerFactory.transaction(entityManager =>
-            log.atInfo.log(s"Inserting ${child.getPrimaryConceptName.getName} which has children: $childNames")
+            log.atDebug.log(s"Inserting ${child.getPrimaryConceptName.getName} which has children: $childNames")
 
             if parent != null then
                 entityManager.find(classOf[ConceptEntity], parent.getId) match
