@@ -50,6 +50,13 @@ public abstract class Repository {
         entityManager.remove(object);
     }
 
+    public void create(Object object) {
+        entityManager.persist(object);
+    }
+
+    public void update(Object object) {
+        entityManager.merge(object);
+    }
 
     public <T> List<T> findByNamedQuery(String name) {
         Query query = entityManager.createNamedQuery(name);
@@ -73,6 +80,8 @@ public abstract class Repository {
         var t = entityManager.find(clazz, primaryKey);
         return Optional.ofNullable(t);
     }
+
+
 
 
 }

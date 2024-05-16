@@ -87,7 +87,7 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         nullable = false,
         length = 50
     )
-    String password;
+    String encryptedPassword;
     
     @Column(
         name = "Role",
@@ -109,7 +109,7 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
     String userName;
 
     public boolean authenticate(String unencryptedPassword) {
-        return (new BasicPasswordEncryptor()).checkPassword(unencryptedPassword, password);
+        return (new BasicPasswordEncryptor()).checkPassword(unencryptedPassword, encryptedPassword);
     }
 
     @Override
@@ -150,8 +150,8 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         return lastName;
     }
 
-    public String getPassword() {
-        return password;
+    public String getEncryptedPassword() {
+        return encryptedPassword;
     }
 
     public String getRole() {
@@ -202,8 +202,12 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         this.lastName = lastName;
     }
 
-    public void setPassword(String unencryptedPassword) {
-        this.password = (new BasicPasswordEncryptor()).encryptPassword(unencryptedPassword);
+    public void setEncryptedPassword(String encryptedPassword) {
+        this.encryptedPassword = encryptedPassword;
+    }
+
+    public void setPassword(String password) {
+        this.encryptedPassword = (new BasicPasswordEncryptor()).encryptPassword(password);
     }
 
     public void setRole(String role) {

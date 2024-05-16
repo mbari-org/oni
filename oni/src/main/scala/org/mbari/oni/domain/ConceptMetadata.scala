@@ -29,12 +29,10 @@ object ConceptMetadata:
     def from(concept: ConceptEntity): ConceptMetadata =
         val name = concept.getPrimaryConceptName.getName
 
-        val alternateNames = concept
-            .getConceptNames
+        val alternateNames = concept.getAlternativeConceptNames
             .asScala
-            .filter(_.getNameType != ConceptNameTypes.PRIMARY.getType)
-            .toSet
             .map(_.getName)
+            .toSet
 
         val media = concept
             .getConceptMetadata

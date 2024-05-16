@@ -26,7 +26,6 @@ object Endpoints:
     val historyEndpoints: HistoryEndpoints               = HistoryEndpoints(entityMangerFactory)
     val phylogenyEndpoints: PhylogenyEndpoints           = PhylogenyEndpoints(entityMangerFactory)
 
-
     val authorizationEndpoints: AuthorizationEndpoints = AuthorizationEndpoints()
     val healthEndpoints: HealthEndpoints               = HealthEndpoints()
 
