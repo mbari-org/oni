@@ -126,6 +126,18 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
         .serverSecurityLogic(jwtOpt => verify(jwtOpt))
         .serverLogic { _ => (name, key) => handleErrors(service.delete(name, key)) }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = ???
+    override def all: List[Endpoint[_, _, _, _, _]] = List(
+        findByPrefix,
+        findAllEndpoint,
+        createEndpoint,
+        updateEndpoint,
+        deleteEndpoint
+    )
 
-    override def allImpl: List[ServerEndpoint[Any, Id]] = ???
+    override def allImpl: List[ServerEndpoint[Any, Id]] = List(
+        findByPrefixImpl,
+        findAllEndpointImpl,
+        createEndpointImpl,
+        updateEndpointImpl,
+        deleteEndpointImpl
+    )

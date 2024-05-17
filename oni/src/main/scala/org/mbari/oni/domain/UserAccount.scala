@@ -7,9 +7,7 @@
 
 package org.mbari.oni.domain
 
-import org.jasypt.util.password.BasicPasswordEncryptor
 import org.mbari.oni.jpa.entities.UserAccountEntity
-import org.mbari.oni.etc.jdk.Numbers.given
 
 case class UserAccount(
     username: String,

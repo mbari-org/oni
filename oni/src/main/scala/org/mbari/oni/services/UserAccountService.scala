@@ -82,3 +82,4 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
                         s"UserAccount with username ${userAccount.username} does not exist"
                     )
         )
+

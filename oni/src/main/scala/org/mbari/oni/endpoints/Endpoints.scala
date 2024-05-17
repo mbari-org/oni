@@ -51,6 +51,8 @@ trait Endpoints:
     implicit lazy val sPaging: Schema[Paging]                   = Schema.derived[Paging]
     implicit lazy val sPrefNode: Schema[PrefNode]               = Schema.derived[PrefNode]
     implicit lazy val sConceptMetadata: Schema[ConceptMetadata] = Schema.derived[ConceptMetadata]
+    implicit lazy val sUserAccount: Schema[UserAccount]         = Schema.derived[UserAccount]
+    implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate]         = Schema.derived[UserAccountUpdate]
 
     // Make Tapir recursive types happy by using `implicit def`, not lazy val
     // https://tapir.softwaremill.com/en/latest/endpoint/schemas.html#derivation-for-recursive-types-in-scala3

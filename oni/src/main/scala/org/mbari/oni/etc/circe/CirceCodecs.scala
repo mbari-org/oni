@@ -96,6 +96,12 @@ object CirceCodecs:
     given Decoder[SimpleConcept] = deriveDecoder
     given Encoder[SimpleConcept] = deriveEncoder
 
+    given Decoder[UserAccount] = deriveDecoder
+    given Encoder[UserAccount] = deriveEncoder
+
+    given Decoder[UserAccountUpdate] = deriveDecoder
+    given Encoder[UserAccountUpdate] = deriveEncoder
+
     val CustomPrinter: Printer = Printer(
         dropNullValues = true,
         indent = ""
