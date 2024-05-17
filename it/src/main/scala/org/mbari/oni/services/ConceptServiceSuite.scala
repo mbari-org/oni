@@ -122,13 +122,13 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
         val glob = "XXXX"
 
         // Insert our search token into a few names
-        val root    = TestEntityFactory.buildRoot(4, 2)
+        val root    = TestEntityFactory.buildRoot(4, 0)
         val renamed = root.getChildConcepts.asScala ++ root.getChildConcepts.iterator().next().getChildConcepts.asScala
         renamed.foreach(c =>
             val primary = c.getPrimaryConceptName
             val name    = primary.getName
             val newName = name.substring(0, 5) + glob + name.substring(5 + glob.length)
-            primary.setName(name)
+            primary.setName(newName)
         )
 
         for
