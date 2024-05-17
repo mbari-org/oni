@@ -46,7 +46,7 @@ class PrefNodeService(entityManagerFactory: EntityManagerFactory) {
         )
     }
 
-    def delete(name: String, key: String): Unit = {
+    def delete(name: String, key: String): Either[Throwable, Unit] = {
         entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
             repo.findByNodeNameAndPrefKey(name, key).toScala match

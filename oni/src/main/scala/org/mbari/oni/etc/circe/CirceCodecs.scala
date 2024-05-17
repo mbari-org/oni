@@ -72,6 +72,9 @@ object CirceCodecs:
     given Decoder[HealthStatus] = deriveDecoder
     given Encoder[HealthStatus] = deriveEncoder
 
+    given Decoder[PrefNode] = deriveDecoder
+    given Encoder[PrefNode] = deriveEncoder
+
     given Decoder[RawConcept] = deriveDecoder
     given Encoder[RawConcept] = deriveEncoder
 

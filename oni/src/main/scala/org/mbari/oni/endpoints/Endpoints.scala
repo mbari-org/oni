@@ -49,6 +49,7 @@ trait Endpoints:
     implicit lazy val sInstant: Schema[Instant] = Schema.string
     implicit lazy val sMedia: Schema[Media] = Schema.derived[Media]
     implicit lazy val sPaging: Schema[Paging] = Schema.derived[Paging]
+    implicit lazy val sPrefNode: Schema[PrefNode] = Schema.derived[PrefNode]
     implicit lazy val sConceptMetadata: Schema[ConceptMetadata] = Schema.derived[ConceptMetadata]
 
     // Make Tapir recursive types happy by using `implicit def`, not lazy val
@@ -103,7 +104,7 @@ trait Endpoints:
 
     def verify(
         jwtOpt: Option[String]
-    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
+    )(using jwtService: JwtService): Id[Either[Unauthorized, Unit]] =
         jwtOpt match
             case None      => Left(Unauthorized("Missing token"))
             case Some(jwt) =>
