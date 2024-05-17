@@ -28,27 +28,25 @@ import org.mbari.oni.domain.ConceptNameTypes
 
 import scala.collection.mutable
 
-
 /**
- * @author Brian Schlining
+ * @author
+ *   Brian Schlining
  * @since 2018-02-11T11:34:00
  */
 case class ConceptRow(
-                         id: Long,
-                         parentId: Option[Long],
-                         name: String,
-                         rankLevel: Option[String] = None,
-                         rankName: Option[String] = None,
-                         nameType: String = ConceptNameTypes.PRIMARY.getType,
-                         conceptTimestamp: Instant = Instant.EPOCH,
-                         conceptNameTimestamp: Instant = Instant.EPOCH
-                     ) {
+    id: Long,
+    parentId: Option[Long],
+    name: String,
+    rankLevel: Option[String] = None,
+    rankName: Option[String] = None,
+    nameType: String = ConceptNameTypes.PRIMARY.getType,
+    conceptTimestamp: Instant = Instant.EPOCH,
+    conceptNameTimestamp: Instant = Instant.EPOCH
+):
 
     lazy val rank: Option[String] = rankName.map(n => rankLevel.getOrElse("") + n)
 
     lazy val lastUpdate: Instant = Seq(conceptTimestamp, conceptNameTimestamp)
         .maxBy(i => i.toEpochMilli)
-
-}
 
 case class CName(name: String, nameType: String)

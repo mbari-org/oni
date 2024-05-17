@@ -11,11 +11,11 @@ import org.mbari.oni.jpa.entities.ConceptEntity
 import scala.jdk.CollectionConverters.*
 
 case class Concept(
-                      name: String,
-                      rank: Option[String] = None,
-                      alternativeNames: Seq[String] = Nil,
-                      children: Seq[Concept] = Nil
-                  ) {
+    name: String,
+    rank: Option[String] = None,
+    alternativeNames: Seq[String] = Nil,
+    children: Seq[Concept] = Nil
+):
     def containsName(n: String): Boolean = name.equals(n) ||
         alternativeNames.contains(n)
 
@@ -30,13 +30,11 @@ case class Concept(
 
     lazy val flatten: Seq[Concept] = Seq(this) ++ children.flatMap(_.flatten)
 
-}
-
-
 object Concept:
 
     def from(c: ConceptEntity): Concept =
-        val alternativeNames = c.getAlternativeConceptNames
+        val alternativeNames = c
+            .getAlternativeConceptNames
             .asScala
             .map(_.getName)
             .toSeq
@@ -46,4 +44,3 @@ object Concept:
             alternativeNames,
             c.getChildConcepts.asScala.map(from).toSeq.sortBy(_.name)
         )
-

@@ -9,16 +9,12 @@ package org.mbari.oni.domain
 
 import org.mbari.oni.jdbc.MutableConcept
 
-case class SimpleConcept(name: String, rank: Option[String], alternativeNames: Seq[String]) {
+case class SimpleConcept(name: String, rank: Option[String], alternativeNames: Seq[String]):
 
-    def containsName(name: String): Boolean = {
+    def containsName(name: String): Boolean =
         this.name == name || alternativeNames.contains(name)
-    }
-}
 
-object SimpleConcept {
-    def from(c: MutableConcept): SimpleConcept = {
+object SimpleConcept:
+    def from(c: MutableConcept): SimpleConcept =
         val primaryName = c.primaryName.getOrElse("")
         SimpleConcept(c.primaryName.getOrElse(""), c.rank, c.alternativeNames)
-    }
-}

@@ -7,7 +7,6 @@
 
 package org.mbari.oni.domain
 
-
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.*
 
@@ -16,7 +15,7 @@ final case class SerdeConcept(
     rank: Option[String] = None,
     alternativeNames: Option[Seq[String]] = None,
     children: Option[Set[SerdeConcept]] = None
-) {
+):
 
     def containsName(n: String): Boolean = name.equals(n) ||
         alternativeNames.getOrElse(Nil).contains(n)
@@ -25,8 +24,6 @@ final case class SerdeConcept(
         children match
             case None    => Seq(this)
             case Some(c) => Seq(this) ++ c.flatMap(_.flatten)
-}
-
 
 object SerdeConcept:
 
@@ -36,7 +33,5 @@ object SerdeConcept:
 
     def from(c: Concept): SerdeConcept =
         val alternativeNames = if c.alternativeNames.isEmpty then None else Some(c.alternativeNames)
-        val children = if c.children.isEmpty then None else Some(c.children.map(from).toSet)
+        val children         = if c.children.isEmpty then None else Some(c.children.map(from).toSet)
         SerdeConcept(c.name, c.rank, alternativeNames, children)
-
-

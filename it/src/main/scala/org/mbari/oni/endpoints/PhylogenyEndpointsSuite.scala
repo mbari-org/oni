@@ -33,18 +33,17 @@ trait PhylogenyEndpointsSuite extends EndpointsSuite with DataInitializer:
     lazy val endpoints = new PhylogenyEndpoints(entityManagerFactory)
 
     test("up") {
-        val root = init(4, 1)
+        val root  = init(4, 1)
         val child = root.getChildConcepts.iterator().next()
-        val name = child.getPrimaryConceptName.getName
+        val name  = child.getPrimaryConceptName.getName
 
         runGet(
             endpoints.upEndpointImpl,
             s"http://test.com/v1/phylogeny/up/$name",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val concept = checkResponse[SerdeConcept](response.body)
                 assertEquals(concept.name, root.getPrimaryConceptName.getName)
-            }
         )
     }
 
@@ -54,45 +53,42 @@ trait PhylogenyEndpointsSuite extends EndpointsSuite with DataInitializer:
         runGet(
             endpoints.downEndpointImpl,
             s"http://test.com/v1/phylogeny/down/$name",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val concept = checkResponse[SerdeConcept](response.body)
                 assertEquals(concept.name, root.getPrimaryConceptName.getName)
-            }
         )
     }
 
     test("siblings") {
-        val root = init(3, 3)
+        val root  = init(3, 3)
         val child = root.getChildConcepts.iterator().next()
-        val name = child.getPrimaryConceptName.getName
+        val name  = child.getPrimaryConceptName.getName
         runGet(
             endpoints.siblingsEndpointImpl,
             s"http://test.com/v1/phylogeny/siblings/$name",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val concepts = checkResponse[Seq[SerdeConcept]](response.body)
                 assertEquals(concepts.size, root.getChildConcepts.size())
-                val a = concepts.find(_.name == name)
+                val a        = concepts.find(_.name == name)
                 assert(a.isDefined)
-            }
         )
     }
 
     test("basic") {
-        val root = init(4, 1)
+        val root  = init(4, 1)
         val child = root.getChildConcepts.iterator().next()
-        val name = child.getPrimaryConceptName.getName
+        val name  = child.getPrimaryConceptName.getName
         runGet(
             endpoints.basicEndpointImpl,
             s"http://test.com/v1/phylogeny/basic/$name",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val concepts = checkResponse[Seq[SerdeConcept]](response.body)
                 assertEquals(concepts.size, 2)
-                val a = concepts.find(_.name == name)
+                val a        = concepts.find(_.name == name)
                 assert(a.isDefined)
-            }
         )
     }
 
@@ -102,12 +98,11 @@ trait PhylogenyEndpointsSuite extends EndpointsSuite with DataInitializer:
         runGet(
             endpoints.taxaEndpointImpl,
             s"http://test.com/v1/phylogeny/taxa/$name",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val concepts = checkResponse[Seq[SerdeConcept]](response.body)
                 assertEquals(concepts.size, 4)
-                val a = concepts.find(_.name == name)
+                val a        = concepts.find(_.name == name)
                 assert(a.isDefined)
-            }
         )
     }

@@ -22,131 +22,118 @@ import org.mbari.oni.etc.jdk.Loggers.{*, given}
 import java.util.concurrent.locks.ReentrantLock
 
 /**
- * @author Brian Schlining
+ * @author
+ *   Brian Schlining
  * @since 2018-02-11T11:19:00
  */
-class FastPhylogenyService(entityManagerFactory: EntityManagerFactory) {
+class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
 
-  private val log = Loggers(getClass)
+    private val log = Loggers(getClass)
 
-  private var lastUpdate = Instant.EPOCH
-  private var rootNode: Option[MutableConcept] = None
-  private var allNodes: Seq[MutableConcept] = Nil
-  private val lock = new ReentrantLock();
+    private var lastUpdate                       = Instant.EPOCH
+    private var rootNode: Option[MutableConcept] = None
+    private var allNodes: Seq[MutableConcept]    = Nil
+    private val lock                             = new ReentrantLock();
 
-  def findUp(name: String): Option[Concept] = {
-      load()
-      // Hide the children
-      //  do branch walk
-      findMutableNode(name)
-        .map(_.copyUp())
-        .map(_.root())
-        .map(_.toImmutable)
-  }
+    def findUp(name: String): Option[Concept] =
+        load()
+        // Hide the children
+        //  do branch walk
+        findMutableNode(name)
+            .map(_.copyUp())
+            .map(_.root())
+            .map(_.toImmutable)
 
-  def findDown(name: String): Option[Concept] = {
-      load()
-      // Parent is't seen so we can walk down from this node
-      val mc = findMutableNode(name)
-      mc.map(_.toImmutable)
-  }
+    def findDown(name: String): Option[Concept] =
+        load()
+        // Parent is't seen so we can walk down from this node
+        val mc = findMutableNode(name)
+        mc.map(_.toImmutable)
 
-  def findSiblings(name: String): Seq[SimpleConcept] = {
-      load()
-      findMutableNode(name)
-        .flatMap(n => n.parent.map(p => p.children.map(SimpleConcept.from)))
-        .getOrElse(Nil)
-  }
+    def findSiblings(name: String): Seq[SimpleConcept] =
+        load()
+        findMutableNode(name)
+            .flatMap(n => n.parent.map(p => p.children.map(SimpleConcept.from)))
+            .getOrElse(Nil)
 
-  private def findMutableNode(name: String): Option[MutableConcept] =
-    allNodes.find(_.names.map(_.name).contains(name))
+    private def findMutableNode(name: String): Option[MutableConcept] =
+        allNodes.find(_.names.map(_.name).contains(name))
 
-  def findDescendantNames(name: String): Seq[String] = {
-      load()
-      findMutableNode(name)
-        .map(_.toImmutable.descendantNames)
-        .getOrElse(Nil)
-  }
+    def findDescendantNames(name: String): Seq[String] =
+        load()
+        findMutableNode(name)
+            .map(_.toImmutable.descendantNames)
+            .getOrElse(Nil)
 
-  def findDescendantNamesAsJava(name: String): java.util.List[String] = {
-    import scala.jdk.CollectionConverters.*
-    findDescendantNames(name).asJava
-  }
+    def findDescendantNamesAsJava(name: String): java.util.List[String] =
+        import scala.jdk.CollectionConverters.*
+        findDescendantNames(name).asJava
 
-  private def load(): Unit = {
-    val lastUpdateInDb = findLastUpdate()
-    if (lastUpdateInDb.isAfter(lastUpdate)) {
+    private def load(): Unit =
+        val lastUpdateInDb = findLastUpdate()
+        if lastUpdateInDb.isAfter(lastUpdate) then
 
-        lock.lock()
-        log.atDebug.log("Loading cache ...")
-        val cache = executeQuery()
-        if (cache.nonEmpty) {
-            val lu = cache.maxBy(_.lastUpdate.toEpochMilli)
-            lastUpdate = lu.lastUpdate
-        }
+            lock.lock()
+            log.atDebug.log("Loading cache ...")
+            val cache = executeQuery()
+            if cache.nonEmpty then
+                val lu = cache.maxBy(_.lastUpdate.toEpochMilli)
+                lastUpdate = lu.lastUpdate
 
-        val r = MutableConcept.toTree(cache)
-        rootNode = r._1
-        allNodes = r._2
-        lock.unlock()
-      }
-
-    }
+            val r = MutableConcept.toTree(cache)
+            rootNode = r._1
+            allNodes = r._2
+            lock.unlock()
 
     def findLastUpdate(): Instant =
-      val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
-        val transaction = entityManager.getTransaction
-        transaction.begin()
-        val query = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
-        val lastUpdate = query.getSingleResult.asInstanceOf[Timestamp]
-        if (lastUpdate == null) {
-            log.atWarn.log("No timestamps found in the database! This indicates a serious database issue. Falling back to the current timestamp.")
-            Instant.now()
+        val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
+            val transaction = entityManager.getTransaction
+            transaction.begin()
+            val query       = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
+            val lastUpdate  = query.getSingleResult.asInstanceOf[Timestamp]
+            if lastUpdate == null then
+                log.atWarn
+                    .log(
+                        "No timestamps found in the database! This indicates a serious database issue. Falling back to the current timestamp."
+                    )
+                Instant.now()
+            else lastUpdate.toInstant
         }
-        else {
-            lastUpdate.toInstant
+        attempt match
+            case Success(result)    => result
+            case Failure(exception) =>
+                log.atError.withCause(exception).log("Failed to execute last update query")
+                Instant.now()
+
+    private def executeQuery(): Seq[ConceptRow] =
+        val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
+            val transaction = entityManager.getTransaction
+            transaction.begin()
+            val query       = entityManager.createNativeQuery(FastPhylogenyDAO.SQL)
+            val results     = query.getResultList
+            transaction.commit()
+            for result <- results.toArray
+            yield
+                val row                  = result.asInstanceOf[Array[Object]]
+                val id                   = row(0).asLong.getOrElse(-1L)
+                val parentId             = row(1).asLong
+                val name                 = row(2).asString.orNull
+                val rankLevel            = row(3).asString
+                val rankName             = row(4).asString
+                val nameType             = row(5).asString.orNull
+                val conceptTimestamp     = row(6).asInstant.getOrElse(Instant.now())
+                val conceptNameTimestamp = row(7).asInstant.getOrElse(Instant.now())
+                ConceptRow(id, parentId, name, rankLevel, rankName, nameType, conceptTimestamp, conceptNameTimestamp)
         }
-      }
-      attempt match
-        case Success(result) => result
-        case Failure(exception) =>
-          log.atError.withCause(exception).log("Failed to execute last update query")
-          Instant.now()
+        attempt match
+            case Success(result)    => result.toSeq
+            case Failure(exception) =>
+                log.atError.withCause(exception).log("Failed to execute query")
+                Nil
 
-
-
-  private def executeQuery(): Seq[ConceptRow] =
-      val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
-          val transaction = entityManager.getTransaction
-          transaction.begin()
-          val query = entityManager.createNativeQuery(FastPhylogenyDAO.SQL)
-          val results = query.getResultList
-          transaction.commit()
-          for
-              result <- results.toArray
-          yield
-              val row = result.asInstanceOf[Array[Object]]
-              val id = row(0).asLong.getOrElse(-1L)
-              val parentId = row(1).asLong
-              val name = row(2).asString.orNull
-              val rankLevel =row(3).asString
-              val rankName = row(4).asString
-              val nameType = row(5).asString.orNull
-              val conceptTimestamp = row(6).asInstant.getOrElse(Instant.now())
-              val conceptNameTimestamp = row(7).asInstant.getOrElse(Instant.now())
-              ConceptRow(id, parentId, name, rankLevel, rankName, nameType, conceptTimestamp, conceptNameTimestamp)
-      }
-      attempt match
-        case Success(result) => result.toSeq
-        case Failure(exception) =>
-          log.atError.withCause(exception).log("Failed to execute query")
-          Nil
-
-}
-
-object FastPhylogenyDAO {
-  val SQL: String =
-    """SELECT
+object FastPhylogenyDAO:
+    val SQL: String =
+        """SELECT
       |  c.ID,
       |  c.PARENTCONCEPTID_FK,
       |  cn.CONCEPTNAME,
@@ -162,8 +149,8 @@ object FastPhylogenyDAO {
       | cn.CONCEPTNAME IS NOT NULL
     """.stripMargin('|')
 
-  val LAST_UPDATE_SQL: String =
-    """SELECT
+    val LAST_UPDATE_SQL: String =
+        """SELECT
       |  MAX(t.mytime)
       |FROM
       |(SELECT
@@ -176,4 +163,3 @@ object FastPhylogenyDAO {
       |FROM
       |  ConceptName) t
     """.stripMargin('|')
-}

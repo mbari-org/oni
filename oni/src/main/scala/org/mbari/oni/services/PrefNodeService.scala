@@ -15,11 +15,11 @@ import org.mbari.oni.jpa.repositories.{PrefNodeRepository, VarsUserPreferencesFa
 import scala.jdk.OptionConverters.*
 import scala.jdk.CollectionConverters.*
 
-class PrefNodeService(entityManagerFactory: EntityManagerFactory) {
+class PrefNodeService(entityManagerFactory: EntityManagerFactory):
 
     def create(prefNode: PrefNode): Either[Throwable, PrefNode] = create(prefNode.name, prefNode.key, prefNode.value)
 
-    def create(name: String, key: String, value: String): Either[Throwable, PrefNode] = {
+    def create(name: String, key: String, value: String): Either[Throwable, PrefNode] =
         val entity = new PreferenceNodeEntity()
         entity.setNodeName(name)
         entity.setPrefKey(key)
@@ -29,11 +29,10 @@ class PrefNodeService(entityManagerFactory: EntityManagerFactory) {
             repo.create(entity)
             PrefNode.from(entity)
         )
-    }
 
     def update(prefNode: PrefNode): Either[Throwable, PrefNode] = update(prefNode.name, prefNode.key, prefNode.value)
 
-    def update(name: String, key: String, value: String): Either[Throwable, PrefNode] = {
+    def update(name: String, key: String, value: String): Either[Throwable, PrefNode] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
             repo.findByNodeNameAndPrefKey(name, key).toScala match
@@ -44,36 +43,30 @@ class PrefNodeService(entityManagerFactory: EntityManagerFactory) {
                 case None         =>
                     throw new IllegalArgumentException(s"PrefNode with name ${name} and key ${key} does not exist")
         )
-    }
 
-    def delete(name: String, key: String): Either[Throwable, Unit] = {
+    def delete(name: String, key: String): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
             repo.findByNodeNameAndPrefKey(name, key).toScala match
                 case Some(entity) => repo.delete(entity)
-                case None         => throw new IllegalArgumentException(s"PrefNode with name ${name} and key ${key} does not exist")
+                case None         =>
+                    throw new IllegalArgumentException(s"PrefNode with name ${name} and key ${key} does not exist")
         )
-    }
 
-    def findByNodeNameAndKey(name: String, key: String): Either[Throwable, Option[PrefNode]] = {
+    def findByNodeNameAndKey(name: String, key: String): Either[Throwable, Option[PrefNode]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
             repo.findByNodeNameAndPrefKey(name, key).map(PrefNode.from).toScala
         )
-    }
 
-    def findByNodeName(name: String): Either[Throwable, Seq[PrefNode]] = {
+    def findByNodeName(name: String): Either[Throwable, Seq[PrefNode]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
             repo.findByNodeName(name).asScala.map(PrefNode.from).toSeq
         )
-    }
 
-    def findByNodeNameLike(name: String): Either[Throwable, Seq[PrefNode]] = {
+    def findByNodeNameLike(name: String): Either[Throwable, Seq[PrefNode]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
             repo.findByNodeNameLike(name).asScala.map(PrefNode.from).toSeq
         )
-    }
-
-}

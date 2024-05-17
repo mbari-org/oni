@@ -11,25 +11,26 @@ import org.mbari.oni.domain.Concept
 
 import scala.collection.mutable
 
-
-class MutableConcept {
-    var id: Option[Long] = None
+class MutableConcept:
+    var id: Option[Long]               = None
     var parent: Option[MutableConcept] = None
-    var rank: Option[String] = None
-    var names: Seq[CName] = Nil
-    var children: Seq[MutableConcept] = Nil
+    var rank: Option[String]           = None
+    var names: Seq[CName]              = Nil
+    var children: Seq[MutableConcept]  = Nil
 
     def primaryName: Option[String] =
-        names.find(n => n.nameType.equals("primary"))
+        names
+            .find(n => n.nameType.equals("primary"))
             .map(_.name)
 
     def alternativeNames: Seq[String] =
-        names.filter(n => !n.nameType.equals("primary"))
+        names
+            .filter(n => !n.nameType.equals("primary"))
             .map(_.name)
 
     def copyUp(): MutableConcept = copyUp(Nil)
 
-    private def copyUp(newChildren: Seq[MutableConcept]): MutableConcept = {
+    private def copyUp(newChildren: Seq[MutableConcept]): MutableConcept =
         val mc = new MutableConcept
         mc.id = id
         mc.rank = rank
@@ -37,11 +38,11 @@ class MutableConcept {
         mc.children = newChildren
         mc.parent = parent.map(_.copyUp(Seq(mc)))
         mc
-    }
 
-    def toImmutable: Concept = {
-        //println(s"${this.id} - ${this.names}")
-        val primaryName = names.find(_.nameType.equalsIgnoreCase("primary"))
+    def toImmutable: Concept =
+        // println(s"${this.id} - ${this.names}")
+        val primaryName      = names
+            .find(_.nameType.equalsIgnoreCase("primary"))
             .getOrElse(names.head)
         val alternativeNames = names.filter(!_.eq(primaryName))
         Concept(
@@ -50,81 +51,64 @@ class MutableConcept {
             alternativeNames.map(_.name),
             children.map(_.toImmutable)
         )
-    }
 
-    def root(): MutableConcept = parent match {
-        case None => this
+    def root(): MutableConcept = parent match
+        case None    => this
         case Some(p) => p.root()
-    }
 
-}
+object MutableConcept:
 
-object MutableConcept {
-
-    def newParent(parentId: Long): MutableConcept = {
+    def newParent(parentId: Long): MutableConcept =
         val mc = new MutableConcept
         mc.id = Some(parentId)
         mc
-    }
 
     // TODO return the nodes too!!
-    def toTree(rows: Seq[ConceptRow]): (Option[MutableConcept], Seq[MutableConcept]) = {
+    def toTree(rows: Seq[ConceptRow]): (Option[MutableConcept], Seq[MutableConcept]) =
         val nodes = new mutable.ArrayBuffer[MutableConcept]
-        for (row <- rows) {
+        for row <- rows do
 
             /*
               Find an existing parent or create one as needed
              */
-            val parentOpt = row.parentId.map(parentId =>
-                nodes.find(_.id.getOrElse(-1L) == parentId)
-                    .getOrElse({
-                        val mc = newParent(parentId)
-                        nodes += mc
-                        mc
-                    }))
+            val parentOpt = row
+                .parentId
+                .map(parentId =>
+                    nodes
+                        .find(_.id.getOrElse(-1L) == parentId)
+                        .getOrElse {
+                            val mc = newParent(parentId)
+                            nodes += mc
+                            mc
+                        }
+                )
 
-            if (parentOpt.isEmpty) {
-                System.getLogger(getClass.getName)
+            if parentOpt.isEmpty then
+                System
+                    .getLogger(getClass.getName)
                     .log(System.Logger.Level.INFO, s"No Parent found for $row")
-            }
 
             /*
               Find the existing concept or create one if needed
              */
-            val concept = nodes.find(_.id.getOrElse(-1L) == row.id) match {
-                case None =>
+            val concept = nodes.find(_.id.getOrElse(-1L) == row.id) match
+                case None     =>
                     val mc = new MutableConcept
                     mc.id = Some(row.id)
                     nodes += mc
                     mc
                 case Some(mc) => mc
-            }
 
             // Set the parent of the concept!!
-            parentOpt.foreach(parent => {
+            parentOpt.foreach(parent =>
                 concept.parent = parentOpt
-                if (!parent.children.contains(concept)) {
-                    parent.children = parent.children :+ concept
-                }
-            })
+                if !parent.children.contains(concept) then parent.children = parent.children :+ concept
+            )
 
-            if (concept.rank.isEmpty && row.rank.isDefined) {
-                concept.rank = row.rank
-            }
+            if concept.rank.isEmpty && row.rank.isDefined then concept.rank = row.rank
 
             val cn = CName(row.name, row.nameType)
             concept.names = concept.names :+ cn
 
-        }
         val root = nodes.find(_.parent.isEmpty)
         (root, nodes.toSeq)
-    }
-
-}
-
-
-
-
-
-
- 

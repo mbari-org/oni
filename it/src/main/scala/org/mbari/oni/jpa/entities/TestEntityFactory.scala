@@ -38,8 +38,8 @@ object TestEntityFactory:
         root
 
     private def buildTree(parent: ConceptEntity, depth: Int = 0, maxBreadth: Int = 0): Unit =
-        if (depth > 0) then
-            val numberChildren = if (maxBreadth > 1) random.between(1, maxBreadth + 1) else 1
+        if depth > 0 then
+            val numberChildren = if maxBreadth > 1 then random.between(1, maxBreadth + 1) else 1
             for _ <- 0 until numberChildren do
                 val entity = buildNode(maxBreadth)
                 if entity.getRankLevel != null then // Add a numbert depth to the rank level
@@ -55,7 +55,7 @@ object TestEntityFactory:
         if maxBreadth > 0 then
 
             val conceptNameBreadth = random.between(0, maxBreadth + 1)
-            if (conceptNameBreadth > 0) then
+            if conceptNameBreadth > 0 then
                 for _ <- 0 until conceptNameBreadth do
                     val conceptName = createConceptName(false)
                     entity.addConceptName(conceptName)

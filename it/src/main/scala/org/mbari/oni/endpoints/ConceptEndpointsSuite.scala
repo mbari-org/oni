@@ -28,9 +28,10 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer:
     lazy val endpoints: ConceptEndpoints = ConceptEndpoints(entityManagerFactory)
 
     test("all") {
-        val root = init(3, 3)
+        val root  = init(3, 3)
         assert(root.getId != null)
-        val names = root.getDescendants
+        val names = root
+            .getDescendants
             .asScala
             .flatMap(_.getConceptNames.asScala.map(_.getName))
             .toSeq
@@ -39,29 +40,27 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer:
         runGet(
             endpoints.allEndpointImpl,
             "http://test.com/v1/concept",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val conceptNames = checkResponse[Seq[String]](response.body).sorted
                 assertEquals(conceptNames, names)
-            }
         )
 
     }
 
     test("findParent") {
-        val root = init(2, 0)
+        val root  = init(2, 0)
         val child = root.getChildConcepts.iterator().next()
-        val name = child.getPrimaryConceptName.getName
+        val name  = child.getPrimaryConceptName.getName
 
         runGet(
             endpoints.findParentEndpointImpl,
             s"http://test.com/v1/concept/parent/${name}",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[ConceptMetadata](response.body)
                 assertEquals(obtained.name, root.getPrimaryConceptName.getName)
-            }
-         )
+        )
     }
 
     test("findChildren") {
@@ -71,49 +70,44 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer:
         runGet(
             endpoints.findChildrenEndpointImpl,
             s"http://test.com/v1/concept/children/${name}",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val candidates = checkResponse[Seq[ConceptMetadata]](response.body)
-                val obtained = candidates.map(_.name).sorted
-                val expected = root.getChildConcepts.asScala.map(_.getPrimaryConceptName.getName).toSeq.sorted
+                val obtained   = candidates.map(_.name).sorted
+                val expected   = root.getChildConcepts.asScala.map(_.getPrimaryConceptName.getName).toSeq.sorted
                 assertEquals(obtained, expected)
-             }
         )
     }
 
     test("findByName") {
-        val root = init(2, 0)
+        val root  = init(2, 0)
         val child = root.getChildConcepts.iterator().next()
-        val name = child.getPrimaryConceptName.getName
-
+        val name  = child.getPrimaryConceptName.getName
 
         runGet(
             endpoints.findByNameImpl,
             s"http://test.com/v1/concept/${name}",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val concept = checkResponse[ConceptMetadata](response.body)
                 assertEquals(concept.name, name)
-            }
         )
     }
 
     test("findByNameContaining") {
-        val root = init(2, 0)
+        val root  = init(2, 0)
         val child = root.getChildConcepts.iterator().next()
-        val name = child.getPrimaryConceptName.getName
-        val glob = name.substring(2, 8)
+        val name  = child.getPrimaryConceptName.getName
+        val glob  = name.substring(2, 8)
 
         runGet(
             endpoints.findByNameContainingImpl,
             s"http://test.com/v1/concept/find/${glob}",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val concepts = checkResponse[Seq[ConceptMetadata]](response.body)
                 val obtained = concepts.map(_.name)
                 val expected = Seq(name)
                 assertEquals(concepts.map(_.name), Seq(name))
-            }
         )
     }
-

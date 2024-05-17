@@ -8,7 +8,13 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, HealthEndpoints, HistoryEndpoints, PhylogenyEndpoints}
+import org.mbari.oni.endpoints.{
+    AuthorizationEndpoints,
+    ConceptEndpoints,
+    HealthEndpoints,
+    HistoryEndpoints,
+    PhylogenyEndpoints
+}
 import org.mbari.oni.etc.jwt.JwtService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
@@ -22,16 +28,15 @@ object Endpoints:
 
     val entityMangerFactory: EntityManagerFactory = AppConfig.DefaultEntityManagerFactory
 
-    val conceptEndpoints: ConceptEndpoints               = ConceptEndpoints(entityMangerFactory)
-    val historyEndpoints: HistoryEndpoints               = HistoryEndpoints(entityMangerFactory)
-    val phylogenyEndpoints: PhylogenyEndpoints           = PhylogenyEndpoints(entityMangerFactory)
+    val conceptEndpoints: ConceptEndpoints     = ConceptEndpoints(entityMangerFactory)
+    val historyEndpoints: HistoryEndpoints     = HistoryEndpoints(entityMangerFactory)
+    val phylogenyEndpoints: PhylogenyEndpoints = PhylogenyEndpoints(entityMangerFactory)
 
     val authorizationEndpoints: AuthorizationEndpoints = AuthorizationEndpoints()
     val healthEndpoints: HealthEndpoints               = HealthEndpoints()
 
     val prometheusMetrics: PrometheusMetrics[Id] = PrometheusMetrics.default[Id]()
     val metricsEndpoint: ServerEndpoint[Any, Id] = prometheusMetrics.metricsEndpoint
-
 
     val endpoints: List[ServerEndpoint[Any, Id]] = List(
         authorizationEndpoints.allImpl,

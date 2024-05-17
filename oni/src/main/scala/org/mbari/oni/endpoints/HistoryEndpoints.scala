@@ -20,8 +20,8 @@ import sttp.tapir.server.nima.Id
 class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
     private val service = HistoryService(entityManagerFactory)
-    private val base = "history"
-    private val tag  = "History"
+    private val base    = "history"
+    private val tag     = "History"
 
     val pendingEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[ExtendedHistory], Any] = openEndpoint
         .get
@@ -31,8 +31,8 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         .description("Get all pending change requests")
         .tag(tag)
 
-    val pendingEndpointImpl: ServerEndpoint[Any, Id] = pendingEndpoint.serverLogic {
-        _ => handleErrors(service.findAllPending())
+    val pendingEndpointImpl: ServerEndpoint[Any, Id] = pendingEndpoint.serverLogic { _ =>
+        handleErrors(service.findAllPending())
     }
 
     val approvedEndpoints: Endpoint[Unit, Unit, ErrorMsg, Seq[ExtendedHistory], Any] = openEndpoint
@@ -43,8 +43,8 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         .description("Get all approved change requests")
         .tag(tag)
 
-    val approvedEndpointsImpl: ServerEndpoint[Any, Id] = approvedEndpoints.serverLogic {
-        _ => handleErrors(service.findAllApproved())
+    val approvedEndpointsImpl: ServerEndpoint[Any, Id] = approvedEndpoints.serverLogic { _ =>
+        handleErrors(service.findAllApproved())
     }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(

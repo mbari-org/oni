@@ -29,7 +29,8 @@ object ConceptMetadata:
     def from(concept: ConceptEntity): ConceptMetadata =
         val name = concept.getPrimaryConceptName.getName
 
-        val alternateNames = concept.getAlternativeConceptNames
+        val alternateNames = concept
+            .getAlternativeConceptNames
             .asScala
             .map(_.getName)
             .toSet

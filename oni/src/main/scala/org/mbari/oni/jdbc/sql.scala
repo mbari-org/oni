@@ -7,15 +7,15 @@
 
 package org.mbari.oni.jdbc
 
-
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
 import java.net.URL
 import java.net.URI
 
-/** This is a collection of explicit conversions to convert from java.sql.ResultSet to various
- * types. This is used in the JdbcRepository and associatited SQL classes.
+/**
+ * This is a collection of explicit conversions to convert from java.sql.ResultSet to various types. This is used in the
+ * JdbcRepository and associatited SQL classes.
  */
 extension (obj: Object)
     def asDouble: Option[Double]   = doubleConverter(obj)
@@ -82,6 +82,3 @@ def urlConverter(obj: Object): Option[URL] =
         case uri: URI  => Try(uri.toURL()).toOption
         case s: String => Try(URI.create(s).toURL()).toOption
         case _         => None
-
-
- 

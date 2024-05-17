@@ -30,11 +30,10 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer:
         runGet(
             endpoints.pendingEndpointImpl,
             "http://test.com/v1/history/pending",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Seq[ExtendedHistory]](response.body)
                 assert(histories.nonEmpty)
-            }
         )
     }
 
@@ -43,12 +42,9 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer:
         runGet(
             endpoints.approvedEndpointsImpl,
             "http://test.com/v1/history/approved",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Seq[ExtendedHistory]](response.body)
                 assert(histories.nonEmpty)
-            }
         )
     }
-
-

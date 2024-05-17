@@ -18,7 +18,7 @@ import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.PrefNodeService
 
-class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService)  extends Endpoints {
+class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints:
 
     private val service = PrefNodeService(entityManagerFactory)
 
@@ -29,34 +29,42 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
         openEndpoint
             .get
             .in(base)
-            .in(query[String]("name")
-                .description("Name of the prefNode")
-                .example("name"))
-            .in(query[Option[String]]("key")
-                .description("Key of the prefNode"))
+            .in(
+                query[String]("name")
+                    .description("Name of the prefNode")
+                    .example("name")
+            )
+            .in(
+                query[Option[String]]("key")
+                    .description("Key of the prefNode")
+            )
             .out(jsonBody[Seq[PrefNode]])
             .name("allPrefNodes")
             .description("Get all prefNode names")
             .tag("PrefNode")
 
     val findAllEndpointImpl: ServerEndpoint[Any, Id] = findAllEndpoint.serverLogic { (name, keyOpt) =>
-        handleErrors(keyOpt match {
-            case Some(key) =>  service.findByNodeNameAndKey(name, key)
-                .map {
-                    case Some(p) => Seq(p)
-                    case None => Nil
-                }
-            case None => service.findByNodeName(name)
-        })
+        handleErrors(keyOpt match
+            case Some(key) =>
+                service
+                    .findByNodeNameAndKey(name, key)
+                    .map {
+                        case Some(p) => Seq(p)
+                        case None    => Nil
+                    }
+            case None      => service.findByNodeName(name)
+        )
     }
 
     val findByPrefix: Endpoint[Unit, String, ErrorMsg, Seq[PrefNode], Any] =
         openEndpoint
             .get
             .in(base / "startswith")
-            .in(query[String]("prefix")
-                .description("Prefix of full node name")
-                .example("prefix"))
+            .in(
+                query[String]("prefix")
+                    .description("Prefix of full node name")
+                    .example("prefix")
+            )
             .out(jsonBody[Seq[PrefNode]])
             .name("findByPrefix")
             .description("Find all preferences with a given prefix")
@@ -80,7 +88,6 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .serverSecurityLogic(jwtOpt => verify(jwtOpt))
             .serverLogic { _ => prefNode => handleErrors(service.create(prefNode)) }
 
-
     def updateEndpoint: Endpoint[Option[String], PrefNode, ErrorMsg, PrefNode, Any] =
         secureEndpoint
             .put
@@ -100,12 +107,16 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
         secureEndpoint
             .delete
             .in(base)
-            .in(query[String]("name")
-                .description("Name of the prefNode")
-                .example("name"))
-            .in(query[String]("key")
-                .description("Key of the prefNode")
-                .example("key"))
+            .in(
+                query[String]("name")
+                    .description("Name of the prefNode")
+                    .example("name")
+            )
+            .in(
+                query[String]("key")
+                    .description("Key of the prefNode")
+                    .example("key")
+            )
             .out(jsonBody[Unit])
             .name("deletePrefNode")
             .description("Delete a prefNode")
@@ -115,8 +126,6 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
         .serverSecurityLogic(jwtOpt => verify(jwtOpt))
         .serverLogic { _ => (name, key) => handleErrors(service.delete(name, key)) }
 
-
     override def all: List[Endpoint[_, _, _, _, _]] = ???
 
     override def allImpl: List[ServerEndpoint[Any, Id]] = ???
-}

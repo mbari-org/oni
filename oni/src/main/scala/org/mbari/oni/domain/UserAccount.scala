@@ -12,25 +12,23 @@ import org.mbari.oni.jpa.entities.UserAccountEntity
 import org.mbari.oni.etc.jdk.Numbers.given
 
 case class UserAccount(
-                   username: String,
-                   password: String,
-                   role: String = "ReadOnly",
-                   affiliation: Option[String] = None,
-                   firstName: Option[String] = None,
-                   lastName: Option[String] = None,
-                   email: Option[String] = None,
-                   id: Option[Long] = None,
-                   isEncrypted: Option[Boolean] = None
-               ) {
+    username: String,
+    password: String,
+    role: String = "ReadOnly",
+    affiliation: Option[String] = None,
+    firstName: Option[String] = None,
+    lastName: Option[String] = None,
+    email: Option[String] = None,
+    id: Option[Long] = None,
+    isEncrypted: Option[Boolean] = None
+):
 
-    def toEntity: UserAccountEntity = {
+    def toEntity: UserAccountEntity =
         val entity = new UserAccountEntity()
         entity.setUserName(username)
         // If the password is not encrypted, then encrypt it
-        if (isEncrypted.getOrElse(false))
-            entity.setEncryptedPassword(password)
-        else
-            entity.setPassword(password)
+        if isEncrypted.getOrElse(false) then entity.setEncryptedPassword(password)
+        else entity.setPassword(password)
         entity.setRole(role)
         entity.setAffiliation(affiliation.orNull)
         entity.setFirstName(firstName.orNull)
@@ -38,11 +36,8 @@ case class UserAccount(
         entity.setEmail(email.orNull)
         entity.setId(id.map(_.asInstanceOf[java.lang.Long]).orNull)
         entity
-    }
 
-}
-
-object UserAccount {
+object UserAccount:
 
     def from(userAccount: UserAccountEntity): UserAccount = UserAccount(
         userAccount.getUserName,
@@ -55,5 +50,3 @@ object UserAccount {
         Option(userAccount.getPrimaryKey).map(_.asInstanceOf[Long]),
         Some(true)
     )
-
-}

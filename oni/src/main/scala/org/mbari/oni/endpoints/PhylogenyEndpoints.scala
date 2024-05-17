@@ -21,8 +21,8 @@ import jakarta.persistence.EntityManagerFactory
 class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
     private val service = FastPhylogenyService(entityManagerFactory)
-    private val base = "phylogeny"
-    private val tag  = "Phylogeny"
+    private val base    = "phylogeny"
+    private val tag     = "Phylogeny"
 
     val upEndpoint: Endpoint[Unit, String, ErrorMsg, SerdeConcept, Any] = openEndpoint
         .get
@@ -35,7 +35,6 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
     val upEndpointImpl: ServerEndpoint[Any, Id] = upEndpoint.serverLogic { name =>
         handleOption(service.findUp(name).map(SerdeConcept.from))
     }
-
 
     val downEndpoint: Endpoint[Unit, String, ErrorMsg, SerdeConcept, Any] = openEndpoint
         .get
@@ -81,12 +80,18 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
             .tag(tag)
 
     val taxaEndpointImpl: ServerEndpoint[Any, Id] = taxaEndpoint.serverLogic { name =>
-        handleOption(service.findDown(name).map(c => SerdeConcept.from(c)
-            .flatten
-            .map(_.copy(children = None))
-            .sortBy(_.name)))
+        handleOption(
+            service
+                .findDown(name)
+                .map(c =>
+                    SerdeConcept
+                        .from(c)
+                        .flatten
+                        .map(_.copy(children = None))
+                        .sortBy(_.name)
+                )
+        )
     }
-
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
         upEndpoint,

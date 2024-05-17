@@ -7,6 +7,4 @@
 
 package org.mbari.oni.endpoints
 
-class RawEndpoints {
-
-}
+class RawEndpoints {}

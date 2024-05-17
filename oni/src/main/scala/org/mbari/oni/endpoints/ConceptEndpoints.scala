@@ -19,10 +19,10 @@ import sttp.tapir.server.nima.Id
 
 class ConceptEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
-    private val service = ConceptService(entityManagerFactory)
+    private val service            = ConceptService(entityManagerFactory)
     private val conceptNameService = ConceptNameService(entityManagerFactory)
-    private val base = "concept"
-    private val tag  = "Concept"
+    private val base               = "concept"
+    private val tag                = "Concept"
 
     val allEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[String], Any] = openEndpoint
         .get
@@ -32,8 +32,8 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         .description("Get all concept names")
         .tag(tag)
 
-    val allEndpointImpl: ServerEndpoint[Any, Id] = allEndpoint.serverLogic {
-        _ => handleErrors(conceptNameService.findAllNames())
+    val allEndpointImpl: ServerEndpoint[Any, Id] = allEndpoint.serverLogic { _ =>
+        handleErrors(conceptNameService.findAllNames())
     }
 
     val findParentEndpoint: Endpoint[Unit, String, ErrorMsg, ConceptMetadata, Any] = openEndpoint
@@ -84,8 +84,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         handleErrors(service.findByGlob(name)).map(_.toSeq.sortBy(_.name))
     }
 
-
-    override val all: List[Endpoint[?, ?, ?, ?, ?]]     = List(
+    override val all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findParentEndpoint,
         findChildrenEndpoint,
         findByNameContaining,

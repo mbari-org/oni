@@ -109,10 +109,10 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     test("findRoot") {
         val root = TestEntityFactory.buildRoot(2)
         conceptService.init(root) match
-            case Left(_) => fail("Failed to init")
+            case Left(_)           => fail("Failed to init")
             case Right(rootEntity) =>
                 conceptService.findRoot() match
-                    case Left(_) => fail("Failed to find root")
+                    case Left(_)      => fail("Failed to find root")
                     case Right(found) =>
                         assert(rootEntity.getId != null)
                         assertEquals(found, ConceptMetadata.from(rootEntity))
