@@ -78,6 +78,7 @@ case class JwtService(issuer: String, apiKey: String, signingSecret: String):
                 .withIssuer(issuer)
                 .withIssuedAt(iat)
                 .withExpiresAt(exp)
+                .withSubject(Option(entity.getId).getOrElse(-1).toString)
                 .withClaim("name", name)
                 .withClaim("role", entity.getRole)
                 .sign(algorithm)

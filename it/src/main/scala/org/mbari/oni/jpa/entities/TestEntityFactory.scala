@@ -16,7 +16,7 @@
 
 package org.mbari.oni.jpa.entities
 
-import org.mbari.oni.domain.{ConceptNameTypes, MediaTypes}
+import org.mbari.oni.domain.{ConceptNameTypes, MediaTypes, UserAccountRoles}
 import org.mbari.oni.etc.jdk.Strings
 
 import java.time.Instant
@@ -150,4 +150,15 @@ object TestEntityFactory:
 
         // DON'T DO THIS. The ID should be assigned by the database. Otherwise inserts will fail.
 //        entity.setId(nextConceptId.incrementAndGet())
+        entity
+
+    def createUserAccount(role: String = UserAccountRoles.ADMINISTRATOR.getRoleName): UserAccountEntity =
+        val entity = new UserAccountEntity()
+        entity.setUserName(Strings.random(20))
+        entity.setPassword(Strings.random(20))
+        entity.setEmail(s"{Strings.random(10)}@mbari.org")
+        entity.setFirstName(Strings.random(10))
+        entity.setLastName(Strings.random(10))
+        entity.setAffiliation(Strings.random(20))
+        entity.setRole(role)
         entity
