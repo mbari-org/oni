@@ -12,7 +12,7 @@ import org.mbari.oni.jpa.entities.UserAccountEntity
 case class UserAccount(
     username: String,
     password: String,
-    role: String = "ReadOnly",
+    role: String = UserAccountRoles.READONLY.getRoleName,
     affiliation: Option[String] = None,
     firstName: Option[String] = None,
     lastName: Option[String] = None,

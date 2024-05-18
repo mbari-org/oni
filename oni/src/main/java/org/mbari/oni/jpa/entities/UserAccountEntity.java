@@ -229,4 +229,5 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
     public Object getPrimaryKey() {
     	return getId();
     }
+
 }
