@@ -90,6 +90,26 @@ public class HistoryEntity implements Serializable, IPersistentObject {
      */
     public static final String ACTION_REPLACE = "REPLACE";
 
+    /**
+     * Field description
+     */
+    public static final  String FIELD_CONCEPT = "Concept";
+    public static final String FIELD_CONCEPTNAME = "ConceptName";
+    public static final String FIELD_CONCEPTNAME_AUTHOR = "ConceptName.author";
+    public static final String FIELD_CONCEPTNAME_PRIMARY = "Concept.primaryConceptName";
+    public static final String FIELD_CONCEPT_CHILD = "Concept.child";
+    public static final String FIELD_CONCEPT_NODCCODE = "NodcCode";
+    public static final String FIELD_CONCEPT_ORIGINATOR = "Originator";
+    public static final String FIELD_CONCEPT_PARENT = "Concept.parent";
+    public static final String FIELD_CONCEPT_RANKLEVEL = "RankLevel";
+    public static final String FIELD_CONCEPT_RANKNAME = "RankName";
+    public static final String FIELD_CONCEPT_REFERENCE = "Reference";
+    public static final String FIELD_CONCEPT_STRUCTURETYPE = "StructureType";
+    public static final String FIELD_LINKREALIZATION = "LinkRealization";
+    public static final String FIELD_LINKTEMPLATE = "LinkTemplate";
+    public static final String FIELD_MEDIA = "Media";
+    public static final String FIELD_SECTIONINFO = "SectionInfo";
+
     @Id
     @Column(name = "id", nullable = false, updatable=false)
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "History_Gen")
