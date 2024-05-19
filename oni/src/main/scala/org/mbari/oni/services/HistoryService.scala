@@ -35,3 +35,11 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h))
                 .sortBy(_.creationTimestamp)
         )
+
+    // TODO: Create
+
+    // TODO: Update (e.g. approve/reject)
+
+    //TODO: Delete?? Do we ever need to delete a history
+
+

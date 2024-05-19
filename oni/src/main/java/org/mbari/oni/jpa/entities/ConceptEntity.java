@@ -29,16 +29,10 @@ import org.mbari.oni.jpa.IPersistentObject;
 @EntityListeners({ TransactionLogger.class, KeyNullifier.class})
 @NamedQueries( {
     @NamedQuery(name = "Concept.findById", query = "SELECT v FROM Concept v WHERE v.id = :id") ,
-    @NamedQuery(name = "Concept.findByOriginator", query = "SELECT c FROM Concept c WHERE c.originator = :originator") ,
-    @NamedQuery(name = "Concept.findByStructureType",
-                query = "SELECT c FROM Concept c WHERE c.structureType = :structureType") ,
     @NamedQuery(name = "Concept.findByReference", query = "SELECT c FROM Concept c WHERE c.reference = :reference") ,
     @NamedQuery(name = "Concept.findByAphiaId", query = "SELECT c FROM Concept c WHERE c.aphiaId = :aphiaId") ,
     @NamedQuery(name = "Concept.findByRankName", query = "SELECT c FROM Concept c WHERE c.rankName = :rankName") ,
-    @NamedQuery(name = "Concept.findByRankLevel", query = "SELECT c FROM Concept c WHERE c.rankLevel = :rankLevel") ,
-    @NamedQuery(name = "Concept.findByTaxonomyType",
-                query = "SELECT c FROM Concept c WHERE c.taxonomyType = :taxonomyType") ,
-    @NamedQuery(name = "Concept.findRoot", query = "SELECT c FROM Concept c WHERE c.parentConcept IS NULL") ,
+    @NamedQuery(name = "Concept.findByRankLevel", query = "SELECT c FROM Concept c WHERE c.rankLevel = :rankLevel") , @NamedQuery(name = "Concept.findRoot", query = "SELECT c FROM Concept c WHERE c.parentConcept IS NULL") ,
     @NamedQuery(name = "Concept.findAll", query = "SELECT c FROM Concept c"),
     @NamedQuery(name = "Concept.findByName", query = "SELECT c FROM Concept c, IN (c.conceptNames) AS n WHERE n.name = :name"),
     @NamedQuery(name = "Concept.findAllByNameGlob", query = "SELECT DISTINCT c FROM Concept c, IN (c.conceptNames) AS n WHERE LOWER(n.name) LIKE :name"),
@@ -96,9 +90,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
     @Column(name = "AphiaId")
     private Long aphiaId;
 
-    @Column(name = "Originator", length = 255)
-    private String originator;
-
     @ManyToOne(
         fetch = FetchType.LAZY,
         optional = true,
@@ -116,15 +107,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
 
     @Column(name = "RankName", length = 20)
     private String rankName;
-
-    @Column(name = "Reference", length = 1024)
-    private String reference;
-
-    @Column(name = "StructureType", length = 10)
-    private String structureType;
-
-    @Column(name = "TaxonomyType", length = 20)
-    private String taxonomyType;
 
     /** Optimistic lock to prevent concurrent overwrites */
     @Version
@@ -222,10 +204,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         return aphiaId;
     }
 
-    public String getOriginator() {
-        return originator;
-    }
-
     public ConceptEntity getParentConcept() {
         return parentConcept;
     }
@@ -265,10 +243,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         return a + b;
     }
 
-    public String getReference() {
-        return reference;
-    }
-
     public ConceptEntity getRootConcept() {
         ConceptEntity concept = this;
         while (concept.getParentConcept() != null) {
@@ -276,10 +250,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         }
 
         return concept;
-    }
-
-    public String getStructureType() {
-        return structureType;
     }
 
     /**
@@ -341,14 +311,9 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         return match;
     }
 
-    public boolean hasDetails() {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
     public boolean hasParent() {
         return parentConcept != null;
     }
-
 
 
     public void removeChildConcept(ConceptEntity childConcept) {
@@ -371,10 +336,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         this.aphiaId = aphiaId;
     }
 
-    public void setOriginator(String originator) {
-        this.originator = originator;
-    }
-
     private void setParentConcept(ConceptEntity parentConcept) {
         this.parentConcept = parentConcept;
     }
@@ -387,14 +348,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         this.rankName = rankName;
     }
 
-    public void setReference(String reference) {
-        this.reference = reference;
-    }
-
-    public void setStructureType(String structureType) {
-        this.structureType = structureType;
-    }
-    
     public Object getPrimaryKey() {
     	return getId();
     }
@@ -404,13 +357,6 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         return getClass().getSimpleName() + " ([id=" + id + "])";
     }
 
-    public void setTaxonomyType(String taxonomyType) {
-        this.taxonomyType = taxonomyType;
-    }
-
-    public String getTaxonomyType() {
-        return taxonomyType;
-    }
 
     // WARNING: Using id for equals and hashcode breaks adding child concepts. They are in a set and the id is not set
     // until the entity is persisted. We'll just use object identity for now

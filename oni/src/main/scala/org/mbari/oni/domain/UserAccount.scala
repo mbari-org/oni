@@ -9,6 +9,18 @@ package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.UserAccountEntity
 
+/**
+ * DTO for user account data
+ * @param username The unique user name
+ * @param password A password, can be encrypted or plain. See isEncrypted
+ * @param role A users role (Admin, Maint, ReadOnly)
+ * @param affiliation The users employere/organization
+ * @param firstName The first name
+ * @param lastName The last name
+ * @param email A users email
+ * @param id The primary key, database id
+ * @param isEncrypted If the password is encrypted. If None, the value is assumed to be false and so the password is assumed to be plain text
+ */
 case class UserAccount(
     username: String,
     password: String,

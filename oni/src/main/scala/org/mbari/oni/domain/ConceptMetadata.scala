@@ -21,7 +21,8 @@ case class ConceptMetadata(
     media: Set[Media] = Set.empty,
     descriptors: Set[Link] = Set.empty,
     rank: Option[String] = None,
-    author: Option[String] = None
+    author: Option[String] = None,
+    aphiaId: Option[Long] = None
 ) {}
 
 object ConceptMetadata:
@@ -58,4 +59,4 @@ object ConceptMetadata:
 
         val author = Option(concept.getPrimaryConceptName.getAuthor)
 
-        ConceptMetadata(name, alternateNames, media, descriptors, Option(rank), author)
+        ConceptMetadata(name, alternateNames, media, descriptors, Option(rank), author, Option(concept.getAphiaId))

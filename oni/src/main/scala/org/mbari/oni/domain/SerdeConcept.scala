@@ -14,7 +14,8 @@ final case class SerdeConcept(
     name: String,
     rank: Option[String] = None,
     alternativeNames: Option[Seq[String]] = None,
-    children: Option[Set[SerdeConcept]] = None
+    children: Option[Set[SerdeConcept]] = None,
+    aphiaId: Option[Long] = None,
 ):
 
     def containsName(n: String): Boolean = name.equals(n) ||
@@ -29,9 +30,9 @@ object SerdeConcept:
 
     def from(c: SimpleConcept): SerdeConcept =
         val alternativeNames = if c.alternativeNames.isEmpty then None else Some(c.alternativeNames)
-        SerdeConcept(c.name, c.rank, alternativeNames, None)
+        SerdeConcept(c.name, c.rank, alternativeNames)
 
     def from(c: Concept): SerdeConcept =
         val alternativeNames = if c.alternativeNames.isEmpty then None else Some(c.alternativeNames)
         val children         = if c.children.isEmpty then None else Some(c.children.map(from).toSet)
-        SerdeConcept(c.name, c.rank, alternativeNames, children)
+        SerdeConcept(c.name, c.rank, alternativeNames, children, c.aphiaId)

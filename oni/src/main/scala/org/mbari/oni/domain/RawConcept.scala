@@ -14,14 +14,11 @@ import scala.jdk.CollectionConverters.*
 
 case class RawConcept(
     names: Set[RawConceptName] = Set.empty,
-    originator: Option[String] = None,
     metadata: Option[RawConceptMetadata] = None,
     children: Set[RawConcept] = Set.empty,
     aphiaId: Option[Long] = None,
     rankLevel: Option[String] = None,
     rankName: Option[String] = None,
-    reference: Option[String] = None,
-    structureType: Option[String] = None
 ):
 
     /**
@@ -49,13 +46,10 @@ case class RawConcept(
         var nextId = id + 1
 
         names.map(_.toEntity).foreach(entity.addConceptName)
-        entity.setOriginator(originator.orNull)
         metadata.map(_.toEntity).foreach(entity.setConceptMetadata)
         aphiaId.foreach(v => entity.setAphiaId(v.longValue()))
         entity.setRankLevel(rankLevel.orNull)
         entity.setRankName(rankName.orNull)
-        entity.setReference(reference.orNull)
-        entity.setStructureType(structureType.orNull)
 //        children.map(_.toEntity).foreach(entity.addChildConcept)
         children.foreach(c =>
             nextId = nextId + 1
@@ -67,12 +61,9 @@ object RawConcept:
     def from(entity: ConceptEntity): RawConcept =
         RawConcept(
             names = entity.getConceptNames.asScala.map(RawConceptName.from).toSet,
-            originator = Option(entity.getOriginator),
             metadata = Option(entity.getConceptMetadata).map(RawConceptMetadata.from),
             children = entity.getChildConcepts.asScala.map(RawConcept.from).toSet,
             aphiaId = Option(entity.getAphiaId).map(_.toLong),
             rankLevel = Option(entity.getRankLevel),
             rankName = Option(entity.getRankName),
-            reference = Option(entity.getReference),
-            structureType = Option(entity.getStructureType)
         )

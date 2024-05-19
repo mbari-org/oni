@@ -14,7 +14,8 @@ case class Concept(
     name: String,
     rank: Option[String] = None,
     alternativeNames: Seq[String] = Nil,
-    children: Seq[Concept] = Nil
+    children: Seq[Concept] = Nil,
+    aphiaId: Option[Long] = None,
 ):
     def containsName(n: String): Boolean = name.equals(n) ||
         alternativeNames.contains(n)
@@ -42,5 +43,6 @@ object Concept:
             c.getPrimaryConceptName.getName,
             Option(c.getRank),
             alternativeNames,
-            c.getChildConcepts.asScala.map(from).toSeq.sortBy(_.name)
+            c.getChildConcepts.asScala.map(from).toSeq.sortBy(_.name),
+            Option(c.getAphiaId).map(_.longValue())
         )

@@ -9,7 +9,7 @@ package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
 import org.mbari.oni.{ConceptNameNotFound, MissingRootConcept, RootAlreadyExists}
-import org.mbari.oni.domain.{ConceptMetadata, RawConcept}
+import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, SimpleConcept}
 import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.ConceptRepository
@@ -21,6 +21,7 @@ import scala.jdk.OptionConverters.*
 class ConceptService(entityManagerFactory: EntityManagerFactory):
 
     private val log = System.getLogger(getClass.getName)
+    private val historyService = HistoryService(entityManagerFactory)
 
     /**
      * Inserts an entire tree of concepts in the database. Requires that the database is empty. This is an ACID
@@ -182,3 +183,14 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         // Convert the (ConceptEntity) => T function to a (ConceptEntity, ConceptRepository) => T function
         val fn2 = (c: ConceptEntity, _: ConceptRepository) => fn(c)
         handleByConceptName(name, fn2)
+
+    // Create
+    def create(conceptCreate: ConceptCreate): Either[Throwable, ConceptMetadata] = ???
+    // Update
+    def update(conceptUpdate: ConceptUpdate): Either[Throwable, ConceptMetadata] = ???
+    // Delete
+    def delete(conceptDelete: ConceptDelete): Either[Throwable, Int] = ???
+
+
+
+
