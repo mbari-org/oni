@@ -7,6 +7,9 @@
 
 package org.mbari.oni.etc.sdk
 
+import java.util.Optional
+
+
 /**
  * Brain-dead implementation of an IO monad. This is just a simple way to represent a function that can fail. It's not a
  * real IO monad, but it's good enough for my purposes.
@@ -27,3 +30,4 @@ object IO:
         def foreach(f: B => Unit): IO[A, Unit] = a =>
             for b <- io(a)
             yield f(b)
+

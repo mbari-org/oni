@@ -22,7 +22,8 @@ case class ExtendedHistory(
     newValue: Option[String] = None,
     approved: Boolean = false,
     processedTimestamp: Option[Instant] = None,
-    processorName: Option[String] = None
+    processorName: Option[String] = None,
+    id: Option[Long] = None
 )
 
 object ExtendedHistory:
@@ -37,7 +38,8 @@ object ExtendedHistory:
             Option(entity.getNewValue),
             entity.isApproved,
             Option(entity.getProcessedDate).map(_.toInstant),
-            Option(entity.getProcessorName)
+            Option(entity.getProcessorName),
+            Option(entity.getId)
         )
 
     def from(concept: ConceptEntity): Set[ExtendedHistory] =

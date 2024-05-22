@@ -19,7 +19,7 @@ import java.util.Date;
  * @author brian
  */
 public class HistoryEntityFactory {
-    
+
     private static HistoryEntity newHistory(UserAccountEntity userAccount, String action, String fieldName, String oldValue, String newValue) {
         final HistoryEntity history = new HistoryEntity();
         history.setCreatorName(userAccount.getUserName());
