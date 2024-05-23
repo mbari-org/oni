@@ -18,5 +18,6 @@ object Eithers {
         def toEither: Either[Throwable, B] =
             if opt.isPresent then Right(opt.get)
             else Left(emptyOptionalError)
-
+            
+    
 }

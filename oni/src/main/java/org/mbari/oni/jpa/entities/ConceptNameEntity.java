@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 
 import jakarta.persistence.*;
 
+import org.mbari.oni.domain.ConceptNameTypes;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.KeyNullifier;
 import org.mbari.oni.jpa.TransactionLogger;
@@ -99,10 +100,16 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
     public ConceptNameEntity() {
     }
 
+    public ConceptNameEntity(String name) {
+        this(name, ConceptNameTypes.PRIMARY.getType())
+    }
+
     public ConceptNameEntity(String name, String nameType) {
         this.name = name;
         this.nameType = nameType;
     }
+
+
 
     @Override
     public boolean equals(Object obj) {

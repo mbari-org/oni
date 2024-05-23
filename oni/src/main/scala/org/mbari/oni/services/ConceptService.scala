@@ -8,9 +8,9 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{ConceptNameNotFound, MissingRootConcept, RootAlreadyExists}
+import org.mbari.oni.{AccessDenied, ConceptNameNotFound, MissingRootConcept, RootAlreadyExists}
 import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, SimpleConcept}
-import org.mbari.oni.jpa.entities.ConceptEntity
+import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.ConceptRepository
 import org.mbari.oni.etc.jdk.Loggers.given
@@ -22,6 +22,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
 
     private val log = System.getLogger(getClass.getName)
     private val historyService = HistoryService(entityManagerFactory)
+    private val userAccountService = UserAccountService(entityManagerFactory)
 
     /**
      * Inserts an entire tree of concepts in the database. Requires that the database is empty. This is an ACID
@@ -185,7 +186,48 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         handleByConceptName(name, fn2)
 
     // Create
-    def create(conceptCreate: ConceptCreate): Either[Throwable, ConceptMetadata] = ???
+    def create(conceptCreate: ConceptCreate): Either[Throwable, ConceptMetadata] =
+
+        def buildInTxn(userEntity: UserAccountEntity, parent: ConceptEntity): ConceptEntity =
+
+            // build concept
+            val concept = new ConceptEntity()
+            conceptCreate.aphiaId.foreach(v => concept.setAphiaId(v.longValue()))
+            conceptCreate.rankLevel.foreach(v => concept.setRankLevel(v))
+            conceptCreate.rankName.foreach(v => concept.setRankName(v))
+            val conceptName = new ConceptNameEntity(conceptCreate.name)
+            concept.addConceptName(conceptName)
+            parent.addChildConcept(concept)
+
+            // build history
+            val history = HistoryEntityFactory.add(userEntity, parent)
+            parent.getConceptMetadata.addHistory(history)
+            concept
+
+        def txn(userEntity: UserAccountEntity): Either[Throwable, ConceptMetadata] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new ConceptRepository(entityManager)
+                repo.findByName(conceptCreate.name).toScala match
+                    case Some(_) => throw ConceptNameAlreadyExists(conceptCreate.name)
+                    case None    =>
+                        val parent = conceptCreate.parentName match
+                            case Some(parentName) =>
+                                repo.findByName(parentName).toScala match
+                                    case Some(p) => p
+                                    case None    => throw ConceptNameNotFound(parentName)
+                            case None            => null
+
+                        val conceptEntity = buildInTxn(userEntity, parent)
+                        ConceptMetadata.from(conceptEntity)
+            )
+
+        for
+            user    <- userAccountService.findByUserName(conceptCreate.userName)
+            concept <- txn(user)
+        yield
+            concept
+
+
     // Update
     def update(conceptUpdate: ConceptUpdate): Either[Throwable, ConceptMetadata] = ???
     // Delete

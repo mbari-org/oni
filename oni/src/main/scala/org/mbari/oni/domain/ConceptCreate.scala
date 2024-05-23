@@ -7,8 +7,8 @@
 
 package org.mbari.oni.domain
 
-case class ConceptCreate(parentName: String,
-                         name: String,
+case class ConceptCreate(name: String,
+                         parentName: Option[String],
                          rankLevel: Option[String] = None,
                          rankName: Option[String] = None,
                          aphiaId: Option[Long] = None,
