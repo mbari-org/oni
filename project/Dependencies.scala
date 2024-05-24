@@ -9,9 +9,9 @@ object Dependencies {
     lazy val circeParser  = "io.circe" %% "circe-parser"  % circeVersion
 
     lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.17.0"
-    lazy val gson = "com.google.code.gson" % "gson" % "2.10.1"
+    lazy val gson = "com.google.code.gson" % "gson" % "2.11.0"
 
-    val hibernateVersion     = "6.5.0.Final"
+    val hibernateVersion     = "6.5.2.Final"
     lazy val hibernateCore   = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateEnvers = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
     lazy val hibernateHikari = "org.hibernate.orm" % "hibernate-hikaricp" % hibernateVersion
@@ -22,7 +22,7 @@ object Dependencies {
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
     lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.6"
     lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.6.1.jre11"
-    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.0-RC1"
+    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.0"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.3"
     lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
@@ -36,7 +36,7 @@ object Dependencies {
     lazy val tapirSwagger    = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle"  % tapirVersion
     lazy val tapirVertex     = "com.softwaremill.sttp.tapir" %% "tapir-vertx-server"       % tapirVersion
 
-    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.6"
+    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.7"
 
     val testcontainersVersion        = "1.19.8"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion

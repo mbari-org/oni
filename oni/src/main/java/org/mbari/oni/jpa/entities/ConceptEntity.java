@@ -34,6 +34,7 @@ import org.mbari.oni.jpa.IPersistentObject;
     @NamedQuery(name = "Concept.findByRankName", query = "SELECT c FROM Concept c WHERE c.rankName = :rankName") ,
     @NamedQuery(name = "Concept.findByRankLevel", query = "SELECT c FROM Concept c WHERE c.rankLevel = :rankLevel") , @NamedQuery(name = "Concept.findRoot", query = "SELECT c FROM Concept c WHERE c.parentConcept IS NULL") ,
     @NamedQuery(name = "Concept.findAll", query = "SELECT c FROM Concept c"),
+    @NamedQuery(name = "Concept.findByAphiaId", query = "SELECT c FROM Concept c WHERE c.aphiaId = :aphiaId"),
     @NamedQuery(name = "Concept.findByName", query = "SELECT c FROM Concept c, IN (c.conceptNames) AS n WHERE n.name = :name"),
     @NamedQuery(name = "Concept.findAllByNameGlob", query = "SELECT DISTINCT c FROM Concept c, IN (c.conceptNames) AS n WHERE LOWER(n.name) LIKE :name"),
     @NamedQuery(name = "Concept.findAllByNameGlobNew", query = "SELECT c FROM Concept c JOIN FETCH c.conceptNames n WHERE LOWER(n.name) LIKE :name"),
@@ -259,6 +260,10 @@ public class ConceptEntity implements Serializable, IPersistentObject {
      */
     public boolean hasChildConcepts() {
         return !getChildConcepts().isEmpty();
+    }
+
+    public boolean hasConceptName(String name) {
+        return getConceptName(name) != null;
     }
 
     /**

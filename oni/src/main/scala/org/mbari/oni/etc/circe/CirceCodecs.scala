@@ -60,6 +60,12 @@ object CirceCodecs:
     given Decoder[ConceptCreate] = deriveDecoder
     given Encoder[ConceptCreate] = deriveEncoder
 
+    given Decoder[ConceptDelete] = deriveDecoder
+    given Encoder[ConceptDelete] = deriveEncoder
+
+    given Decoder[ConceptUpdate] = deriveDecoder
+    given Encoder[ConceptUpdate] = deriveEncoder
+
     given Decoder[ExtendedHistory] = deriveDecoder
     given Encoder[ExtendedHistory] = deriveEncoder
 

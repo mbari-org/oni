@@ -8,8 +8,10 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{UserAccount, UserAccountUpdate}
+import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException}
+import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
+import org.mbari.oni.jpa.entities.UserAccountEntity
 import org.mbari.oni.jpa.repositories.UserAccountRepository
 
 import scala.jdk.CollectionConverters.*
@@ -82,4 +84,15 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
                         s"UserAccount with username ${userAccount.username} does not exist"
                     )
         )
+
+    def verifyWriteAccess(userName: Option[String]): Either[OniException, UserAccount] =
+        userName match
+            case Some(name) =>
+                findByUserName(name) match
+                    case Left(e) => Left(AccessDeniedMissingCredentials)
+                    case Right(None) => Left(AccessDenied(name))
+                    case Right(Some(u)) => 
+                        if u.role != UserAccountRoles.READONLY.getRoleName then Right(u)
+                        else Left(AccessDenied(name))
+            case None => Left(AccessDeniedMissingCredentials)
 

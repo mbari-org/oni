@@ -12,12 +12,13 @@ import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{ConceptMetadata, ErrorMsg}
+import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, ErrorMsg, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
+import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{ConceptNameService, ConceptService}
 import sttp.tapir.server.nima.Id
 
-class ConceptEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
+class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints:
 
     private val service            = ConceptService(entityManagerFactory)
     private val conceptNameService = ConceptNameService(entityManagerFactory)
@@ -35,6 +36,43 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
     val allEndpointImpl: ServerEndpoint[Any, Id] = allEndpoint.serverLogic { _ =>
         handleErrors(conceptNameService.findAllNames())
     }
+
+    val createEndpoint: Endpoint[Option[String], ConceptCreate, ErrorMsg, ConceptMetadata, Any] = secureEndpoint
+        .post
+        .in(base)
+        .in(jsonBody[ConceptCreate])
+        .out(jsonBody[ConceptMetadata])
+        .name("createConcept")
+        .description("Create a new concept")
+        .tag(tag)
+
+    val createEndpointImpl: ServerEndpoint[Any, Id] = createEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => conceptCreate =>
+            val createData = conceptCreate.copy(userName = Some(userAccount.username))
+            service.create(createData).fold(
+                error => Left(ServerError(error.getMessage)),
+                concept => Right(concept)
+            )
+        }
+
+    val deleteEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] = secureEndpoint
+        .delete
+        .in(base / path[String]("name"))
+        .out(jsonBody[Unit])
+        .name("deleteConcept")
+        .description("Delete a concept")
+        .tag(tag)
+
+    val deleteEndpointImpl: ServerEndpoint[Any, Id] = deleteEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => name =>
+            val deleteData = ConceptDelete(name, Some(userAccount.username))
+            service.delete(deleteData).fold(
+                error => Left(ServerError(error.getMessage)),
+                _ => Right(())
+            )
+        }
 
     val findParentEndpoint: Endpoint[Unit, String, ErrorMsg, ConceptMetadata, Any] = openEndpoint
         .get
@@ -83,6 +121,25 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
     val findByNameContainingImpl: ServerEndpoint[Any, Id] = findByNameContaining.serverLogic { name =>
         handleErrors(service.findByGlob(name)).map(_.toSeq.sortBy(_.name))
     }
+
+    val updateEndpoint: Endpoint[Option[String], ConceptUpdate, ErrorMsg, ConceptMetadata, Any] = secureEndpoint
+        .put
+        .in(base)
+        .in(jsonBody[ConceptUpdate])
+        .out(jsonBody[ConceptMetadata])
+        .name("updateConcept")
+        .description("Update a concept")
+        .tag(tag)
+
+    val updateEndpointImpl: ServerEndpoint[Any, Id] = updateEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => conceptUpdate =>
+            val updateData = conceptUpdate.copy(userName = Some(userAccount.username))
+            service.update(updateData).fold(
+                error => Left(ServerError(error.getMessage)),
+                concept => Right(concept)
+            )
+        }
 
     override val all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findParentEndpoint,

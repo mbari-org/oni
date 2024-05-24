@@ -50,6 +50,9 @@ trait Endpoints:
     implicit lazy val sMedia: Schema[Media]                     = Schema.derived[Media]
     implicit lazy val sPaging: Schema[Paging]                   = Schema.derived[Paging]
     implicit lazy val sPrefNode: Schema[PrefNode]               = Schema.derived[PrefNode]
+    implicit lazy val sConceptCreate: Schema[ConceptCreate]     = Schema.derived[ConceptCreate]
+    implicit lazy val sConceptDelete: Schema[ConceptDelete]     = Schema.derived[ConceptDelete]
+    implicit lazy val sConceptUpdate: Schema[ConceptUpdate]     = Schema.derived[ConceptUpdate]
     implicit lazy val sConceptMetadata: Schema[ConceptMetadata] = Schema.derived[ConceptMetadata]
     implicit lazy val sUserAccount: Schema[UserAccount]         = Schema.derived[UserAccount]
     implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate]         = Schema.derived[UserAccountUpdate]
@@ -112,3 +115,15 @@ trait Endpoints:
             case Some(jwt) =>
                 if jwtService.verify(jwt) then Right(())
                 else Left(Unauthorized("Invalid token"))
+
+    def verifyLogin(
+        jwtOpt: Option[String]
+    )(using jwtService: JwtService): Id[Either[Unauthorized, UserAccount]] =
+        jwtOpt match
+            case None      => Left(Unauthorized("Missing token"))
+            case Some(jwt) =>
+                jwtService.decode(jwt) match
+                    case None      => Left(Unauthorized("Invalid token"))
+                    case Some(userAccount) => Right(userAccount)
+
+

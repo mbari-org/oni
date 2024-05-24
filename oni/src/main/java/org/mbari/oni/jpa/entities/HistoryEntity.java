@@ -170,8 +170,12 @@ public class HistoryEntity implements Serializable, IPersistentObject {
         DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
-
-
+    public void approveBy(String approverName) {
+        setApproved(true);
+        setProcessorName(approverName);
+        setProcessedDate(new Date());
+    }
+    
 
     public boolean isAdd() {
         return ACTION_ADD.equalsIgnoreCase(action);

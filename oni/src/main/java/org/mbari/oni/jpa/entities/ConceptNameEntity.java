@@ -101,7 +101,7 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
     }
 
     public ConceptNameEntity(String name) {
-        this(name, ConceptNameTypes.PRIMARY.getType())
+        this(name, ConceptNameTypes.PRIMARY.getType());
     }
 
     public ConceptNameEntity(String name, String nameType) {

@@ -51,6 +51,11 @@ public class ConceptRepository extends Repository {
         return concepts.stream().findFirst();
     }
 
+    public Optional<ConceptEntity> findByAphiaId(final Long aphiaId) {
+        List<ConceptEntity> concepts =  findByNamedQuery("Concept.findByAphiaId", Map.of("aphiaId", aphiaId));
+        return concepts.stream().findFirst();
+    }
+
     public List<ConceptEntity> findAllByNameContaining(final String nameGlob) {
         final String name = "%" + nameGlob.toLowerCase() + "%";
         return findByNamedQuery("Concept.findAllByNameGlob", Map.of("name", name));

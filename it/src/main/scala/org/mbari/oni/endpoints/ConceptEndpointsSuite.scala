@@ -21,10 +21,12 @@ import org.mbari.oni.jpa.DataInitializer
 
 import scala.jdk.CollectionConverters.*
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.jwt.JwtService
 import sttp.model.StatusCode
 
 trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer:
 
+    given jwtService: JwtService         = JwtService("mbari", "foo", "bar")
     lazy val endpoints: ConceptEndpoints = ConceptEndpoints(entityManagerFactory)
 
     test("all") {
