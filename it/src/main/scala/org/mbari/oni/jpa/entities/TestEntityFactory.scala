@@ -18,6 +18,7 @@ package org.mbari.oni.jpa.entities
 
 import org.mbari.oni.domain.{ConceptNameTypes, MediaTypes, UserAccountRoles}
 import org.mbari.oni.etc.jdk.Strings
+import sun.security.util.Password
 
 import java.time.Instant
 import java.util.Date
@@ -152,10 +153,10 @@ object TestEntityFactory:
 //        entity.setId(nextConceptId.incrementAndGet())
         entity
 
-    def createUserAccount(role: String = UserAccountRoles.ADMINISTRATOR.getRoleName): UserAccountEntity =
+    def createUserAccount(role: String = UserAccountRoles.ADMINISTRATOR.getRoleName, password: String = Strings.random(20)): UserAccountEntity =
         val entity = new UserAccountEntity()
         entity.setUserName(Strings.random(20))
-        entity.setPassword(Strings.random(20))
+        entity.setPassword(password)
         entity.setEmail(s"{Strings.random(10)}@mbari.org")
         entity.setFirstName(Strings.random(10))
         entity.setLastName(Strings.random(10))

@@ -16,16 +16,19 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ConceptMetadata, RawConcept}
+import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, UserAccount, UserAccountRoles}
 import org.mbari.oni.jpa.DatabaseFunSuite
 import org.mbari.oni.jpa.entities.{EntityUtilities, TestEntityFactory}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
 import scala.jdk.CollectionConverters.*
+import scala.util.Properties
 
 trait ConceptServiceSuite extends DatabaseFunSuite:
 
-    lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
+    lazy val conceptService: ConceptService         = new ConceptService(entityManagerFactory)
+    lazy val userAccountService: UserAccountService = new UserAccountService(entityManagerFactory)
+    lazy val historyService: HistoryService         = new HistoryService(entityManagerFactory)
 
     override def beforeEach(context: BeforeEach): Unit =
         for root <- conceptService.findRoot()
@@ -152,4 +155,167 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
             assert(rootEntity.getId != null)
             val expected = RawConcept.from(rootEntity)
             assertEquals(obtained, expected)
+    }
+
+    test("create root") {
+        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount       = UserAccount.from(userAccountEntity)
+
+        assert(userAccount.username != null)
+        val attempt = for
+            user <- userAccountService.create(userAccount)
+            root <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
+        yield root
+
+        attempt match
+            case Left(e)     =>
+                fail("Failed to create root")
+            case Right(root) =>
+                assertEquals(root.name, "root")
+
+        conceptService.findRoot() match
+            case Left(e)      => fail("Failed to find root")
+            case Right(found) => assertEquals(found.name, "root")
+    }
+
+    test("create root and child") {
+        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount       = UserAccount.from(userAccountEntity)
+
+        assert(userAccount.username != null)
+        val attempt = for
+            user  <- userAccountService.create(userAccount)
+            root  <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
+            child <- conceptService.create(ConceptCreate("child", Some(root.name), userName = Some(user.username)))
+        yield child
+
+        attempt match
+            case Left(e)      =>
+                fail("Failed to create root")
+            case Right(child) =>
+                assertEquals(child.name, "child")
+    }
+
+    test("create 2nd root should fail") {
+        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount       = UserAccount.from(userAccountEntity)
+
+        assert(userAccount.username != null)
+        val attempt = for
+            user      <- userAccountService.create(userAccount)
+            root      <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
+            otherRoot <- conceptService.create(ConceptCreate("anotherroot", None, userName = Some(user.username)))
+        yield root
+
+        attempt match
+            case Left(e)     =>
+            case Right(root) =>
+                fail("Should not have been able to create a 2nd root")
+
+        conceptService.findRoot() match
+            case Left(e)      => fail("Failed to find root")
+            case Right(found) => assertEquals(found.name, "root")
+    }
+
+    test("update") {
+        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount       = UserAccount.from(userAccountEntity)
+        assert(userAccount.username != null)
+
+        val root = TestEntityFactory.buildRoot(2, 0)
+
+        val attempt = for
+            user         <- userAccountService.create(userAccount)
+            rootEntity   <- conceptService.init(root)
+            child        <- Right(rootEntity.getChildConcepts.iterator().next())
+            updatedChild <- conceptService.update(
+                                ConceptUpdate(
+                                    child.getPrimaryConceptName.getName,
+                                    rankLevel = Some("supersuper"),
+                                    rankName = Some("genera"),
+                                    aphiaId = Some(1234),
+                                    userName = Some(user.username)
+                                )
+                            )
+        yield updatedChild
+
+        attempt match
+            case Left(e)     =>
+                fail("Failed to update")
+            case Right(child) =>
+                assertEquals(child.rank, Some("supersupergenera"))
+                assertEquals(child.aphiaId, Some(1234L))
+
+                historyService.findByConceptName(child.name) match
+                    case Left(e)      => fail("Failed to find history")
+                    case Right(found) =>
+                        assertEquals(found.size, 2)
+
+    }
+
+    test("update parent") {
+        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount = UserAccount.from(userAccountEntity)
+        assert(userAccount.username != null)
+
+        val root = TestEntityFactory.buildRoot(3, 0)
+        val grandChild = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+
+        val attempt = for
+            user <- userAccountService.create(userAccount)
+            rootEntity <- conceptService.init(root)
+            grandChildEntity <- Right(grandChild)
+            updatedGrandChild <- conceptService.update(
+                ConceptUpdate(
+                    grandChildEntity.getPrimaryConceptName.getName,
+                    parentName = Some(rootEntity.getPrimaryConceptName.getName),
+                    userName = Some(user.username)
+                )
+            )
+        yield updatedGrandChild
+
+        attempt match
+            case Left(e) =>
+                fail("Failed to update")
+            case Right(grandChild) =>
+                conceptService.findParentByChildName(grandChild.name) match
+                    case Left(e) =>
+                        fail("Failed to find parent")
+                    case Right(found) =>
+                        assertEquals(found.name, root.getPrimaryConceptName.getName)
+                historyService.findByConceptName(grandChild.name) match
+                    case Left(e) =>
+                        fail("Failed to find history")
+                    case Right(found) =>
+                        assertEquals(found.size, 1)
+    }
+
+    test("delete") {
+        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount       = UserAccount.from(userAccountEntity)
+        assert(userAccount.username != null)
+
+        val root = TestEntityFactory.buildRoot(3, 0)
+        val childEntity = root.getChildConcepts.iterator().next()
+        val childName = childEntity.getPrimaryConceptName.getName
+
+        val attempt = for
+            user       <- userAccountService.create(userAccount)
+            rootEntity <- conceptService.init(root)
+            child      <- Right(childEntity)
+            n          <- conceptService.delete(ConceptDelete(child.getPrimaryConceptName.getName, Some(user.username)))
+        yield n
+
+        attempt match
+            case Left(e) =>
+                fail("Failed to delete")
+            case Right(n) =>
+                assertEquals(n, 2)
+                conceptService.findByName(childName) match
+                    case Left(_)    =>
+                    case Right(opt) => fail("Should not have found child")
+                conceptService.findRoot() match
+                    case Left(e)      => fail("Failed to find root")
+                    case Right(found) =>
+                        assertEquals(found.name, root.getPrimaryConceptName.getName)
     }

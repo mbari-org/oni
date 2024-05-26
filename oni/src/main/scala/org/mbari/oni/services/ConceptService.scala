@@ -212,7 +212,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
     def create(conceptCreate: ConceptCreate): Either[Throwable, ConceptMetadata] =
 
         // -- Helper function to build the concept and history in a transaction
-        def buildInTxn(userEntity: UserAccountEntity, parent: ConceptEntity): ConceptEntity =
+        def buildInTxn(userEntity: UserAccountEntity, parent: ConceptEntity, entityManager: EntityManager): ConceptEntity =
 
             // build concept
             val concept     = new ConceptEntity()
@@ -221,11 +221,19 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             conceptCreate.rankName.foreach(v => concept.setRankName(v))
             val conceptName = new ConceptNameEntity(conceptCreate.name)
             concept.addConceptName(conceptName)
-            parent.addChildConcept(concept)
+            if (parent != null) {
+                parent.addChildConcept(concept)
 
-            // build history
-            val history = HistoryEntityFactory.add(userEntity, parent)
-            parent.getConceptMetadata.addHistory(history)
+                // build history
+                val history = HistoryEntityFactory.add(userEntity, parent)
+                parent.getConceptMetadata.addHistory(history)
+            }
+            else {
+                findRoot() match
+                    case Left(_) => entityManager.persist(concept)
+                    case Right(_) =>
+                        throw new IllegalArgumentException("Root concept already exists. Cannot create a new root concept")
+            }
             concept
 
         // -- Helper function to run the transaction
@@ -242,7 +250,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                                     case None    => throw ConceptNameNotFound(parentName)
                             case None             => null
 
-                        val conceptEntity = buildInTxn(userEntity, parent)
+                        val conceptEntity = buildInTxn(userEntity, parent, entityManager)
                         ConceptMetadata.from(conceptEntity)
             )
 
@@ -351,8 +359,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                     case parent =>
                         parent.getConceptMetadata.addHistory(history)
                         repo.deleteBranchByName(name)
-                val count = repo.deleteBranchByName(name)
-                count
+
             )
 
         for

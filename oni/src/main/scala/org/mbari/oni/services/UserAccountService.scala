@@ -8,16 +8,19 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException}
+import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException, WrappedException}
 import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.UserAccountEntity
 import org.mbari.oni.jpa.repositories.UserAccountRepository
+import org.mbari.oni.etc.jdk.Loggers.given
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 
 class UserAccountService(entityManagerFactory: EntityManagerFactory):
+
+    private val log = System.getLogger(getClass.getName)
 
     def findAll(): Either[Throwable, Seq[UserAccount]] =
         entityManagerFactory.transaction(entityManager =>
@@ -89,7 +92,8 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
         userName match
             case Some(name) =>
                 findByUserName(name) match
-                    case Left(e) => Left(AccessDeniedMissingCredentials)
+                    case Left(e) =>
+                        Left(WrappedException(s"An error occurred while finding user account with username ${name}", e))
                     case Right(None) => Left(AccessDenied(name))
                     case Right(Some(u)) => 
                         if u.role != UserAccountRoles.READONLY.getRoleName then Right(u)

@@ -55,3 +55,19 @@ trait HistoryServiceSuite extends DataInitializer:
             case Right(obtained) =>
                 assertEquals(expected.size, obtained.size)
     }
+
+    test("findByConceptName") {
+        val root     = init(3, 6)
+        assert(root != null)
+        val conceptName = root.getPrimaryConceptName.getName
+        val expected = root
+            .getDescendants
+            .asScala
+            .flatMap(ExtendedHistory.from)
+            .toSet
+            .filter(_.concept == conceptName)
+        historyService.findByConceptName(conceptName) match
+            case Left(e)         => fail(e.getMessage)
+            case Right(obtained) =>
+                assertEquals(expected.size, obtained.size)
+    }

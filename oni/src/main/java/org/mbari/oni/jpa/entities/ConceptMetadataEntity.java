@@ -55,7 +55,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     @OneToMany(
             targetEntity = HistoryEntity.class,
             mappedBy = "conceptMetadata",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = {CascadeType.ALL}
     )
     @OrderBy(value = "creationDate")
@@ -81,7 +81,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     @OneToMany(
             targetEntity = LinkRealizationEntity.class,
             mappedBy = "conceptMetadata",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
     )
     private Set<LinkRealizationEntity> linkRealizations;
@@ -89,7 +89,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     @OneToMany(
             targetEntity = LinkTemplateEntity.class,
             mappedBy = "conceptMetadata",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
     )
     private Set<LinkTemplateEntity> linkTemplates;
@@ -98,10 +98,13 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     @OneToMany(
             targetEntity = MediaEntity.class,
             mappedBy = "conceptMetadata",
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             cascade = CascadeType.ALL
     )
     private Set<MediaEntity> medias;
+
+    @ManyToMany(mappedBy = "conceptMetadatas", fetch = FetchType.LAZY)
+    private Set<ReferenceEntity> references;
 
     /**
      * Optimistic lock to prevent concurrent overwrites
@@ -132,6 +135,12 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     public void addMedia(MediaEntity media) {
         if (getMedias().add(media)) {
             media.setConceptMetadata(this);
+        }
+    }
+
+    public void addReference(ReferenceEntity reference) {
+        if (getReferences().add(reference)) {
+            reference.getConceptMetadatas().add(this);
         }
     }
 
@@ -209,6 +218,14 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
         return getId();
     }
 
+    public Set<ReferenceEntity> getReferences() {
+        if (references == null) {
+            references = new HashSet<>();
+        }
+
+        return references;
+    }
+
     public boolean hasPrimaryImage() {
         return (getPrimaryImage() != null);
     }
@@ -249,6 +266,12 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     public void removeMedia(MediaEntity media) {
         if (getMedias().remove(media)) {
             media.setConceptMetadata(null);
+        }
+    }
+
+    public void removeReference(ReferenceEntity reference) {
+        if (getReferences().remove(reference)) {
+            reference.getConceptMetadatas().remove(this);
         }
     }
 

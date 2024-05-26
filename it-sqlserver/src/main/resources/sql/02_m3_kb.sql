@@ -84,12 +84,15 @@ create table Prefs
     NodeName  varchar(1024) not null,
     primary key (NodeName, PrefKey)
 );
+create table Reference (id bigint not null, doi varchar(2048), reference varchar(2048) not null, LAST_UPDATED_TIME datetime2(6), primary key (id));
+create table Reference_ConceptDelegate (ConceptDelegateID_FK bigint not null, ReferenceID_FK bigint not null, primary key (ConceptDelegateID_FK, ReferenceID_FK));
 create table UniqueID
 (
     NextID    bigint,
     TableName varchar(255) not null,
     primary key (TableName)
 );
+insert into UniqueID(TableName, NextID) values ('Reference',0);
 insert into UniqueID(TableName, NextID)
 values ('UserName', 0);
 insert into UniqueID(TableName, NextID)
@@ -138,8 +141,12 @@ create index idx_LinkTemplate_FK1 on LinkTemplate (ConceptDelegateID_FK);
 create index idx_LinkTemplate_LUT on LinkTemplate (LAST_UPDATED_TIME);
 create index idx_Media_FK1 on Media (ConceptDelegateID_FK);
 create index idx_Media_LUT on Media (LAST_UPDATED_TIME);
+create index idx_Reference_name on Reference (ReferenceName);
+create index idx_Reference_FK1 on Reference (ConceptDelegateID_FK);
+create index idx_Reference_LUT on Reference (LAST_UPDATED_TIME);
+create unique nonclustered index uc_Reference_doi on Reference (doi) where doi is not null;
 alter table UserAccount
-    add constraint UKfymnce9g69g5npidfaoevoje4 unique (UserName);
+    add constraint uc_UserAccount_UserName unique (UserName);
 alter table Concept
     add constraint fk_concept__concept_id foreign key (ParentConceptID_FK) references Concept;
 alter table ConceptDelegate
@@ -154,3 +161,5 @@ alter table LinkTemplate
     add constraint fk_LinkTempate__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
 alter table Media
     add constraint fk_Media__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
+alter table Reference_ConceptDelegate add constraint fk_RC_to_C foreign key (ConceptDelegateID_FK) references ConceptDelegate;
+alter table Reference_ConceptDelegate add constraint fk_RC_to_R foreign key (ReferenceID_FK) references Reference;

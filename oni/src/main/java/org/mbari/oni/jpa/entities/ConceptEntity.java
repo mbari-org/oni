@@ -28,18 +28,16 @@ import org.mbari.oni.jpa.IPersistentObject;
                @Index(name = "idx_Concept_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({ TransactionLogger.class, KeyNullifier.class})
 @NamedQueries( {
-    @NamedQuery(name = "Concept.findById", query = "SELECT v FROM Concept v WHERE v.id = :id") ,
-    @NamedQuery(name = "Concept.findByReference", query = "SELECT c FROM Concept c WHERE c.reference = :reference") ,
-    @NamedQuery(name = "Concept.findByAphiaId", query = "SELECT c FROM Concept c WHERE c.aphiaId = :aphiaId") ,
-    @NamedQuery(name = "Concept.findByRankName", query = "SELECT c FROM Concept c WHERE c.rankName = :rankName") ,
-    @NamedQuery(name = "Concept.findByRankLevel", query = "SELECT c FROM Concept c WHERE c.rankLevel = :rankLevel") , @NamedQuery(name = "Concept.findRoot", query = "SELECT c FROM Concept c WHERE c.parentConcept IS NULL") ,
+    @NamedQuery(name = "Concept.eagerFindById", query = "SELECT c FROM Concept c JOIN FETCH c.conceptMetadata m WHERE c.id = :id"),
     @NamedQuery(name = "Concept.findAll", query = "SELECT c FROM Concept c"),
-    @NamedQuery(name = "Concept.findByAphiaId", query = "SELECT c FROM Concept c WHERE c.aphiaId = :aphiaId"),
-    @NamedQuery(name = "Concept.findByName", query = "SELECT c FROM Concept c, IN (c.conceptNames) AS n WHERE n.name = :name"),
     @NamedQuery(name = "Concept.findAllByNameGlob", query = "SELECT DISTINCT c FROM Concept c, IN (c.conceptNames) AS n WHERE LOWER(n.name) LIKE :name"),
     @NamedQuery(name = "Concept.findAllByNameGlobNew", query = "SELECT c FROM Concept c JOIN FETCH c.conceptNames n WHERE LOWER(n.name) LIKE :name"),
-    @NamedQuery(name = "Concept.eagerFindById", query = "SELECT c FROM Concept c JOIN FETCH c.conceptMetadata m WHERE c.id = :id")
-
+    @NamedQuery(name = "Concept.findByAphiaId", query = "SELECT c FROM Concept c WHERE c.aphiaId = :aphiaId") ,
+    @NamedQuery(name = "Concept.findById", query = "SELECT v FROM Concept v WHERE v.id = :id") ,
+    @NamedQuery(name = "Concept.findByName", query = "SELECT c FROM Concept c, IN (c.conceptNames) AS n WHERE n.name = :name"),
+    @NamedQuery(name = "Concept.findByRankLevel", query = "SELECT c FROM Concept c WHERE c.rankLevel = :rankLevel") ,
+    @NamedQuery(name = "Concept.findByRankName", query = "SELECT c FROM Concept c WHERE c.rankName = :rankName"),
+    @NamedQuery(name = "Concept.findRoot", query = "SELECT c FROM Concept c WHERE c.parentConcept IS NULL")
 })
 public class ConceptEntity implements Serializable, IPersistentObject {
 

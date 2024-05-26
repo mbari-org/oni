@@ -47,18 +47,12 @@ import org.mbari.oni.jpa.TransactionLogger;
                    @Index(name = "idx_History_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
 @NamedQueries( {
-    @NamedQuery(name = "History.findAll", 
-                query = "SELECT h FROM History h"),
-    @NamedQuery(name = "History.findById",
-                query = "SELECT v FROM History v WHERE v.id = :id"),
-    @NamedQuery(name = "History.findByProcessedDate",
-                query = "SELECT h FROM History h WHERE h.processedDate = :processedDate"),
-    @NamedQuery(name = "History.findByCreationDate",
-                query = "SELECT h FROM History h WHERE h.creationDate = :creationDate"),
-    @NamedQuery(name = "History.findByCreatorName",
-                query = "SELECT h FROM History h WHERE h.creatorName = :creatorName"),
-    @NamedQuery(name = "History.findByProcessorName",
-                query = "SELECT h FROM History h WHERE h.processorName = :processorName") ,
+    @NamedQuery(name = "History.findAll",  query = "SELECT h FROM History h"),
+    @NamedQuery(name = "History.findById", query = "SELECT v FROM History v WHERE v.id = :id"),
+    @NamedQuery(name = "History.findByProcessedDate", query = "SELECT h FROM History h WHERE h.processedDate = :processedDate"),
+    @NamedQuery(name = "History.findByCreationDate", query = "SELECT h FROM History h WHERE h.creationDate = :creationDate"),
+    @NamedQuery(name = "History.findByCreatorName", query = "SELECT h FROM History h WHERE h.creatorName = :creatorName"),
+    @NamedQuery(name = "History.findByProcessorName", query = "SELECT h FROM History h WHERE h.processorName = :processorName") ,
     @NamedQuery(name = "History.findByField", query = "SELECT h FROM History h WHERE h.field = :field") ,
     @NamedQuery(name = "History.findByOldValue", query = "SELECT h FROM History h WHERE h.oldValue = :oldValue") ,
     @NamedQuery(name = "History.findByNewValue", query = "SELECT h FROM History h WHERE h.newValue = :newValue") ,
@@ -66,7 +60,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     //@NamedQuery(name = "History.findByComment", query = "SELECT h FROM History h WHERE h.comment = :comment") ,
     @NamedQuery(name = "History.findByApproved", query = "SELECT h FROM History h WHERE h.approved = :approved"),
     @NamedQuery(name = "History.findPendingApproval", query = "SELECT h FROM History h WHERE h.processedDate IS NULL"),
-    @NamedQuery(name = "History.findApproved", query = "SELECT h FROM History h WHERE h.processedDate IS NOT NULL")
+    @NamedQuery(name = "History.findApproved", query = "SELECT h FROM History h WHERE h.processedDate IS NOT NULL"),
+    @NamedQuery(name = "History.findByConceptName", query = "SELECT h FROM History h WHERE h.conceptMetadata.id IN (SELECT cn.concept.conceptMetadata.id FROM ConceptName cn WHERE cn.name = :name)"),
 })
 public class HistoryEntity implements Serializable, IPersistentObject {
 

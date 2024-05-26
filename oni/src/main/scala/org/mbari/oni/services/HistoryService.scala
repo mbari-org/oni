@@ -45,6 +45,16 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h))
                 .toScala
         )
+        
+    def findByConceptName(conceptName: String): Either[Throwable, Seq[ExtendedHistory]] =
+        entityManagerFactory.transaction(entityManager =>
+            val repo = HistoryRepository(entityManager)
+            repo.findByConceptName(conceptName)
+                .asScala
+                .toSeq
+                .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h))
+                .sortBy(_.creationTimestamp)
+        )
 
 
     // TODO: Create
