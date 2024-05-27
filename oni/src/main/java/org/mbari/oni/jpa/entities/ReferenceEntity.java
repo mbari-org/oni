@@ -27,8 +27,9 @@ import java.util.Set;
                 @Index(name = "idx_Reference_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({ TransactionLogger.class, KeyNullifier.class })
 @NamedQueries( {
+    @NamedQuery(name = "Reference.findAll", query = "SELECT v FROM Reference v ORDER BY v.reference ASC"),
     @NamedQuery(name = "Reference.findById", query = "SELECT v FROM Reference v WHERE v.id = :id") ,
-    @NamedQuery(name = "Reference.findByGlob", query = "SELECT r FROM Reference r WHERE r.reference LIKE :glob"),
+    @NamedQuery(name = "Reference.findByGlob", query = "SELECT r FROM Reference r WHERE r.reference LIKE :glob ORDER BY v.reference ASC"),
     @NamedQuery(name = "Reference.findByDoi", query = "SELECT r FROM Reference r WHERE r.doi = :doi") ,
     @NamedQuery(name = "Reference.findByConceptName",
                 query = "SELECT r FROM Reference r JOIN r.conceptMetadatas cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name") ,

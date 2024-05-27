@@ -21,14 +21,18 @@ public class ReferenceRepository extends Repository {
         super(entityManager);
     }
 
+    public List<ReferenceEntity> findAll(int limit, int offset) {
+        return findByNamedQuery("Reference.findAll", limit, offset);
+    }
+
     public Optional<ReferenceEntity> findByDoi(URI doi) {
         List<ReferenceEntity> results = findByNamedQuery("Reference.findByDoi", Map.of("doi", doi));
         return results.stream().findFirst();
     }
 
-    public List<ReferenceEntity> findByGlob(String glob) {
+    public List<ReferenceEntity> findByGlob(String glob, int limit, int offset) {
         var key = '%' + glob + '%';
-        return findByNamedQuery("Reference.findByGlob", Map.of("glob", key));
+        return findByNamedQuery("Reference.findByGlob", Map.of("glob", key), limit, offset);
     }
 
     public List<ReferenceEntity> findByConceptName(String name) {
