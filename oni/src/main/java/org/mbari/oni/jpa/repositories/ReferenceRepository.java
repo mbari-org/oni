@@ -1,8 +1,19 @@
+/*
+ * Copyright (c) Monterey Bay Aquarium Research Institute 2024
+ *
+ * oni code is non-public software. Unauthorized copying of this file,
+ * via any medium is strictly prohibited. Proprietary and confidential. 
+ */
+
 package org.mbari.oni.jpa.repositories;
 
+import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.ReferenceEntity;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class ReferenceRepository extends Repository {
 
@@ -11,7 +22,8 @@ public class ReferenceRepository extends Repository {
     }
 
     public Optional<ReferenceEntity> findByDoi(URI doi) {
-        return findByNamedQuery("Reference.findByDoi", Map.of("doi", doi)).stream().findFirst();
+        List<ReferenceEntity> results = findByNamedQuery("Reference.findByDoi", Map.of("doi", doi));
+        return results.stream().findFirst();
     }
 
     public List<ReferenceEntity> findByGlob(String glob) {
