@@ -99,6 +99,9 @@ object CirceCodecs:
     given Decoder[RawMedia] = deriveDecoder
     given Encoder[RawMedia] = deriveEncoder
 
+    given Decoder[Reference] = deriveDecoder
+    given Encoder[Reference] = deriveEncoder
+
     given Decoder[SerdeConcept] = deriveDecoder
     given Encoder[SerdeConcept] = deriveEncoder
 

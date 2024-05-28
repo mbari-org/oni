@@ -17,7 +17,7 @@ import sttp.tapir.json.circe.*
 import org.mbari.oni.domain.HealthStatus
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.domain.{ErrorMsg, HealthStatus}
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 
 class HealthEndpoints extends Endpoints:
 
@@ -30,10 +30,10 @@ class HealthEndpoints extends Endpoints:
             .description("Health check")
             .tag("Health")
 
-    val healthEndpointImpl: ServerEndpoint[Any, Id] =
+    val healthEndpointImpl: ServerEndpoint[Any, Identity] =
         healthEndpoint.serverLogic(_ => Right(HealthStatus.Default))
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] =
         List(healthEndpoint)
 
-    override def allImpl: List[ServerEndpoint[Any, Id]] = List(healthEndpointImpl)
+    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(healthEndpointImpl)

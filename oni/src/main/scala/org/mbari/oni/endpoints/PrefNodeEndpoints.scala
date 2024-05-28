@@ -13,7 +13,7 @@ import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.PrefNodeService
@@ -43,7 +43,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .description("Get all prefNode names")
             .tag("PrefNode")
 
-    val findAllEndpointImpl: ServerEndpoint[Any, Id] = findAllEndpoint.serverLogic { (name, keyOpt) =>
+    val findAllEndpointImpl: ServerEndpoint[Any, Identity] = findAllEndpoint.serverLogic { (name, keyOpt) =>
         handleErrors(keyOpt match
             case Some(key) =>
                 service
@@ -70,7 +70,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .description("Find all preferences with a given prefix")
             .tag(tag)
 
-    val findByPrefixImpl: ServerEndpoint[Any, Id] = findByPrefix.serverLogic { prefix =>
+    val findByPrefixImpl: ServerEndpoint[Any, Identity] = findByPrefix.serverLogic { prefix =>
         handleErrors(service.findByNodeNameLike(prefix))
     }
 
@@ -83,7 +83,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
         .description("Create a new prefNode")
         .tag(tag)
 
-    val createEndpointImpl: ServerEndpoint[Any, Id] =
+    val createEndpointImpl: ServerEndpoint[Any, Identity] =
         createEndpoint
             .serverSecurityLogic(jwtOpt => verify(jwtOpt))
             .serverLogic { _ => prefNode => handleErrors(service.create(prefNode)) }
@@ -98,7 +98,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .description("Update a prefNode")
             .tag(tag)
 
-    val updateEndpointImpl: ServerEndpoint[Any, Id] =
+    val updateEndpointImpl: ServerEndpoint[Any, Identity] =
         updateEndpoint
             .serverSecurityLogic(jwtOpt => verify(jwtOpt))
             .serverLogic { _ => prefNode => handleErrors(service.update(prefNode)) }
@@ -122,7 +122,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .description("Delete a prefNode")
             .tag(tag)
 
-    val deleteEndpointImpl: ServerEndpoint[Any, Id] = deleteEndpoint
+    val deleteEndpointImpl: ServerEndpoint[Any, Identity] = deleteEndpoint
         .serverSecurityLogic(jwtOpt => verify(jwtOpt))
         .serverLogic { _ => (name, key) => handleErrors(service.delete(name, key)) }
 
@@ -134,7 +134,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
         deleteEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Id]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
         findByPrefixImpl,
         findAllEndpointImpl,
         createEndpointImpl,

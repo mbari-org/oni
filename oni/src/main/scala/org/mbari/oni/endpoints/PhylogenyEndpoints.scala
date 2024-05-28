@@ -11,7 +11,7 @@ import org.mbari.oni.domain.{Concept, ErrorMsg, Phylogeny, SerdeConcept}
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import CustomTapirJsonCirce.*
 
@@ -32,7 +32,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         .description("Find the branch from a given concept up to the root")
         .tag(tag)
 
-    val upEndpointImpl: ServerEndpoint[Any, Id] = upEndpoint.serverLogic { name =>
+    val upEndpointImpl: ServerEndpoint[Any, Identity] = upEndpoint.serverLogic { name =>
         handleOption(service.findUp(name).map(SerdeConcept.from))
     }
 
@@ -43,7 +43,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         .description("Find the branch from the root down to a given concept")
         .tag(tag)
 
-    val downEndpointImpl: ServerEndpoint[Any, Id] = downEndpoint.serverLogic { name =>
+    val downEndpointImpl: ServerEndpoint[Any, Identity] = downEndpoint.serverLogic { name =>
         handleOption(service.findDown(name).map(SerdeConcept.from))
     }
 
@@ -53,7 +53,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         .out(jsonBody[Seq[SerdeConcept]])
         .tag(tag)
 
-    val siblingsEndpointImpl: ServerEndpoint[Any, Id] = siblingsEndpoint.serverLogic { name =>
+    val siblingsEndpointImpl: ServerEndpoint[Any, Identity] = siblingsEndpoint.serverLogic { name =>
         handleErrors(
             Try(service.findSiblings(name))
                 .toEither
@@ -68,7 +68,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
             .out(jsonBody[Seq[SerdeConcept]])
             .tag(tag)
 
-    val basicEndpointImpl: ServerEndpoint[Any, Id] = basicEndpoint.serverLogic { name =>
+    val basicEndpointImpl: ServerEndpoint[Any, Identity] = basicEndpoint.serverLogic { name =>
         handleOption(service.findUp(name).map(c => SerdeConcept.from(c).flatten.map(_.copy(children = None))))
     }
 
@@ -79,7 +79,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
             .out(jsonBody[Seq[SerdeConcept]])
             .tag(tag)
 
-    val taxaEndpointImpl: ServerEndpoint[Any, Id] = taxaEndpoint.serverLogic { name =>
+    val taxaEndpointImpl: ServerEndpoint[Any, Identity] = taxaEndpoint.serverLogic { name =>
         handleOption(
             service
                 .findDown(name)
@@ -101,7 +101,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         taxaEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Id]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
         upEndpointImpl,
         downEndpointImpl,
         siblingsEndpointImpl,

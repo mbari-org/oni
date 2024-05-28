@@ -21,7 +21,7 @@ import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.model.ValuedEndpointOutput
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.tapir.server.nima.NimaServerOptions
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 import org.checkerframework.checker.units.qual.m
 
 class HealthEndpointsSuite extends munit.FunSuite:
@@ -31,7 +31,7 @@ class HealthEndpointsSuite extends munit.FunSuite:
     test("health"):
 
         // --- START: This block adds exception logging to the stub
-        val exceptionHandler = ExceptionHandler.pure[Id](ctx =>
+        val exceptionHandler = ExceptionHandler.pure[Identity](ctx =>
             Some(
                 ValuedEndpointOutput(
                     sttp.tapir.stringBody.and(sttp.tapir.statusCode),
@@ -40,14 +40,14 @@ class HealthEndpointsSuite extends munit.FunSuite:
             )
         )
 
-        val customOptions: CustomiseInterceptors[Id, NimaServerOptions] =
+        val customOptions: CustomiseInterceptors[Identity, NimaServerOptions] =
             NimaServerOptions
                 .customiseInterceptors
                 .exceptionHandler(exceptionHandler)
         // --- END: This block adds exception logging to the stub
         // println(HealthStatus.default)
 
-        val backendStub: SttpBackend[Id, Any] =
+        val backendStub: SttpBackend[Identity, Any] =
             TapirStubInterpreter(customOptions, SttpBackendStub.synchronous)
                 .whenServerEndpointRunLogic(healthEndpoints.healthEndpointImpl)
                 .backend()

@@ -84,7 +84,7 @@ create table Prefs
     NodeName  varchar(1024) not null,
     primary key (NodeName, PrefKey)
 );
-create table Reference (id bigint not null, doi varchar(2048), reference varchar(2048) not null, LAST_UPDATED_TIME datetime2(6), primary key (id));
+create table Reference (id bigint not null, doi varchar(2048), citation varchar(2048) not null, LAST_UPDATED_TIME datetime2(6), primary key (id));
 create table Reference_ConceptDelegate (ConceptDelegateID_FK bigint not null, ReferenceID_FK bigint not null, primary key (ConceptDelegateID_FK, ReferenceID_FK));
 create table UniqueID
 (

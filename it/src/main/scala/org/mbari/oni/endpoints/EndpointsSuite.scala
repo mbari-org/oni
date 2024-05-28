@@ -23,7 +23,8 @@ import sttp.client3.testing.SttpBackendStub
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.stub.TapirStubInterpreter
 
-import sttp.tapir.server.nima.{Id, NimaServerOptions}
+import sttp.shared.Identity
+import sttp.tapir.server.nima.NimaServerOptions
 import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.model.StatusCode
@@ -36,7 +37,7 @@ trait EndpointsSuite extends munit.FunSuite:
     private val log: System.Logger = System.getLogger(getClass.getName)
 
     def runDelete(
-        ep: ServerEndpoint[Any, Id],
+        ep: ServerEndpoint[Any, Identity],
         uri: String,
         assertions: Response[Either[String, String]] => Unit,
         jwt: Option[String] = None
@@ -54,7 +55,7 @@ trait EndpointsSuite extends munit.FunSuite:
         assertions(response)
 
     def runPut(
-        ep: ServerEndpoint[Any, Id],
+        ep: ServerEndpoint[Any, Identity],
         uri: String,
         body: String,
         assertions: Response[Either[String, String]] => Unit,
@@ -74,7 +75,7 @@ trait EndpointsSuite extends munit.FunSuite:
         assertions(response)
 
     def runPost(
-        ep: ServerEndpoint[Any, Id],
+        ep: ServerEndpoint[Any, Identity],
         uri: String,
         body: String,
         assertions: Response[Either[String, String]] => Unit,
@@ -95,7 +96,7 @@ trait EndpointsSuite extends munit.FunSuite:
         assertions(response)
 
     def runGet(
-        ep: ServerEndpoint[Any, Id],
+        ep: ServerEndpoint[Any, Identity],
         uri: String,
         assertions: Response[Either[String, String]] => Unit
     ): Unit =
@@ -121,9 +122,9 @@ trait EndpointsSuite extends munit.FunSuite:
      * @param serverEndpoint
      * @return
      */
-    def newBackendStub(serverEndpoint: ServerEndpoint[Any, Id]): SttpBackend[Id, Any] =
+    def newBackendStub(serverEndpoint: ServerEndpoint[Any, Identity]): SttpBackend[Identity, Any] =
         // --- START: This block adds exception logging to the stub
-        val exceptionHandler = ExceptionHandler.pure[Id](ctx =>
+        val exceptionHandler = ExceptionHandler.pure[Identity](ctx =>
             Some(
                 ValuedEndpointOutput(
                     sttp.tapir.stringBody.and(sttp.tapir.statusCode),
@@ -132,7 +133,7 @@ trait EndpointsSuite extends munit.FunSuite:
             )
         )
 
-        val customOptions: CustomiseInterceptors[Id, NimaServerOptions] =
+        val customOptions: CustomiseInterceptors[Identity, NimaServerOptions] =
             NimaServerOptions
                 .customiseInterceptors
                 .exceptionHandler(exceptionHandler)

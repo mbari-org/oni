@@ -39,5 +39,9 @@ public class ReferenceRepository extends Repository {
         return findByNamedQuery("Reference.findByConceptName", Map.of("name", name));
     }
 
+    public Optional<ReferenceEntity> findById(Long id) {
+        List<ReferenceEntity> results = findByNamedQuery("Reference.findById", Map.of("id", id));
+        return results.stream().findFirst();
+    }
 
 }

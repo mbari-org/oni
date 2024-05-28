@@ -16,7 +16,7 @@ import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, Conc
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{ConceptNameService, ConceptService}
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 
 class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints:
 
@@ -33,7 +33,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Get all concept names")
         .tag(tag)
 
-    val allEndpointImpl: ServerEndpoint[Any, Id] = allEndpoint.serverLogic { _ =>
+    val allEndpointImpl: ServerEndpoint[Any, Identity] = allEndpoint.serverLogic { _ =>
         handleErrors(conceptNameService.findAllNames())
     }
 
@@ -46,7 +46,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Create a new concept")
         .tag(tag)
 
-    val createEndpointImpl: ServerEndpoint[Any, Id] = createEndpoint
+    val createEndpointImpl: ServerEndpoint[Any, Identity] = createEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => conceptCreate =>
             val createData = conceptCreate.copy(userName = Some(userAccount.username))
@@ -64,7 +64,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Delete a concept")
         .tag(tag)
 
-    val deleteEndpointImpl: ServerEndpoint[Any, Id] = deleteEndpoint
+    val deleteEndpointImpl: ServerEndpoint[Any, Identity] = deleteEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => name =>
             val deleteData = ConceptDelete(name, Some(userAccount.username))
@@ -82,7 +82,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Find the parent of a concept")
         .tag(tag)
 
-    val findParentEndpointImpl: ServerEndpoint[Any, Id] = findParentEndpoint.serverLogic { name =>
+    val findParentEndpointImpl: ServerEndpoint[Any, Identity] = findParentEndpoint.serverLogic { name =>
         handleErrors(service.findParentByChildName(name))
     }
 
@@ -94,7 +94,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Find the children of a concept")
         .tag(tag)
 
-    val findChildrenEndpointImpl: ServerEndpoint[Any, Id] = findChildrenEndpoint.serverLogic { name =>
+    val findChildrenEndpointImpl: ServerEndpoint[Any, Identity] = findChildrenEndpoint.serverLogic { name =>
         handleErrors(service.findChildrenByParentName(name)).map(_.toSeq.sortBy(_.name))
     }
 
@@ -106,7 +106,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Find a concept by name")
         .tag(tag)
 
-    val findByNameImpl: ServerEndpoint[Any, Id] = findByName.serverLogic { name =>
+    val findByNameImpl: ServerEndpoint[Any, Identity] = findByName.serverLogic { name =>
         handleErrors(service.findByName(name))
     }
 
@@ -118,7 +118,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Find concepts by name containing")
         .tag(tag)
 
-    val findByNameContainingImpl: ServerEndpoint[Any, Id] = findByNameContaining.serverLogic { name =>
+    val findByNameContainingImpl: ServerEndpoint[Any, Identity] = findByNameContaining.serverLogic { name =>
         handleErrors(service.findByGlob(name)).map(_.toSeq.sortBy(_.name))
     }
 
@@ -131,7 +131,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .description("Update a concept")
         .tag(tag)
 
-    val updateEndpointImpl: ServerEndpoint[Any, Id] = updateEndpoint
+    val updateEndpointImpl: ServerEndpoint[Any, Identity] = updateEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => conceptUpdate =>
             val updateData = conceptUpdate.copy(userName = Some(userAccount.username))
@@ -149,7 +149,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         allEndpoint
     )
 
-    override val allImpl: List[ServerEndpoint[Any, Id]] = List(
+    override val allImpl: List[ServerEndpoint[Any, Identity]] = List(
         findParentEndpointImpl,
         findChildrenEndpointImpl,
         findByNameContainingImpl,

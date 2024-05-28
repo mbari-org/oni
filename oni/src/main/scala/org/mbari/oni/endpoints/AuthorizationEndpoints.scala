@@ -19,7 +19,7 @@ import org.mbari.oni.domain.{Authorization, BadRequest, ErrorMsg, NotFound, Serv
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.services.UserAccountService
 import sttp.tapir.model.UsernamePassword
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 import sttp.model.headers.{AuthenticationScheme, WWWAuthenticateChallenge}
 
 class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService)
@@ -55,7 +55,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
             )
             .tag(tag)
 
-    val authEndpointImpl: ServerEndpoint[Any, Id] =
+    val authEndpointImpl: ServerEndpoint[Any, Identity] =
         authEndpoint
             .serverSecurityLogicPure(authHeader =>
                 val parts = authHeader.split(" ")
@@ -89,7 +89,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
             .description("Login with username and password")
             .tag(tag)
 
-    val loginEndpointImpl: ServerEndpoint[Any, Id] =
+    val loginEndpointImpl: ServerEndpoint[Any, Identity] =
         loginEndpoint
             .serverSecurityLogicPure { usernamePassword =>
                 for
@@ -110,5 +110,5 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
     override val all: List[Endpoint[?, ?, ?, ?, ?]]     = List(
         loginEndpoint,
         authEndpoint)
-    override val allImpl: List[ServerEndpoint[Any, Id]] =
+    override val allImpl: List[ServerEndpoint[Any, Identity]] =
         List(loginEndpointImpl, authEndpointImpl)

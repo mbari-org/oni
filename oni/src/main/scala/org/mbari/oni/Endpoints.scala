@@ -12,7 +12,7 @@ import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, Health
 import org.mbari.oni.etc.jwt.JwtService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 
 object Endpoints:
 
@@ -35,10 +35,10 @@ object Endpoints:
 
 
 
-    val prometheusMetrics: PrometheusMetrics[Id] = PrometheusMetrics.default[Id]()
-    val metricsEndpoint: ServerEndpoint[Any, Id] = prometheusMetrics.metricsEndpoint
+    val prometheusMetrics: PrometheusMetrics[Identity] = PrometheusMetrics.default[Identity]()
+    val metricsEndpoint: ServerEndpoint[Any, Identity] = prometheusMetrics.metricsEndpoint
 
-    val endpoints: List[ServerEndpoint[Any, Id]] = List(
+    val endpoints: List[ServerEndpoint[Any, Identity]] = List(
         authorizationEndpoints.allImpl,
         conceptEndpoints.allImpl,
         healthEndpoints.allImpl,
@@ -49,4 +49,4 @@ object Endpoints:
         userAccountEndpoints.allImpl
     ).flatten
 
-    val allImpl: List[ServerEndpoint[Any, Id]] = endpoints ++ List(metricsEndpoint)
+    val allImpl: List[ServerEndpoint[Any, Identity]] = endpoints ++ List(metricsEndpoint)

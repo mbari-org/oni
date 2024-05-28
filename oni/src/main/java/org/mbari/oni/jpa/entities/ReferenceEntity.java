@@ -27,9 +27,9 @@ import java.util.Set;
                 @Index(name = "idx_Reference_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({ TransactionLogger.class, KeyNullifier.class })
 @NamedQueries( {
-    @NamedQuery(name = "Reference.findAll", query = "SELECT v FROM Reference v ORDER BY v.reference ASC"),
-    @NamedQuery(name = "Reference.findById", query = "SELECT v FROM Reference v WHERE v.id = :id") ,
-    @NamedQuery(name = "Reference.findByGlob", query = "SELECT r FROM Reference r WHERE r.reference LIKE :glob ORDER BY v.reference ASC"),
+    @NamedQuery(name = "Reference.findAll", query = "SELECT r FROM Reference r ORDER BY r.citation ASC"),
+    @NamedQuery(name = "Reference.findById", query = "SELECT r FROM Reference r WHERE r.id = :id") ,
+    @NamedQuery(name = "Reference.findByGlob", query = "SELECT r FROM Reference r WHERE r.citation LIKE :glob ORDER BY r.citation ASC"),
     @NamedQuery(name = "Reference.findByDoi", query = "SELECT r FROM Reference r WHERE r.doi = :doi") ,
     @NamedQuery(name = "Reference.findByConceptName",
                 query = "SELECT r FROM Reference r JOIN r.conceptMetadatas cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name") ,
@@ -53,8 +53,8 @@ public class ReferenceEntity implements Serializable, IPersistentObject {
     )
     Long id;
 
-    @Column(name = "reference", length = 2048, nullable = false)
-    String reference;
+    @Column(name = "citation", length = 2048, nullable = false)
+    String citation;
 
     @Column(name = "doi", length = 2048, nullable = true)
     @Convert(converter = URIConverter.class)
@@ -90,12 +90,12 @@ public class ReferenceEntity implements Serializable, IPersistentObject {
         this.id = id;
     }
 
-    public String getReference() {
-        return reference;
+    public String getCitation() {
+        return citation;
     }
 
-    public void setReference(String reference) {
-        this.reference = reference;
+    public void setCitation(String citation) {
+        this.citation = citation;
     }
 
     public URI getDoi() {

@@ -14,7 +14,7 @@ import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 import org.mbari.oni.etc.circe.CirceCodecs.given
 
 class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
@@ -32,7 +32,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all links")
         .tag(tag)
 
-    val allLinksEndpointImpl: ServerEndpoint[Any, Id] = allLinksEndpoint.serverLogic { _ =>
+    val allLinksEndpointImpl: ServerEndpoint[Any, Identity] = allLinksEndpoint.serverLogic { _ =>
         handleErrors(service.findAllLinkTemplates())
     }
 
@@ -45,7 +45,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all link templates applicable to a concept")
         .tag(tag)
 
-    val linksForConceptEndpointImpl: ServerEndpoint[Any, Id] = linksForConceptEndpoint.serverLogic { name =>
+    val linksForConceptEndpointImpl: ServerEndpoint[Any, Identity] = linksForConceptEndpoint.serverLogic { name =>
         handleErrors(service.findAllLinkTemplatesForConcept(name))
     }
 
@@ -58,7 +58,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all link templates applicable to a concept and link name")
         .tag(tag)
 
-    val linksForConceptAndLinkNameEndpointImpl: ServerEndpoint[Any, Id] =
+    val linksForConceptAndLinkNameEndpointImpl: ServerEndpoint[Any, Identity] =
         linksForConceptAndLinkNameEndpoint.serverLogic { (name, linkName) =>
             handleErrors(service.findLinkTemplatesByNameForConcept(name, linkName))
         }
@@ -72,7 +72,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all link realizations for a link name")
         .tag(tag)
 
-    val linkRealizationsEndpointImpl: ServerEndpoint[Any, Id] = linkRealizationsEndpoint.serverLogic { linkName =>
+    val linkRealizationsEndpointImpl: ServerEndpoint[Any, Identity] = linkRealizationsEndpoint.serverLogic { linkName =>
         handleErrors(service.findLinkRealizationsByLinkName(linkName))
     }
 
@@ -83,7 +83,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         allLinksEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Id]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
         linkRealizationsEndpointImpl,
         linksForConceptAndLinkNameEndpointImpl,
         linksForConceptEndpointImpl,

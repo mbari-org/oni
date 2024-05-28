@@ -19,8 +19,10 @@ import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
+
 import org.mbari.oni.etc.jdk.Loggers.given
+
 
 import scala.concurrent.ExecutionContext
 import org.mbari.oni.etc.jwt.JwtService
@@ -29,6 +31,7 @@ import org.mbari.oni.AppConfig
 import java.net.URI
 import java.time.Instant
 import java.net.URL
+
 
 case class Paging(offset: Option[Int] = Some(0), limit: Option[Int] = Some(100))
 
@@ -64,7 +67,7 @@ trait Endpoints:
 
     // --- Abstract methods
     def all: List[Endpoint[?, ?, ?, ?, ?]]
-    def allImpl: List[ServerEndpoint[Any, Id]]
+    def allImpl: List[ServerEndpoint[Any, Identity]]
 
     // hard coded ATM, but could be configurable
     val baseEndpoint: Endpoint[Unit, Unit, Unit, Unit, Any] = endpoint.in(AppConfig.DefaultHttpConfig.contextPath)
@@ -109,7 +112,7 @@ trait Endpoints:
 
     def verify(
         jwtOpt: Option[String]
-    )(using jwtService: JwtService): Id[Either[Unauthorized, Unit]] =
+    )(using jwtService: JwtService): Identity[Either[Unauthorized, Unit]] =
         jwtOpt match
             case None      => Left(Unauthorized("Missing token"))
             case Some(jwt) =>
@@ -118,7 +121,7 @@ trait Endpoints:
 
     def verifyLogin(
         jwtOpt: Option[String]
-    )(using jwtService: JwtService): Id[Either[Unauthorized, UserAccount]] =
+    )(using jwtService: JwtService): Identity[Either[Unauthorized, UserAccount]] =
         jwtOpt match
             case None      => Left(Unauthorized("Missing token"))
             case Some(jwt) =>

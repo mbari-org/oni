@@ -15,7 +15,7 @@ import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.nima.Id
+import sttp.shared.Identity
 
 class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
@@ -31,7 +31,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         .description("Get all pending change requests")
         .tag(tag)
 
-    val pendingEndpointImpl: ServerEndpoint[Any, Id] = pendingEndpoint.serverLogic { _ =>
+    val pendingEndpointImpl: ServerEndpoint[Any, Identity] = pendingEndpoint.serverLogic { _ =>
         handleErrors(service.findAllPending())
     }
 
@@ -43,7 +43,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         .description("Get all approved change requests")
         .tag(tag)
 
-    val approvedEndpointsImpl: ServerEndpoint[Any, Id] = approvedEndpoints.serverLogic { _ =>
+    val approvedEndpointsImpl: ServerEndpoint[Any, Identity] = approvedEndpoints.serverLogic { _ =>
         handleErrors(service.findAllApproved())
     }
 
@@ -52,7 +52,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         pendingEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Id]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
         approvedEndpointsImpl,
         pendingEndpointImpl
     )
