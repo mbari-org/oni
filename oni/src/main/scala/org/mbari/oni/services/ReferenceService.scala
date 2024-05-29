@@ -20,6 +20,14 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
 
     private val log = System.getLogger(getClass.getName)
 
+    def findById(id: Long): Either[Throwable, Option[Reference]] =
+        entityManagerFactory.transaction(entityManager =>
+            val repo = ReferenceRepository(entityManager)
+            repo.findById(id)
+                .map(Reference.from)
+                .toScala
+        )
+
     def findAll(limit: Int, offset: Int): Either[Throwable, Seq[Reference]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
@@ -28,6 +36,7 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
                 .toSeq
                 .map(Reference.from)
         )
+
 
     def findByReferenceGlob(glob: String, limit: Int, offset: Int): Either[Throwable, Seq[Reference]] =
         entityManagerFactory.transaction(entityManager =>

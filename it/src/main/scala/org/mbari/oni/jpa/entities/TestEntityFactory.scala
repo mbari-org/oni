@@ -20,6 +20,7 @@ import org.mbari.oni.domain.{ConceptNameTypes, MediaTypes, UserAccountRoles}
 import org.mbari.oni.etc.jdk.Strings
 import sun.security.util.Password
 
+import java.net.URI
 import java.time.Instant
 import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
@@ -162,4 +163,13 @@ object TestEntityFactory:
         entity.setLastName(Strings.random(10))
         entity.setAffiliation(Strings.random(20))
         entity.setRole(role)
+        entity
+
+    def createReference(): ReferenceEntity =
+        val entity = new ReferenceEntity()
+        entity.setDoi(URI.create(s"https://doi.org/${random.nextInt(100)}.${random.nextInt(1000)}/TEST.${random.nextInt(1000)}.${random.nextInt(99999)}"))
+
+        val n = random.nextInt(10) + 1
+        val s = 0 to n map { _ => Strings.random(20) } mkString " "
+        entity.setCitation(s"B. M. Schlining. 1968. $s")
         entity

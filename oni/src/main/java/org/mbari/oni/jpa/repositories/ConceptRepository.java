@@ -120,6 +120,11 @@ public class ConceptRepository extends Repository {
                         parent.removeChildConcept(c);
                     }
                     deleteCount++;
+                    // Delete references to this concept
+                    c.getConceptMetadata()
+                            .getReferences()
+                            .forEach(r -> c.getConceptMetadata().removeReference(r));
+
                     entityManager.remove(c);
                 }
                 else {

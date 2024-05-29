@@ -35,7 +35,10 @@ create table LinkRealization (ConceptDelegateID_FK bigint not null, LAST_UPDATED
 create table LinkTemplate (ConceptDelegateID_FK bigint not null, LAST_UPDATED_TIME datetime2(6), id bigint not null, LinkName varchar(50), ToConcept varchar(128), LinkValue varchar(2048), primary key (id));
 create table Media (PrimaryMedia bit, MediaType varchar(5), ConceptDelegateID_FK bigint not null, LAST_UPDATED_TIME datetime2(6), id bigint not null, Caption varchar(1000), Url varchar(1024), Credit varchar(255), primary key (id));
 create table Prefs (PrefKey varchar(256) not null, PrefValue varchar(256) not null, NodeName varchar(1024) not null, primary key (NodeName, PrefKey));
+create table Reference (LAST_UPDATED_TIME datetime2(6), id bigint not null, citation varchar(2048) not null, doi varchar(2048), primary key (id));
+create table Reference_ConceptDelegate (ConceptDelegateID_FK bigint not null, ReferenceID_FK bigint not null, primary key (ConceptDelegateID_FK, ReferenceID_FK));
 create table UniqueID (NextID bigint, TableName varchar(255) not null, primary key (TableName));
+insert into UniqueID(TableName, NextID) values ('Reference',0);
 insert into UniqueID(TableName, NextID) values ('UserName',0);
 insert into UniqueID(TableName, NextID) values ('Media',0);
 insert into UniqueID(TableName, NextID) values ('LinkTemplate',0);
@@ -62,6 +65,9 @@ create index idx_LinkTemplate_FK1 on LinkTemplate (ConceptDelegateID_FK);
 create index idx_LinkTemplate_LUT on LinkTemplate (LAST_UPDATED_TIME);
 create index idx_Media_FK1 on Media (ConceptDelegateID_FK);
 create index idx_Media_LUT on Media (LAST_UPDATED_TIME);
+create index idx_Reference_citation on Reference (citation);
+create index idx_Reference_LUT on Reference (LAST_UPDATED_TIME);
+create unique nonclustered index uc_Reference_doi on Reference (doi) where doi is not null;
 alter table UserAccount add constraint uc_UserAccount__UserName unique (UserName);
 alter table Concept add constraint fk_Concept__Concept_id foreign key (ParentConceptID_FK) references Concept;
 alter table ConceptDelegate add constraint fk_ConceptDelegage__Concept_id foreign key (ConceptID_FK) references Concept;
@@ -70,6 +76,9 @@ alter table History add constraint fk_History__ConceptDelegate_id foreign key (C
 alter table LinkRealization add constraint fk_LinkRealization__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
 alter table LinkTemplate add constraint fk_LinkTempate__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
 alter table Media add constraint fk_Media__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
+alter table Reference_ConceptDelegate add constraint fk_Reference__ConceptDelegate foreign key (ConceptDelegateID_FK) references ConceptDelegate;
+alter table Reference_ConceptDelegate add constraint fk_ConceptDelegate__Reference foreign key (ReferenceID_FK) references Reference;
+
 
 -- Add case sensitve ConceptName column
 ALTER TABLE ConceptName

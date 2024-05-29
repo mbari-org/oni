@@ -56,9 +56,8 @@ public class ReferenceEntity implements Serializable, IPersistentObject {
     @Column(name = "citation", length = 2048, nullable = false)
     String citation;
 
-    @Column(name = "doi", length = 2048, nullable = true)
+    @Column(name = "doi", length = 2048, nullable = true, unique = true)
     @Convert(converter = URIConverter.class)
-    @NaturalId
     URI doi;
 
     @ManyToMany(
