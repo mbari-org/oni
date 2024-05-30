@@ -25,7 +25,6 @@ import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 
-import java.net.URLEncoder
 import scala.util.Random
 
 trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer {

@@ -8,7 +8,7 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, UserAccountEndpoints}
+import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
 import org.mbari.oni.etc.jwt.JwtService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
@@ -29,10 +29,8 @@ object Endpoints:
     val linkEndpoints: LinkEndpoints           = LinkEndpoints(entityMangerFactory)
     val phylogenyEndpoints: PhylogenyEndpoints = PhylogenyEndpoints(entityMangerFactory)
     val prefNodeEndpoints: PrefNodeEndpoints   = PrefNodeEndpoints(entityMangerFactory)
+    val referenceEndpoints: ReferenceEndpoints = ReferenceEndpoints(entityMangerFactory)
     val userAccountEndpoints: UserAccountEndpoints = UserAccountEndpoints(entityMangerFactory)
-
-
-
 
 
     val prometheusMetrics: PrometheusMetrics[Identity] = PrometheusMetrics.default[Identity]()
@@ -46,6 +44,7 @@ object Endpoints:
         linkEndpoints.allImpl,
         phylogenyEndpoints.allImpl,
         prefNodeEndpoints.allImpl,
+        referenceEndpoints.allImpl,
         userAccountEndpoints.allImpl
     ).flatten
 
