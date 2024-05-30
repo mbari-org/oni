@@ -17,6 +17,7 @@ case class ConceptNameAlreadyExists(name: String)
     extends Exception(s"Concept name `$name` already exists")
     with OniException
 case class ConceptNameNotFound(name: String) extends Exception(s"Concept name `$name` was not found") with OniException
+case class ReferenceIdNotFound(id: Long) extends Exception(s"Reference with `$id` was not found") with OniException
 case class WrappedException(msg: String, cause: Throwable) extends Exception(msg, cause) with OniException
 case object AccessDeniedMissingCredentials   extends Exception("I'm sorry, I can not let you do that.") with OniException
 case object MissingRootConcept               extends Exception("Root concept is missing") with OniException

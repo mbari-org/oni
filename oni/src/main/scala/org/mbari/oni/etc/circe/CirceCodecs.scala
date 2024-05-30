@@ -66,6 +66,9 @@ object CirceCodecs:
     given Decoder[ConceptUpdate] = deriveDecoder
     given Encoder[ConceptUpdate] = deriveEncoder
 
+    given Decoder[ReferenceQuery] = deriveDecoder
+    given Encoder[ReferenceQuery] = deriveEncoder
+
     given Decoder[ExtendedHistory] = deriveDecoder
     given Encoder[ExtendedHistory] = deriveEncoder
 
@@ -101,6 +104,9 @@ object CirceCodecs:
 
     given Decoder[Reference] = deriveDecoder
     given Encoder[Reference] = deriveEncoder
+
+    given Decoder[ReferenceUpdate] = deriveDecoder
+    given Encoder[ReferenceUpdate] = deriveEncoder
 
     given Decoder[SerdeConcept] = deriveDecoder
     given Encoder[SerdeConcept] = deriveEncoder

@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.net.URI;
 import java.sql.Timestamp;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity(name = "Reference")
@@ -112,4 +113,16 @@ public class ReferenceEntity implements Serializable, IPersistentObject {
         return conceptMetadatas;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ReferenceEntity that = (ReferenceEntity) o;
+        return Objects.equals(citation, that.citation) && Objects.equals(doi, that.doi);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(citation, doi);
+    }
 }

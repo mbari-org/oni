@@ -21,8 +21,8 @@ import scala.util.Try
  */
 case class Media(
     url: URL,
-    caption: String,
-    credit: String,
+    caption: Option[String] = None,
+    credit: Option[String] = None,
     mimeType: String,
     isPrimary: Boolean
 )
@@ -37,8 +37,8 @@ object Media:
     def from(media: MediaEntity): Media =
         Media(
             URI.create(media.getUrl).toURL,
-            media.getCaption,
-            media.getCredit,
+            Option(media.getCaption),
+            Option(media.getCredit),
             resolveMimeType(media.getType, media.getUrl),
             media.isPrimary
         )

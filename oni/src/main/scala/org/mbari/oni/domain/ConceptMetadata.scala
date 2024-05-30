@@ -22,7 +22,8 @@ case class ConceptMetadata(
     descriptors: Set[Link] = Set.empty,
     rank: Option[String] = None,
     author: Option[String] = None,
-    aphiaId: Option[Long] = None
+    aphiaId: Option[Long] = None,
+    references: Set[Reference] = Set.empty
 ) {}
 
 object ConceptMetadata:
@@ -48,7 +49,14 @@ object ConceptMetadata:
             .getLinkRealizations
             .asScala
             .toSet
-            .map(Link.from(_))
+            .map(Link.from)
+
+        val references = concept
+            .getConceptMetadata
+            .getReferences
+            .asScala
+            .toSet
+            .map(Reference.from)
 
         val rankLevel    = concept.getRankLevel
         val rankName     = concept.getRankName
@@ -59,4 +67,4 @@ object ConceptMetadata:
 
         val author = Option(concept.getPrimaryConceptName.getAuthor)
 
-        ConceptMetadata(name, alternateNames, media, descriptors, Option(rank), author, Option(concept.getAphiaId))
+        ConceptMetadata(name, alternateNames, media, descriptors, Option(rank), author, Option(concept.getAphiaId), references)

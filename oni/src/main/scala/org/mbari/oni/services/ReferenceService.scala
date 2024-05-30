@@ -37,8 +37,7 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
                 .map(Reference.from)
         )
 
-
-    def findByReferenceGlob(glob: String, limit: Int, offset: Int): Either[Throwable, Seq[Reference]] =
+    def findByCitationGlob(glob: String, limit: Int, offset: Int): Either[Throwable, Seq[Reference]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
             repo.findByGlob(glob, limit, offset)
@@ -57,13 +56,15 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
 
     def create(reference: Reference): Either[Throwable, Reference] =
         entityManagerFactory.transaction(entityManager =>
-            val repo = ReferenceRepository(entityManager)
-            reference.doi.foreach(doi =>
-                if repo.findByDoi(doi).isPresent then
-                    throw new IllegalArgumentException(
-                        s"A Reference with DOI '${doi}' already exists"
-                    )
-            )
+            val repo   = ReferenceRepository(entityManager)
+            reference
+                .doi
+                .foreach(doi =>
+                    if repo.findByDoi(doi).isPresent then
+                        throw new IllegalArgumentException(
+                            s"A Reference with DOI '${doi}' already exists"
+                        )
+                )
             val entity = reference.toEntity
             entity.setId(null) // just in case. Hibernate requires that this is null for inserts
             repo.create(entity)
@@ -79,18 +80,17 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
                     reference.doi.foreach(entity.setDoi)
                     reference.citation.foreach(entity.setCitation)
                     Reference.from(entity)
-                case None =>
-                    throw (new IllegalArgumentException(
+                case None         =>
+                    throw new IllegalArgumentException(
                         s"Reference with id '${reference.id}' not found"
-                    ))
+                    )
         )
 
     def delete(id: Long): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
             repo.findById(id).toScala match
-                case None => throw new IllegalArgumentException(
-                    s"Reference with id '${id}' not found")
+                case None         => throw new IllegalArgumentException(s"Reference with id '${id}' not found")
                 case Some(entity) =>
                     val metadatas = entity.getConceptMetadatas.asScala
                     metadatas.foreach(m => m.removeReference(entity))
@@ -99,37 +99,30 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
 
     def addConcept(id: Long, concept: String): Either[Throwable, Reference] =
         entityManagerFactory.transaction(entityManager =>
-            val repo = ReferenceRepository(entityManager)
+            val repo        = ReferenceRepository(entityManager)
             val conceptRepo = ConceptRepository(entityManager)
             conceptRepo.findByName(concept).toScala match
-                case None => throw new IllegalArgumentException(
-                    s"Concept with name '${concept}' not found")
+                case None          => throw new IllegalArgumentException(s"Concept with name '${concept}' not found")
                 case Some(concept) =>
                     val reference = repo.findById(id).toScala
                     reference match
-                        case None => throw new IllegalArgumentException(
-                            s"Reference with id '${id}' not found")
+                        case None            => throw new IllegalArgumentException(s"Reference with id '${id}' not found")
                         case Some(reference) =>
                             concept.getConceptMetadata.addReference(reference)
                             Reference.from(reference)
-
         )
 
     def removeConcept(id: Long, concept: String): Either[Throwable, Reference] =
         entityManagerFactory.transaction(entityManager =>
-            val repo = ReferenceRepository(entityManager)
+            val repo        = ReferenceRepository(entityManager)
             val conceptRepo = ConceptRepository(entityManager)
             conceptRepo.findByName(concept).toScala match
-                case None => throw new IllegalArgumentException(
-                    s"Concept with name '${concept}' not found")
+                case None          => throw new IllegalArgumentException(s"Concept with name '${concept}' not found")
                 case Some(concept) =>
                     val reference = repo.findById(id).toScala
                     reference match
-                        case None => throw new IllegalArgumentException(
-                            s"Reference with id '${id}' not found")
+                        case None            => throw new IllegalArgumentException(s"Reference with id '${id}' not found")
                         case Some(reference) =>
                             concept.getConceptMetadata.removeReference(reference)
                             Reference.from(reference)
-
         )
-

@@ -170,6 +170,7 @@ object TestEntityFactory:
         entity.setDoi(URI.create(s"https://doi.org/${random.nextInt(100)}.${random.nextInt(1000)}/TEST.${random.nextInt(1000)}.${random.nextInt(99999)}"))
 
         val n = random.nextInt(10) + 1
-        val s = 0 to n map { _ => Strings.random(20) } mkString " "
+        val m = random.nextInt(20) + 5
+        val s = 0 to n map { _ => Strings.random(m) } mkString " "
         entity.setCitation(s"B. M. Schlining. 1968. $s")
         entity

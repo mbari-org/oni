@@ -23,7 +23,6 @@ import sttp.shared.Identity
 
 import org.mbari.oni.etc.jdk.Loggers.given
 
-
 import scala.concurrent.ExecutionContext
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.AppConfig
@@ -31,7 +30,6 @@ import org.mbari.oni.AppConfig
 import java.net.URI
 import java.time.Instant
 import java.net.URL
-
 
 case class Paging(offset: Option[Int] = Some(0), limit: Option[Int] = Some(100))
 
@@ -45,20 +43,23 @@ trait Endpoints:
     val log: System.Logger = System.getLogger(getClass.getName)
 
     // --- Schemas
-    implicit lazy val sExtendedHistory: Schema[ExtendedHistory] = Schema.derived[ExtendedHistory]
-    implicit lazy val sLink: Schema[Link]                       = Schema.derived[Link]
-    implicit lazy val sURI: Schema[URI]                         = Schema.string
-    implicit lazy val sURL: Schema[URL]                         = Schema.string
-    implicit lazy val sInstant: Schema[Instant]                 = Schema.string
-    implicit lazy val sMedia: Schema[Media]                     = Schema.derived[Media]
-    implicit lazy val sPaging: Schema[Paging]                   = Schema.derived[Paging]
-    implicit lazy val sPrefNode: Schema[PrefNode]               = Schema.derived[PrefNode]
-    implicit lazy val sConceptCreate: Schema[ConceptCreate]     = Schema.derived[ConceptCreate]
-    implicit lazy val sConceptDelete: Schema[ConceptDelete]     = Schema.derived[ConceptDelete]
-    implicit lazy val sConceptUpdate: Schema[ConceptUpdate]     = Schema.derived[ConceptUpdate]
-    implicit lazy val sConceptMetadata: Schema[ConceptMetadata] = Schema.derived[ConceptMetadata]
-    implicit lazy val sUserAccount: Schema[UserAccount]         = Schema.derived[UserAccount]
-    implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate]         = Schema.derived[UserAccountUpdate]
+    implicit lazy val sExtendedHistory: Schema[ExtendedHistory]     = Schema.derived[ExtendedHistory]
+    implicit lazy val sLink: Schema[Link]                           = Schema.derived[Link]
+    implicit lazy val sURI: Schema[URI]                             = Schema.string
+    implicit lazy val sURL: Schema[URL]                             = Schema.string
+    implicit lazy val sInstant: Schema[Instant]                     = Schema.string
+    implicit lazy val sDoi: Schema[ReferenceQuery]                  = Schema.derived[ReferenceQuery]
+    implicit lazy val sMedia: Schema[Media]                         = Schema.derived[Media]
+    implicit lazy val sPaging: Schema[Paging]                       = Schema.derived[Paging]
+    implicit lazy val sPrefNode: Schema[PrefNode]                   = Schema.derived[PrefNode]
+    implicit lazy val sReference: Schema[Reference]                 = Schema.derived[Reference]
+    implicit lazy val sReferenceUpdate: Schema[ReferenceUpdate]     = Schema.derived[ReferenceUpdate]
+    implicit lazy val sConceptCreate: Schema[ConceptCreate]         = Schema.derived[ConceptCreate]
+    implicit lazy val sConceptDelete: Schema[ConceptDelete]         = Schema.derived[ConceptDelete]
+    implicit lazy val sConceptUpdate: Schema[ConceptUpdate]         = Schema.derived[ConceptUpdate]
+    implicit lazy val sConceptMetadata: Schema[ConceptMetadata]     = Schema.derived[ConceptMetadata]
+    implicit lazy val sUserAccount: Schema[UserAccount]             = Schema.derived[UserAccount]
+    implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate] = Schema.derived[UserAccountUpdate]
 
     // Make Tapir recursive types happy by using `implicit def`, not lazy val
     // https://tapir.softwaremill.com/en/latest/endpoint/schemas.html#derivation-for-recursive-types-in-scala3
@@ -126,7 +127,5 @@ trait Endpoints:
             case None      => Left(Unauthorized("Missing token"))
             case Some(jwt) =>
                 jwtService.decode(jwt) match
-                    case None      => Left(Unauthorized("Invalid token"))
+                    case None              => Left(Unauthorized("Invalid token"))
                     case Some(userAccount) => Right(userAccount)
-
-
