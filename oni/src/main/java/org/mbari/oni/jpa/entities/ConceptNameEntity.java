@@ -177,6 +177,10 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
         this.name = name;
     }
 
+    public void setNameType(ConceptNameTypes nameType) {
+        this.nameType = nameType.getType();
+    }
+
     public void setNameType(String nameType) {
         this.nameType = nameType;
     }

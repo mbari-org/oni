@@ -33,6 +33,15 @@ public enum ConceptNameTypes {
     public String toString() {
         return getType();
     }
+    
+    public static ConceptNameTypes fromString(String text) {
+        for (ConceptNameTypes b : ConceptNameTypes.values()) {
+            if (b.type.equalsIgnoreCase(text)) {
+                return b;
+            }
+        }
+        return null;
+    }
 
 
 }

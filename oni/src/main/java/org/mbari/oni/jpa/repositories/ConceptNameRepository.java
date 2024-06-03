@@ -12,6 +12,8 @@ import java.util.List;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import org.mbari.oni.jpa.entities.ConceptNameEntity;
@@ -31,9 +33,9 @@ public class ConceptNameRepository extends Repository {
     }
 
 
-    public ConceptNameEntity findByName(final String name) {
+    public Optional<ConceptNameEntity> findByName(final String name) {
         List<ConceptNameEntity> names = findByNamedQuery("ConceptName.findByName", Map.of("name", name));
-        return names.isEmpty() ? null : names.getFirst();
+        return names.stream().findFirst();
     }
 
     public Collection<ConceptNameEntity> findAll() {

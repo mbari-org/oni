@@ -146,6 +146,27 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
 
     }
 
+    test("findRawByName (no children)") {
+        val root = TestEntityFactory.buildRoot(3, 2)
+        for
+            rootEntity <- conceptService.init(root)
+            found      <- conceptService.findRawByName(root.getPrimaryConceptName.getName, false)
+        do
+            val expected = RawConcept.from(rootEntity, includeChildren = false)
+            assertEquals(found, expected)
+    }
+
+    test("findRawByName (with children)") {
+        val root = TestEntityFactory.buildRoot(4, 2)
+        for
+            rootEntity <- conceptService.init(root)
+            found <- conceptService.findRawByName(root.getPrimaryConceptName.getName, true)
+        do
+            val expected = RawConcept.from(rootEntity, includeChildren = true)
+            assertEquals(found, expected)
+//            println(found.stringify)
+    }
+
     test("tree") {
         val root = TestEntityFactory.buildRoot(4, 2)
         for

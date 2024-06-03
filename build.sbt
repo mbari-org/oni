@@ -1,14 +1,16 @@
 import Dependencies._
 
+
+
 Global / onChangedBuildSource := ReloadOnSourceChanges
 Compile / doc / scalacOptions ++= Seq(
     "-groups",
     "-project-footer",
     "Monterey Bay Aquarium Research Institute",
     "-siteroot",
-    "src/docs",
+    "oni/src/docs",
     "-doc-root-content",
-    "./src/docs/index.md"
+    "./oni/src/docs/index.md"
 )
 
 ThisBuild / javacOptions ++= Seq("-target", "21", "-source", "21")
@@ -51,6 +53,7 @@ lazy val oni = project
   .settings(
     // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
     // Use `show gitCurrentTags` in sbt to update/see the tags
+
     git.gitTagToVersionNumber := { tag: String =>
       if(tag matches "[0-9]+\\..*") Some(tag)
       else None

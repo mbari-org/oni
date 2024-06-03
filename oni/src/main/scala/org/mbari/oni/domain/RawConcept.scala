@@ -21,6 +21,10 @@ case class RawConcept(
     rankName: Option[String] = None,
 ):
 
+    lazy val primaryConceptName: Option[RawConceptName] = names.find(_.nameType == ConceptNameTypes.PRIMARY.getType)
+
+    lazy val primaryName: String = primaryConceptName.map(_.name).getOrElse("")
+
     /**
      * @return
      */
@@ -58,11 +62,15 @@ case class RawConcept(
         entity
 
 object RawConcept:
-    def from(entity: ConceptEntity): RawConcept =
+
+    def from(entity: ConceptEntity): RawConcept = from(entity, includeChildren = true)
+
+    def from(entity: ConceptEntity, includeChildren: Boolean): RawConcept =
+        val children = if includeChildren then entity.getChildConcepts.asScala.map(RawConcept.from).toSet else Set.empty
         RawConcept(
             names = entity.getConceptNames.asScala.map(RawConceptName.from).toSet,
             metadata = Option(entity.getConceptMetadata).map(RawConceptMetadata.from),
-            children = entity.getChildConcepts.asScala.map(RawConcept.from).toSet,
+            children = children,
             aphiaId = Option(entity.getAphiaId).map(_.toLong),
             rankLevel = Option(entity.getRankLevel),
             rankName = Option(entity.getRankName),

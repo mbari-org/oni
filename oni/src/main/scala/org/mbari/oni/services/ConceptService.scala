@@ -121,6 +121,10 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 .toSet
         )
 
+    def findRawByName(name: String, includeChildren: Boolean = false): Either[Throwable, RawConcept] =
+        val fn = RawConcept.from(_, includeChildren) // eta expansion and curry
+        handleByConceptNameQuery(name, fn)
+
     def tree(): Either[Throwable, RawConcept] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new ConceptRepository(entityManager)
