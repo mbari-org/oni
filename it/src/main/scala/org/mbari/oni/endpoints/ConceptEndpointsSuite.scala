@@ -135,7 +135,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                     assertEquals(concept.rank, Some("yoyoyoyayaya")),
                 jwt = jwtService.login(user.username, password, user.toEntity)
             )
-        , Some(password))
+        , password)
 
         attempt match {
             case Right(_) => println("Success")
@@ -165,7 +165,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                     assertEquals(concept.name, grandChild.getPrimaryConceptName.getName)
                     assertEquals(concept.rank, Some("yoyoyoyayaya")),
                 jwt = jwtService.login(user.username, password, user.toEntity)
-        ), Some(password))
+        ), password)
 
         attempt match {
             case Right(_) => println("Success")
@@ -187,7 +187,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                     assertEquals(response.code, StatusCode.Ok),
                 jwt = jwtService.login(user.username, password, user.toEntity)
             )
-        , Some(password))
+        , password)
 
         attempt match {
             case Right(_) => println("Success")
