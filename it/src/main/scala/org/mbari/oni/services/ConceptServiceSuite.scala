@@ -24,10 +24,9 @@ import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import scala.jdk.CollectionConverters.*
 import scala.util.Properties
 
-trait ConceptServiceSuite extends DatabaseFunSuite:
+trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
     lazy val conceptService: ConceptService         = new ConceptService(entityManagerFactory)
-    lazy val userAccountService: UserAccountService = new UserAccountService(entityManagerFactory)
     lazy val historyService: HistoryService         = new HistoryService(entityManagerFactory)
 
     override def beforeEach(context: BeforeEach): Unit =
@@ -179,14 +178,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     }
 
     test("create root") {
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
-        val userAccount       = UserAccount.from(userAccountEntity)
 
-        assert(userAccount.username != null)
-        val attempt = for
-            user <- userAccountService.create(userAccount)
-            root <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
-        yield root
+        val attempt = runWithUserAuth(user => conceptService.create(ConceptCreate("root", None, userName = Some(user.username))))
 
         attempt match
             case Left(e)     =>
@@ -200,15 +193,11 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     }
 
     test("create root and child") {
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
-        val userAccount       = UserAccount.from(userAccountEntity)
 
-        assert(userAccount.username != null)
-        val attempt = for
-            user  <- userAccountService.create(userAccount)
-            root  <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
-            child <- conceptService.create(ConceptCreate("child", Some(root.name), userName = Some(user.username)))
-        yield child
+        val attempt = runWithUserAuth(user => for
+                root  <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
+                child <- conceptService.create(ConceptCreate("child", Some(root.name), userName = Some(user.username)))
+            yield child)
 
         attempt match
             case Left(e)      =>
@@ -218,15 +207,11 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     }
 
     test("create 2nd root should fail") {
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
-        val userAccount       = UserAccount.from(userAccountEntity)
 
-        assert(userAccount.username != null)
-        val attempt = for
-            user      <- userAccountService.create(userAccount)
-            root      <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
-            otherRoot <- conceptService.create(ConceptCreate("anotherroot", None, userName = Some(user.username)))
-        yield root
+        val attempt = runWithUserAuth(user => for
+                root      <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
+                otherRoot <- conceptService.create(ConceptCreate("anotherroot", None, userName = Some(user.username)))
+            yield root)
 
         attempt match
             case Left(e)     =>
@@ -239,26 +224,37 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     }
 
     test("update") {
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
-        val userAccount       = UserAccount.from(userAccountEntity)
-        assert(userAccount.username != null)
 
         val root = TestEntityFactory.buildRoot(2, 0)
 
-        val attempt = for
-            user         <- userAccountService.create(userAccount)
+        val attempt = runWithUserAuth(user => for
             rootEntity   <- conceptService.init(root)
             child        <- Right(rootEntity.getChildConcepts.iterator().next())
             updatedChild <- conceptService.update(
-                                ConceptUpdate(
-                                    child.getPrimaryConceptName.getName,
-                                    rankLevel = Some("supersuper"),
-                                    rankName = Some("genera"),
-                                    aphiaId = Some(1234),
-                                    userName = Some(user.username)
-                                )
-                            )
-        yield updatedChild
+                ConceptUpdate(
+                    child.getPrimaryConceptName.getName,
+                    rankLevel = Some("supersuper"),
+                    rankName = Some("genera"),
+                    aphiaId = Some(1234),
+                    userName = Some(user.username)
+                )
+            )
+        yield updatedChild)
+
+//        val attempt = for
+//            user         <- userAccountService.create(userAccount)
+//            rootEntity   <- conceptService.init(root)
+//            child        <- Right(rootEntity.getChildConcepts.iterator().next())
+//            updatedChild <- conceptService.update(
+//                                ConceptUpdate(
+//                                    child.getPrimaryConceptName.getName,
+//                                    rankLevel = Some("supersuper"),
+//                                    rankName = Some("genera"),
+//                                    aphiaId = Some(1234),
+//                                    userName = Some(user.username)
+//                                )
+//                            )
+//        yield updatedChild
 
         attempt match
             case Left(e)     =>
@@ -275,15 +271,11 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     }
 
     test("update parent") {
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
-        val userAccount = UserAccount.from(userAccountEntity)
-        assert(userAccount.username != null)
 
         val root = TestEntityFactory.buildRoot(3, 0)
         val grandChild = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
 
-        val attempt = for
-            user <- userAccountService.create(userAccount)
+        val attempt = runWithUserAuth(user => for
             rootEntity <- conceptService.init(root)
             grandChildEntity <- Right(grandChild)
             updatedGrandChild <- conceptService.update(
@@ -293,7 +285,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
                     userName = Some(user.username)
                 )
             )
-        yield updatedGrandChild
+        yield updatedGrandChild)
 
         attempt match
             case Left(e) =>
@@ -312,20 +304,16 @@ trait ConceptServiceSuite extends DatabaseFunSuite:
     }
 
     test("delete") {
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
-        val userAccount       = UserAccount.from(userAccountEntity)
-        assert(userAccount.username != null)
 
         val root = TestEntityFactory.buildRoot(3, 0)
         val childEntity = root.getChildConcepts.iterator().next()
         val childName = childEntity.getPrimaryConceptName.getName
 
-        val attempt = for
-            user       <- userAccountService.create(userAccount)
+        val attempt = runWithUserAuth(user => for
             rootEntity <- conceptService.init(root)
             child      <- Right(childEntity)
             n          <- conceptService.delete(ConceptDelete(child.getPrimaryConceptName.getName, Some(user.username)))
-        yield n
+        yield n)
 
         attempt match
             case Left(e) =>

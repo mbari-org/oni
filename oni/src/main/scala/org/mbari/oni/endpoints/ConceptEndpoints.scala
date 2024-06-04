@@ -34,7 +34,9 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .tag(tag)
 
     val allEndpointImpl: ServerEndpoint[Any, Identity] = allEndpoint.serverLogic { _ =>
-        handleErrors(conceptNameService.findAllNames())
+        val limit = 10000
+        val offset = 0
+        handleErrors(conceptNameService.findAllNames(limit, offset))
     }
 
     val createEndpoint: Endpoint[Option[String], ConceptCreate, ErrorMsg, ConceptMetadata, Any] = secureEndpoint

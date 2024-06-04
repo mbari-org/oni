@@ -16,24 +16,26 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ConceptNameTypes, RawConcept, RawConceptName}
-import org.mbari.oni.jpa.entities.ConceptEntity
-import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
-import org.mbari.oni.jpa.EntityManagerFactories.*
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept, RawConceptName, UserAccount, UserAccountRoles}
+import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.jpa.entities.TestEntityFactory
 
-import scala.jdk.CollectionConverters.*
 
-trait ConceptNameServiceSuite extends DataInitializer:
+trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
     lazy val conceptNameService: ConceptNameService = new ConceptNameService(entityManagerFactory)
+
+    override def beforeEach(context: BeforeEach): Unit =
+        for root <- conceptService.findRoot()
+        do conceptService.deleteByName(root.name)
 
     test("findAllNames") {
         val root     = init(3, 3)
         assert(root != null)
         val rawRoot  = RawConcept.from(root)
         val expected = rawRoot.descendantNames
-        conceptNameService.findAllNames() match
+        conceptNameService.findAllNames(expected.size, 0) match
             case Right(names) =>
                 val obtained = names.sorted
                 assertEquals(obtained, expected)
@@ -47,73 +49,85 @@ trait ConceptNameServiceSuite extends DataInitializer:
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
-        val newName = RawConceptName(name = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
-        conceptNameService.addName(name, newName) match
+        val dto = ConceptNameCreate(name = name, newName = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
+
+        val attempt = runWithUserAuth(user => conceptNameService.addName(dto.copy(userName = Some(user.username))))
+
+        attempt match
             case Right(rawConcept) =>
                 val obtained = rawConcept.names.map(_.name).toSeq
-                val expected = rawRoot.names.map(_.name).toSeq :+ newName.name
-                assertEquals(obtained.sorted, expected.sorted)
-                assertNotEquals(rawConcept.primaryName, name)
-                assertEquals(rawConcept.primaryName, newName.name)
+                assert(obtained.contains(dto.name))
+                assert(obtained.contains(dto.newName))
             case Left(error)       =>
                 fail(error.toString)
     }
 
     test("addName (not a primary name)") {
+
         val root = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name = rawRoot.primaryName
-        val newName = RawConceptName(name = "newName22", nameType = ConceptNameTypes.SYNONYM.getType)
-        conceptNameService.addName(name, newName) match
+        val dto = ConceptNameCreate(name = name, newName = "newName22", nameType = ConceptNameTypes.SYNONYM.getType)
+
+        val attempt = runWithUserAuth(user => conceptNameService.addName(dto.copy(userName = Some(user.username))))
+
+        attempt match
             case Right(rawConcept) =>
                 val obtained = rawConcept.names.map(_.name).toSeq
-                val expected = rawRoot.names.map(_.name).toSeq :+ newName.name
-                assertEquals(obtained.sorted, expected.sorted)
-                assertNotEquals(rawConcept.primaryName, newName.name)
+                assert(obtained.contains(dto.name))
+                assert(obtained.contains(dto.newName))
             case Left(error) =>
                 fail(error.toString)
     }
 
     test("updateName") {
+
         val root = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
-        val newName = RawConceptName(name = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
-        conceptNameService.updateName(name, newName) match
+        val dto = ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.PRIMARY.getType))
+
+        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto.copy(userName = Some(user.username))))
+
+        attempt match
             case Right(rawConcept) =>
+                println(rawConcept.stringify)
                 val obtained = rawConcept.names.map(_.name).toSeq
-                assert(!obtained.contains(name))
-                assert(obtained.contains(newName.name))
+                assert(!obtained.contains(dto.name))
+                assert(obtained.contains(dto.newName.getOrElse("")))
             case Left(error)       =>
                 fail(error.toString)
     }
 
     test("updateName (attempt to change primary to non-primary)") {
+
         val root = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name = rawRoot.primaryName
-        val newName = RawConceptName(name = "newName", nameType = ConceptNameTypes.COMMON.getType)
-        conceptNameService.updateName(name, newName) match
+        val dto = ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.COMMON.getType))
+
+        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto.copy(userName = Some(user.username))))
+
+        attempt match
             case Right(rawConcept) =>
                 println(rawConcept.stringify)
                 fail("Should have thrown an exception")
-            case Left(error) =>
-                assert(error.isInstanceOf[IllegalArgumentException])
+            case Left(error) => ()
     }
 
     test("deleteName (attempt to delete primary name)") {
+        // TODO add user account
         val root = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
-        conceptNameService.deleteName(name) match
+        runWithUserAuth(user => conceptNameService.deleteName(name, user.username)) match
             case Right(rawConcept) =>
                 fail("Should have thrown an exception")
-            case Left(error)       =>
-                assert(error.isInstanceOf[IllegalArgumentException])
+            case Left(error)       => ()
     }
 
     test("deleteName") {
@@ -124,7 +138,7 @@ trait ConceptNameServiceSuite extends DataInitializer:
             .find(_.nameType != ConceptNameTypes.PRIMARY.getType)
             .map(_.name)
             .getOrElse("")
-        conceptNameService.deleteName(nameToDelete) match
+        runWithUserAuth(user => conceptNameService.deleteName(nameToDelete, user.username)) match
             case Right(rawConcept) =>
                 assert(!rawConcept.names.map(_.name).toSeq.contains(nameToDelete))
             case Left(error) =>

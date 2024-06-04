@@ -274,19 +274,27 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         // -- Helper function to update the parent concept
         def updateParent(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, parentName: Option[String])(using repo: ConceptRepository): Unit =
             parentName.foreach(name =>
+                if !conceptEntity.hasParent then
+                    throw new IllegalArgumentException(s"Cannot set the parent of the root concept!")
+
                 repo.findByName(name).toScala match
                     case None    => throw ConceptNameNotFound(name)
                     case Some(p) =>
+
+                        // Don't allow cyclic relation
+                        if conceptEntity.hasDescendent(name) then
+                            throw new IllegalArgumentException(s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation")
+
                         // Only update if the parent is different
                         if !conceptEntity.getParentConcept.hasConceptName(name) then
                             val history = HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, p)
                             conceptEntity.getConceptMetadata.addHistory(history)
                             conceptEntity.getParentConcept match
-                            case null =>
-                                p.addChildConcept(conceptEntity)
-                            case parent =>
-                                parent.removeChildConcept(conceptEntity)
-                                p.addChildConcept(conceptEntity)
+                                case null =>
+                                    p.addChildConcept(conceptEntity)
+                                case parent =>
+                                    parent.removeChildConcept(conceptEntity)
+                                    p.addChildConcept(conceptEntity)
             )
 
 

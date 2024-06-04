@@ -38,8 +38,8 @@ public class ConceptNameRepository extends Repository {
         return names.stream().findFirst();
     }
 
-    public Collection<ConceptNameEntity> findAll() {
-        return findByNamedQuery("ConceptName.findAll");
+    public Collection<ConceptNameEntity> findAll(int limit, int offset) {
+        return findByNamedQuery("ConceptName.findAll", limit, offset);
     }
 
     public Collection<ConceptNameEntity> findByNameContaining(final String substring) {

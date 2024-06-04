@@ -63,8 +63,17 @@ object CirceCodecs:
     given Decoder[ConceptDelete] = deriveDecoder
     given Encoder[ConceptDelete] = deriveEncoder
 
+    given Decoder[ConceptNameCreate] = deriveDecoder
+    given Encoder[ConceptNameCreate] = deriveEncoder
+
+    given Decoder[ConceptNameUpdate] = deriveDecoder
+    given Encoder[ConceptNameUpdate] = deriveEncoder
+
     given Decoder[ConceptUpdate] = deriveDecoder
     given Encoder[ConceptUpdate] = deriveEncoder
+
+    given Decoder[Page[Seq[String]]] = deriveDecoder
+    given Encoder[Page[Seq[String]]] = deriveEncoder
 
     given Decoder[ReferenceQuery] = deriveDecoder
     given Encoder[ReferenceQuery] = deriveEncoder

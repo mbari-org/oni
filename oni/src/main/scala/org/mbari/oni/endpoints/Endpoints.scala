@@ -56,14 +56,19 @@ trait Endpoints:
     implicit lazy val sReferenceUpdate: Schema[ReferenceUpdate]     = Schema.derived[ReferenceUpdate]
     implicit lazy val sConceptCreate: Schema[ConceptCreate]         = Schema.derived[ConceptCreate]
     implicit lazy val sConceptDelete: Schema[ConceptDelete]         = Schema.derived[ConceptDelete]
+    implicit lazy val sConceptNameCreate: Schema[ConceptNameCreate] = Schema.derived[ConceptNameCreate]
+    implicit lazy val sConceptNameUpdate: Schema[ConceptNameUpdate] = Schema.derived[ConceptNameUpdate]
     implicit lazy val sConceptUpdate: Schema[ConceptUpdate]         = Schema.derived[ConceptUpdate]
     implicit lazy val sConceptMetadata: Schema[ConceptMetadata]     = Schema.derived[ConceptMetadata]
+    implicit lazy val sConceptName: Schema[RawConceptName]          = Schema.derived[RawConceptName]
+    implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]     = Schema.derived[Page[Seq[String]]]
     implicit lazy val sUserAccount: Schema[UserAccount]             = Schema.derived[UserAccount]
     implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate] = Schema.derived[UserAccountUpdate]
 
     // Make Tapir recursive types happy by using `implicit def`, not lazy val
     // https://tapir.softwaremill.com/en/latest/endpoint/schemas.html#derivation-for-recursive-types-in-scala3
     implicit def sConcept: Schema[Concept]           = Schema.derived[Concept]
+    implicit def sRawConcept: Schema[RawConcept]     = Schema.derived[RawConcept]
     implicit def sSerdeConcept: Schema[SerdeConcept] = Schema.derived[SerdeConcept]
 
     // --- Abstract methods

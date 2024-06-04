@@ -113,8 +113,8 @@ public class HistoryEntityFactory {
         return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_REFERENCE, oldRef, newRef);
     }
 
-    public static HistoryEntity replaceConceptName(UserAccountEntity userAccount, ConceptNameEntity oldName, ConceptNameEntity newName) {
-        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPTNAME, oldName.stringValue(), newName.stringValue());
+    public static HistoryEntity replaceConceptName(UserAccountEntity userAccount, String oldName, String newName) {
+        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPTNAME, oldName, newName);
     }
 
     public static HistoryEntity replacePrimaryConceptName(UserAccountEntity userAccount, ConceptNameEntity oldName, ConceptNameEntity newName) {

@@ -9,9 +9,9 @@ package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
-import org.mbari.oni.domain.{ConceptMetadata, ConceptNameTypes, RawConcept, RawConceptName}
+import org.mbari.oni.domain.{ConceptMetadata, ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept, RawConceptName}
 import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.entities.ConceptNameEntity
+import org.mbari.oni.jpa.entities.{ConceptNameEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptNameRepository, ConceptRepository}
 
 import scala.jdk.CollectionConverters.*
@@ -19,90 +19,136 @@ import scala.jdk.OptionConverters.*
 
 class ConceptNameService(entityManagerFactory: EntityManagerFactory):
 
-    def findAllNames(): Either[Throwable, Seq[String]] =
+    private val log                = System.getLogger(getClass.getName)
+    private val historyService = HistoryService(entityManagerFactory)
+    private val userAccountService = UserAccountService(entityManagerFactory)
+
+    def findAllNames(limit: Int, offset: Int): Either[Throwable, Seq[String]] =
         entityManagerFactory.transaction(entityManger =>
             val repo = new ConceptNameRepository(entityManger)
             repo.findAllNamesAsStrings().asScala.toSeq
         )
 
-    def addName(name: String, newName: RawConceptName): Either[Throwable, RawConcept] =
-        entityManagerFactory.transaction(entityManager =>
-            val repo = new ConceptNameRepository(entityManager)
+    def addName(dto: ConceptNameCreate): Either[Throwable, RawConcept] =
 
-            // Make sure the old name exists
-            val conceptNameOpt = repo.findByName(name).toScala
-            if (conceptNameOpt.isEmpty) {
-                throw ConceptNameNotFound(name)
-            }
+        def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new ConceptNameRepository(entityManager)
 
-            // Mae sure the new name does not exist
-            val newConceptNameOpt = repo.findByName(newName.name).toScala
-            if (newConceptNameOpt.isDefined) {
-                throw ConceptNameAlreadyExists(newName.name)
-            }
+                // Make sure the old name exists
+                val conceptNameOpt = repo.findByName(dto.name).toScala
+                if (conceptNameOpt.isEmpty) {
+                    throw ConceptNameNotFound(dto.name)
+                }
 
-            val oldConceptName = conceptNameOpt.get
-            val concept = oldConceptName.getConcept
-            val newNameType = ConceptNameTypes.fromString(newName.nameType)
-            if (newNameType == ConceptNameTypes.PRIMARY) {
-                oldConceptName.getConcept
-                    .getPrimaryConceptName
-                    .setNameType(ConceptNameTypes.FORMER)
-            }
+                // Mae sure the new name does not exist
+                val newConceptNameOpt = repo.findByName(dto.newName).toScala
+                if (newConceptNameOpt.isDefined) {
+                    throw ConceptNameAlreadyExists(dto.newName)
+                }
 
-            val newConceptName = newName.toEntity
-            concept.addConceptName(newConceptName)
-            RawConcept.from(concept, false)
-        )
+                val oldConceptName = conceptNameOpt.get
+                val concept = oldConceptName.getConcept
+                val newNameType = ConceptNameTypes.fromString(dto.nameType)
+                if (newNameType == ConceptNameTypes.PRIMARY) {
+                    oldConceptName.getConcept
+                        .getPrimaryConceptName
+                        .setNameType(ConceptNameTypes.FORMER)
+                }
 
-    def updateName(name: String, newName: RawConceptName): Either[Throwable, RawConcept] =
-        entityManagerFactory.transaction(entityManager =>
-            val repo = new ConceptNameRepository(entityManager)
+                val newConceptName = dto.toEntity
+                concept.addConceptName(newConceptName)
 
-            // Make sure the old name exists
-            val conceptNameOpt = repo.findByName(name).toScala
-            if (conceptNameOpt.isEmpty) {
-                throw ConceptNameNotFound(name)
-            }
+                // TODO add history
+                val history = HistoryEntityFactory.add(userEntity, newConceptName)
+                concept.getConceptMetadata.addHistory(history)
 
-            // Mae sure the new name does not exist
-            val newConceptNameOpt = repo.findByName(newName.name).toScala
-            if (newConceptNameOpt.isDefined) {
-                throw ConceptNameAlreadyExists(newName.name)
-            }
+                RawConcept.from(concept, false)
+            )
 
-            val conceptName = conceptNameOpt.get
-            if (conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType) &&
-                !newName.nameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType)) {
-                throw new IllegalArgumentException("Attempting to change a primary name to a non-primary name. Use add name instead.")
-            }
+        for
+            user <- userAccountService.verifyWriteAccess(dto.userName)
+            concept <- txn(user.toEntity)
+        yield concept
 
-            conceptName.setName(newName.name)
-            conceptName.setNameType(newName.nameType)
-            newName.author.foreach(conceptName.setAuthor)
+    def updateName(dto: ConceptNameUpdate): Either[Throwable, RawConcept] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new ConceptNameRepository(entityManager)
 
-            RawConcept.from(conceptName.getConcept, false)
-        )
+                // Make sure the old name exists
+                val conceptNameOpt = repo.findByName(dto.name).toScala
+                if (conceptNameOpt.isEmpty) {
+                    throw ConceptNameNotFound(dto.name)
+                }
+                val existingConceptName = conceptNameOpt.get // EXISTING NAME
+                val existingNameType = ConceptNameTypes.fromString(existingConceptName.getNameType)
 
-    def deleteName(name: String): Either[Throwable, RawConcept] =
-        entityManagerFactory.transaction(entityManager =>
-            val repo = new ConceptNameRepository(entityManager)
+                // Mae sure the new name does not exist
+                dto.newName match {
+                    case Some(newName) =>
+                        val newConceptNameOpt = repo.findByName(newName).toScala
+                        if (newConceptNameOpt.isDefined) {
+                            throw ConceptNameAlreadyExists(newName)
+                        }
+                        val history = HistoryEntityFactory.replaceConceptName(userEntity, dto.name, newName)
+                        existingConceptName.getConcept.getConceptMetadata.addHistory(history)
+                    case None => ()
 
-            // Make sure the old name exists
-            val conceptNameOpt = repo.findByName(name).toScala
-            if (conceptNameOpt.isEmpty) {
-                throw ConceptNameNotFound(name)
-            }
+                }
+
+                // If the name type is changing, make sure the primary name is not being changed
+                dto.nameType match
+                    case Some(nameType) =>
+                        val newNameType = ConceptNameTypes.fromString(nameType)
+                        if (newNameType == null) {
+                            throw new IllegalArgumentException(s"Invalid name type: $nameType. Must be one of ${ConceptNameTypes.values.mkString(", ")}")
+                        }
+                        if  (existingNameType == ConceptNameTypes.PRIMARY && newNameType != ConceptNameTypes.PRIMARY) {
+                            throw new IllegalArgumentException("Attempting to change a primary name to a non-primary name. Use add name instead.")
+                        }
+                    case None => ()
+
+                dto.updateEntity(existingConceptName)
+
+                RawConcept.from(existingConceptName.getConcept, false)
+            )
+
+        for
+            user <- userAccountService.verifyWriteAccess(dto.userName)
+            concept <- txn(user.toEntity)
+        yield concept
+
+    def deleteName(name: String, userName: String): Either[Throwable, RawConcept] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new ConceptNameRepository(entityManager)
+
+                // Make sure the old name exists
+                val conceptNameOpt = repo.findByName(name).toScala
+                if (conceptNameOpt.isEmpty) {
+                    throw ConceptNameNotFound(name)
+                }
 
 
-            val conceptName = conceptNameOpt.get
-            if (conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType)) {
-                throw new IllegalArgumentException("Cannot delete a primary name. Use add name instead.")
-            }
-            val concept = conceptName.getConcept
-            concept.removeConceptName(conceptName)
-            entityManager.remove(conceptName)
-            RawConcept.from(concept, false)
-        )
+                val conceptName = conceptNameOpt.get
+                if (conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType)) {
+                    throw new IllegalArgumentException("Cannot delete a primary name. Use add name instead.")
+                }
+
+                val concept = conceptName.getConcept
+                concept.removeConceptName(conceptName)
+                entityManager.remove(conceptName)
+
+                val history = HistoryEntityFactory.delete(userEntity, conceptName)
+                concept.getConceptMetadata.addHistory(history)
+
+                RawConcept.from(concept, false)
+            )
+
+        for
+            user <- userAccountService.verifyWriteAccess(Some(userName))
+            concept <- txn(user.toEntity)
+        yield concept
 
 

@@ -23,14 +23,14 @@ import scala.jdk.CollectionConverters.*
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.services.UserAccountService
+import org.mbari.oni.services.{UserAccountService, UserAuthMixin}
 import sttp.model.StatusCode
 
-trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer:
+trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
     given jwtService: JwtService         = JwtService("mbari", "foo", "bar")
     lazy val endpoints: ConceptEndpoints = ConceptEndpoints(entityManagerFactory)
-    lazy val userAccountService: UserAccountService = UserAccountService(entityManagerFactory)
+    private val password                  = "foofoofoo"
 
     test("all") {
         val root  = init(3, 3)
@@ -118,68 +118,79 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer:
     }
 
     test("create") {
-        val userAccount = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName, "foo")
-        userAccountService.create(UserAccount.from(userAccount)) match
-            case Left(e) => fail(e.getMessage)
-            case Right(user) =>
-                val root = init(2, 0)
-                val name = root.getPrimaryConceptName.getName
-                val conceptCreate = ConceptCreate("SomeChildConcept", Some(root.getPrimaryConceptName.getName), rankLevel = Some("yoyoyo"), rankName = Some("yayaya"), aphiaId = Some(54321L))
 
-                runPost(
-                    endpoints.createEndpointImpl,
-                    "http://test.com/v1/concept",
-                    conceptCreate.stringify,
-                    response =>
-                        assertEquals(response.code, StatusCode.Ok)
-                        val concept = checkResponse[ConceptMetadata](response.body)
-                        assertEquals(concept.name, "SomeChildConcept")
-                        assertEquals(concept.rank, Some("yoyoyoyayaya")),
-                    jwt = jwtService.login(user.username, "foo", userAccount)
-                )
+        val attempt = testWithUserAuth(user =>
+            val root = init(2, 0)
+            val name = root.getPrimaryConceptName.getName
+            val conceptCreate = ConceptCreate("SomeChildConcept", Some(root.getPrimaryConceptName.getName), rankLevel = Some("yoyoyo"), rankName = Some("yayaya"), aphiaId = Some(54321L))
+
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/concept",
+                conceptCreate.stringify,
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val concept = checkResponse[ConceptMetadata](response.body)
+                    assertEquals(concept.name, "SomeChildConcept")
+                    assertEquals(concept.rank, Some("yoyoyoyayaya")),
+                jwt = jwtService.login(user.username, password, user.toEntity)
+            )
+        , Some(password))
+
+        attempt match {
+            case Right(_) => println("Success")
+            case Left(error) => fail(error.toString)
+        }
 
     }
 
     test("update") {
-        val userAccount = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName, "foo")
-        userAccountService.create(UserAccount.from(userAccount)) match
-            case Left(e) => fail(e.getMessage)
-            case Right(user) =>
-                val root = init(3, 0)
-                val grandChild = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
-                val conceptUpdate = ConceptUpdate(grandChild.getPrimaryConceptName.getName,
-                    Some(root.getPrimaryConceptName.getName),
-                    rankLevel = Some("yoyoyo"),
-                    rankName = Some("yayaya"),
-                    aphiaId = Some(543210L))
 
-                runPut(
-                    endpoints.updateEndpointImpl,
-                    "http://test.com/v1/concept",
-                    conceptUpdate.stringify,
-                    response =>
-                        assertEquals(response.code, StatusCode.Ok)
-                        val concept = checkResponse[ConceptMetadata](response.body)
-                        assertEquals(concept.name, grandChild.getPrimaryConceptName.getName)
-                        assertEquals(concept.rank, Some("yoyoyoyayaya")),
-                    jwt = jwtService.login(user.username, "foo", userAccount)
-                )
+        val attempt = testWithUserAuth(user =>
+            val root = init(3, 0)
+            val grandChild = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+            val conceptUpdate = ConceptUpdate(grandChild.getPrimaryConceptName.getName,
+                Some(root.getPrimaryConceptName.getName),
+                rankLevel = Some("yoyoyo"),
+                rankName = Some("yayaya"),
+                aphiaId = Some(543210L))
+
+            runPut(
+                endpoints.updateEndpointImpl,
+                "http://test.com/v1/concept",
+                conceptUpdate.stringify,
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val concept = checkResponse[ConceptMetadata](response.body)
+                    assertEquals(concept.name, grandChild.getPrimaryConceptName.getName)
+                    assertEquals(concept.rank, Some("yoyoyoyayaya")),
+                jwt = jwtService.login(user.username, password, user.toEntity)
+        ), Some(password))
+
+        attempt match {
+            case Right(_) => println("Success")
+            case Left(error) => fail(error.toString)
+        }
 
     }
 
     test("delete") {
-        val userAccount = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName, "foo")
-        userAccountService.create(UserAccount.from(userAccount)) match
-            case Left(e) => fail(e.getMessage)
-            case Right(user) =>
-                val root = init(3, 0)
-                val name = root.getPrimaryConceptName.getName
 
-                runDelete(
-                    endpoints.deleteEndpointImpl,
-                    s"http://test.com/v1/concept/${name}",
-                    response =>
-                        assertEquals(response.code, StatusCode.Ok),
-                    jwt = jwtService.login(user.username, "foo", userAccount)
-                )
+        val attempt = testWithUserAuth(user =>
+            val root = init(3, 0)
+            val name = root.getPrimaryConceptName.getName
+
+            runDelete(
+                endpoints.deleteEndpointImpl,
+                s"http://test.com/v1/concept/${name}",
+                response =>
+                    assertEquals(response.code, StatusCode.Ok),
+                jwt = jwtService.login(user.username, password, user.toEntity)
+            )
+        , Some(password))
+
+        attempt match {
+            case Right(_) => println("Success")
+            case Left(error) => fail(error.toString)
+        }
     }
