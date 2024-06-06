@@ -27,8 +27,10 @@ case class JwtService(issuer: String, apiKey: String, signingSecret: String):
 
     /**
      * Verify a JWT
-     * @param jwt the JWT to verify
-     * @return true if the JWT is valid, false otherwise
+     * @param jwt
+     *   the JWT to verify
+     * @return
+     *   true if the JWT is valid, false otherwise
      */
     def verify(jwt: String): Boolean =
         try
@@ -38,8 +40,10 @@ case class JwtService(issuer: String, apiKey: String, signingSecret: String):
 
     /**
      * Authorize a request with an API key
-     * @param providedApiKey the API key provided by the client
-     * @return a JWT if the API key is valid, None otherwise
+     * @param providedApiKey
+     *   the API key provided by the client
+     * @return
+     *   a JWT if the API key is valid, None otherwise
      */
     def authorize(providedApiKey: String): Option[String] =
         if providedApiKey == apiKey then
@@ -59,15 +63,20 @@ case class JwtService(issuer: String, apiKey: String, signingSecret: String):
 
     /**
      * Login a user and return a JWT
-     * @param name the username
-     * @param pwd the plain text, non-encrypted password
-     * @param entity the user account entity (looked up from the database)
-     * @return a JWT if the login is successful, None otherwise
+     * @param name
+     *   the username
+     * @param pwd
+     *   the plain text, non-encrypted password
+     * @param entity
+     *   the user account entity (looked up from the database)
+     * @return
+     *   a JWT if the login is successful, None otherwise
      */
     def login(name: String, pwd: String, entity: UserAccountEntity): Option[String] =
-        if (name == entity.getUserName
+        if name == entity.getUserName
             && entity.authenticate(pwd)
-            && (entity.isAdministrator || entity.isMaintainer)) then
+            && (entity.isAdministrator || entity.isMaintainer)
+        then
             val now      = Instant.now()
             val tomorrow = now.plus(1, ChronoUnit.DAYS)
             val iat      = Date.from(now)
@@ -87,8 +96,10 @@ case class JwtService(issuer: String, apiKey: String, signingSecret: String):
 
     /**
      * Decode a JWT and return UserAccount info from it's claims
-     * @param userJwt the JWT to decode
-     * @return a UserAccount if the JWT is valid, None otherwise
+     * @param userJwt
+     *   the JWT to decode
+     * @return
+     *   a UserAccount if the JWT is valid, None otherwise
      */
     def decode(userJwt: String): Option[UserAccount] =
         try

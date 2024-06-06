@@ -15,7 +15,7 @@ case class Concept(
     rank: Option[String] = None,
     alternativeNames: Seq[String] = Nil,
     children: Seq[Concept] = Nil,
-    aphiaId: Option[Long] = None,
+    aphiaId: Option[Long] = None
 ):
     def containsName(n: String): Boolean = name.equals(n) ||
         alternativeNames.contains(n)

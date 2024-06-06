@@ -45,7 +45,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h))
                 .toScala
         )
-        
+
     def findByConceptName(conceptName: String): Either[Throwable, Seq[ExtendedHistory]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = HistoryRepository(entityManager)
@@ -56,11 +56,8 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 .sortBy(_.creationTimestamp)
         )
 
-
     // TODO: Create
 
     // TODO: Update (e.g. approve/reject)
 
-    //TODO: Delete?? Do we ever need to delete a history
-
-
+    // TODO: Delete?? Do we ever need to delete a history

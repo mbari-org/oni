@@ -18,43 +18,44 @@ import org.mbari.oni.services.ConceptNameService
 import sttp.shared.Identity
 import org.mbari.oni.etc.circe.CirceCodecs.given
 
-class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints {
+class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints:
 
     private val service = ConceptNameService(entityManagerFactory)
-    private val base = "names"
-    private val tag = "ConceptName"
+    private val base    = "names"
+    private val tag     = "ConceptName"
 
     val allEndpoint = openEndpoint
-            .get
-            .in(base)
-            .in(paging)
-            .out(jsonBody[Page[Seq[String]]])
-            .name("allConceptNames")
-            .description("Get all concept names")
-            .tag(tag)
+        .get
+        .in(base)
+        .in(paging)
+        .out(jsonBody[Page[Seq[String]]])
+        .name("allConceptNames")
+        .description("Get all concept names")
+        .tag(tag)
 
     val allEndpointImpl: ServerEndpoint[Any, Identity] = allEndpoint.serverLogic { paging =>
-        val limit = paging.limit.getOrElse(10000)
+        val limit  = paging.limit.getOrElse(10000)
         val offset = paging.offset.getOrElse(0)
         handleErrors(service.findAllNames(limit, offset).map(s => Page(s, limit, offset)))
     }
 
     val addConceptNameEndpoint: Endpoint[Option[String], ConceptNameCreate, ErrorMsg, RawConcept, Any] = secureEndpoint
-            .post
-            .in(base)
-            .in(jsonBody[ConceptNameCreate])
-            .out(jsonBody[RawConcept])
-            .name("addConceptName")
-            .description("Add a new concept name")
-            .tag(tag)
+        .post
+        .in(base)
+        .in(jsonBody[ConceptNameCreate])
+        .out(jsonBody[RawConcept])
+        .name("addConceptName")
+        .description("Add a new concept name")
+        .tag(tag)
 
     val addConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = addConceptNameEndpoint
-            .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
-            .serverLogic { userAccount => dto =>
-                handleErrors(service.addName(dto.copy(userName = Some(userAccount.username))))
-            }
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => dto =>
+            handleErrors(service.addName(dto.copy(userName = Some(userAccount.username))))
+        }
 
-    val updateConceptNameEndpoint: Endpoint[Option[String], ConceptNameUpdate, ErrorMsg, RawConcept, Any] = secureEndpoint
+    val updateConceptNameEndpoint: Endpoint[Option[String], ConceptNameUpdate, ErrorMsg, RawConcept, Any] =
+        secureEndpoint
             .put
             .in(base)
             .in(jsonBody[ConceptNameUpdate])
@@ -64,28 +65,24 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .tag(tag)
 
     val updateConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = updateConceptNameEndpoint
-            .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
-            .serverLogic { userAccount => dto =>
-                handleErrors(service.updateName(dto.copy(userName = Some(userAccount.username))))
-            }
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => dto =>
+            handleErrors(service.updateName(dto.copy(userName = Some(userAccount.username))))
+        }
 
     val deleteConceptNameEndpoint: Endpoint[Option[String], String, ErrorMsg, RawConcept, Any] = secureEndpoint
-            .delete
-            .in(base / path[String]("name"))
-            .out(jsonBody[RawConcept])
-            .name("deleteConceptName")
-            .description("Delete a concept name")
-            .tag(tag)
+        .delete
+        .in(base / path[String]("name"))
+        .out(jsonBody[RawConcept])
+        .name("deleteConceptName")
+        .description("Delete a concept name")
+        .tag(tag)
 
     val deleteConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = deleteConceptNameEndpoint
-            .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
-            .serverLogic { userAccount => name =>
-                handleErrors(service.deleteName(name, userAccount.username))
-            }
-
-
-
-
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => name =>
+            handleErrors(service.deleteName(name, userAccount.username))
+        }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
         allEndpoint,
@@ -100,4 +97,3 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         updateConceptNameEndpointImpl,
         deleteConceptNameEndpointImpl
     )
-}

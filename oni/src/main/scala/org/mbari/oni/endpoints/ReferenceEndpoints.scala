@@ -28,8 +28,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
     private val service = ReferenceService(entityManagerFactory)
 
     private val base = "reference"
-    private val tag = "Reference"
-
+    private val tag  = "Reference"
 
     val findReferenceByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Reference, Any] =
         openEndpoint
@@ -72,12 +71,19 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Find references by citation glob")
             .tag(tag)
 
-    val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Identity] = findReferencesByCitationGlobEndpoint.serverLogic { (paging, glob) =>
-        glob.citation match
-            case None => Left(BadRequest("Citation is required"))
-            case Some(citationGlob) =>
-                handleErrors(service.findByCitationGlob(citationGlob, paging.limit.getOrElse(DefaultLimit), paging.offset.getOrElse(0)))
-    }
+    val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Identity] =
+        findReferencesByCitationGlobEndpoint.serverLogic { (paging, glob) =>
+            glob.citation match
+                case None               => Left(BadRequest("Citation is required"))
+                case Some(citationGlob) =>
+                    handleErrors(
+                        service.findByCitationGlob(
+                            citationGlob,
+                            paging.limit.getOrElse(DefaultLimit),
+                            paging.offset.getOrElse(0)
+                        )
+                    )
+        }
 
     val findReferenceByDoiEndpoint: Endpoint[Unit, ReferenceQuery, ErrorMsg, Reference, Any] =
         openEndpoint
@@ -91,7 +97,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
 
     val findReferenceByDoiEndpointImpl: ServerEndpoint[Any, Identity] = findReferenceByDoiEndpoint.serverLogic { doi =>
         doi.doi match
-            case None => Left(BadRequest("DOI is required"))
+            case None      => Left(BadRequest("DOI is required"))
             case Some(doi) =>
                 service.findByDoi(doi) match
                     case Right(Some(reference)) => Right(reference)
@@ -130,7 +136,6 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
         .serverLogic { _ => referenceUpdate =>
             handleErrors(service.update(referenceUpdate))
         }
-
 
     val deleteReferenceEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] =
         secureEndpoint
@@ -178,15 +183,15 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
-        addConceptEndpoint,                    // PUT    add/:id/to/:concept
-        removeConceptEndpoint,                 // PUT    remove/:id/from/:concept
-        findReferencesByCitationGlobEndpoint,  // GET    query/citation/:glob
-        findReferenceByDoiEndpoint,            // GET    query/doi
-        findReferenceByIdEndpoint,             // GET    :id
-        findAllEndpoint,                       // GET    /
-        createReferenceEndpoint,               // POST   /
-        updateReferenceEndpoint,               // PUT    /
-        deleteReferenceEndpoint,               // DELETE /:id
+        addConceptEndpoint,                   // PUT    add/:id/to/:concept
+        removeConceptEndpoint,                // PUT    remove/:id/from/:concept
+        findReferencesByCitationGlobEndpoint, // GET    query/citation/:glob
+        findReferenceByDoiEndpoint,           // GET    query/doi
+        findReferenceByIdEndpoint,            // GET    :id
+        findAllEndpoint,                      // GET    /
+        createReferenceEndpoint,              // POST   /
+        updateReferenceEndpoint,              // PUT    /
+        deleteReferenceEndpoint               // DELETE /:id
 
     )
 
@@ -201,7 +206,6 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
         updateReferenceEndpointImpl,
         deleteReferenceEndpointImpl
     )
-
 
 object ReferenceEndpoints:
 

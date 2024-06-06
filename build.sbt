@@ -141,6 +141,7 @@ lazy val itSqlserver = (project in file("it-sqlserver"))
   )
   .settings(
     libraryDependencies ++= Seq(
+      slf4jJulBridge,
       testcontainersSqlserver
     )
   )

@@ -8,13 +8,28 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.domain.ILink
+import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
 
 /**
  * @author
  *   Brian Schlining
  * @since 2016-11-17T16:23:00
  */
-case class Link(linkName: String, toConcept: String, linkValue: String)
+case class Link(linkName: String, toConcept: String, linkValue: String, id: Option[Long] = None):
+
+    def toLinkTemplateEntity: LinkTemplateEntity =
+        val l = new LinkTemplateEntity()
+        l.setLinkName(linkName)
+        l.setToConcept(toConcept)
+        l.setLinkValue(linkValue)
+        l
+
+    def toLinkRealizationEntity: LinkRealizationEntity =
+        val l = new LinkRealizationEntity()
+        l.setLinkName(linkName)
+        l.setToConcept(toConcept)
+        l.setLinkValue(linkValue)
+        l
 
 object Link:
     def from(link: ILink): Link =

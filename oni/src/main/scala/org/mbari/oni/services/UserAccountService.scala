@@ -92,11 +92,10 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
         userName match
             case Some(name) =>
                 findByUserName(name) match
-                    case Left(e) =>
+                    case Left(e)        =>
                         Left(WrappedException(s"An error occurred while finding user account with username ${name}", e))
-                    case Right(None) => Left(AccessDenied(name))
-                    case Right(Some(u)) => 
+                    case Right(None)    => Left(AccessDenied(name))
+                    case Right(Some(u)) =>
                         if u.role != UserAccountRoles.READONLY.getRoleName then Right(u)
                         else Left(AccessDenied(name))
-            case None => Left(AccessDeniedMissingCredentials)
-
+            case None       => Left(AccessDeniedMissingCredentials)

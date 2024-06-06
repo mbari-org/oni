@@ -34,7 +34,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .tag(tag)
 
     val allEndpointImpl: ServerEndpoint[Any, Identity] = allEndpoint.serverLogic { _ =>
-        val limit = 10000
+        val limit  = 10000
         val offset = 0
         handleErrors(conceptNameService.findAllNames(limit, offset))
     }
@@ -52,10 +52,12 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => conceptCreate =>
             val createData = conceptCreate.copy(userName = Some(userAccount.username))
-            service.create(createData).fold(
-                error => Left(ServerError(error.getMessage)),
-                concept => Right(concept)
-            )
+            service
+                .create(createData)
+                .fold(
+                    error => Left(ServerError(error.getMessage)),
+                    concept => Right(concept)
+                )
         }
 
     val deleteEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] = secureEndpoint
@@ -70,10 +72,12 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => name =>
             val deleteData = ConceptDelete(name, Some(userAccount.username))
-            service.delete(deleteData).fold(
-                error => Left(ServerError(error.getMessage)),
-                _ => Right(())
-            )
+            service
+                .delete(deleteData)
+                .fold(
+                    error => Left(ServerError(error.getMessage)),
+                    _ => Right(())
+                )
         }
 
     val findParentEndpoint: Endpoint[Unit, String, ErrorMsg, ConceptMetadata, Any] = openEndpoint
@@ -137,10 +141,12 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => conceptUpdate =>
             val updateData = conceptUpdate.copy(userName = Some(userAccount.username))
-            service.update(updateData).fold(
-                error => Left(ServerError(error.getMessage)),
-                concept => Right(concept)
-            )
+            service
+                .update(updateData)
+                .fold(
+                    error => Left(ServerError(error.getMessage)),
+                    concept => Right(concept)
+                )
         }
 
     override val all: List[Endpoint[?, ?, ?, ?, ?]] = List(

@@ -154,7 +154,10 @@ object TestEntityFactory:
 //        entity.setId(nextConceptId.incrementAndGet())
         entity
 
-    def createUserAccount(role: String = UserAccountRoles.ADMINISTRATOR.getRoleName, password: String = Strings.random(20)): UserAccountEntity =
+    def createUserAccount(
+        role: String = UserAccountRoles.ADMINISTRATOR.getRoleName,
+        password: String = Strings.random(20)
+    ): UserAccountEntity =
         val entity = new UserAccountEntity()
         entity.setUserName(Strings.random(20))
         entity.setPassword(password)
@@ -167,7 +170,11 @@ object TestEntityFactory:
 
     def createReference(): ReferenceEntity =
         val entity = new ReferenceEntity()
-        entity.setDoi(URI.create(s"https://doi.org/${random.nextInt(100)}.${random.nextInt(1000)}/TEST.${random.nextInt(1000)}.${random.nextInt(99999)}"))
+        entity.setDoi(
+            URI.create(
+                s"https://doi.org/${random.nextInt(100)}.${random.nextInt(1000)}/TEST.${random.nextInt(1000)}.${random.nextInt(99999)}"
+            )
+        )
 
         val n = random.nextInt(10) + 1
         val m = random.nextInt(20) + 5

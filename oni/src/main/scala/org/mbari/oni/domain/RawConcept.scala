@@ -18,7 +18,7 @@ case class RawConcept(
     children: Set[RawConcept] = Set.empty,
     aphiaId: Option[Long] = None,
     rankLevel: Option[String] = None,
-    rankName: Option[String] = None,
+    rankName: Option[String] = None
 ):
 
     lazy val primaryConceptName: Option[RawConceptName] = names.find(_.nameType == ConceptNameTypes.PRIMARY.getType)
@@ -73,5 +73,5 @@ object RawConcept:
             children = children,
             aphiaId = Option(entity.getAphiaId).map(_.toLong),
             rankLevel = Option(entity.getRankLevel),
-            rankName = Option(entity.getRankName),
+            rankName = Option(entity.getRankName)
         )

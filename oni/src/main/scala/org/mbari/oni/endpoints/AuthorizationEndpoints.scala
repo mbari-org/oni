@@ -107,8 +107,6 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
             }
             .serverLogic(bearerAuth => Unit => Right(bearerAuth))
 
-    override val all: List[Endpoint[?, ?, ?, ?, ?]]     = List(
-        loginEndpoint,
-        authEndpoint)
+    override val all: List[Endpoint[?, ?, ?, ?, ?]]           = List(loginEndpoint, authEndpoint)
     override val allImpl: List[ServerEndpoint[Any, Identity]] =
         List(loginEndpointImpl, authEndpointImpl)

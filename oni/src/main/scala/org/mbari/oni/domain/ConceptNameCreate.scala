@@ -15,15 +15,11 @@ case class ConceptNameCreate(
     nameType: String,
     author: Option[String] = None,
     userName: Option[String] = None
-) {
+):
 
-    def toEntity: ConceptNameEntity = {
+    def toEntity: ConceptNameEntity =
         val entity = new ConceptNameEntity()
         entity.setName(newName)
         entity.setNameType(nameType)
         author.foreach(entity.setAuthor)
         entity
-    }
-    
-
-}

@@ -26,7 +26,10 @@ object Dependencies {
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.3"
     lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
-    lazy val slf4jSystem = "org.slf4j"               % "slf4j-jdk-platform-logging" % "2.0.13"
+
+    val slf4jVersion = "2.0.13"
+    lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
+    lazy val slf4jSystem    = "org.slf4j" % "slf4j-jdk-platform-logging" % slf4jVersion
 
     private val tapirVersion = "1.10.8"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion

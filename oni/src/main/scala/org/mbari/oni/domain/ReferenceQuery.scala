@@ -11,7 +11,9 @@ import java.net.URI
 
 /**
  * Query DTO for references. One of the fields, doi or citation, must be set.
- * @param doi A complete DOI (optional)
- * @param citation A partial citation (optional)
+ * @param doi
+ *   A complete DOI (optional)
+ * @param citation
+ *   A partial citation (optional)
  */
 case class ReferenceQuery(doi: Option[URI] = None, citation: Option[String] = None)

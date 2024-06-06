@@ -26,14 +26,11 @@ import sttp.client3.*
 
 import sttp.model.StatusCode
 
-
-
 import java.util.Base64
-
 
 trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
 
-    given jwtService: JwtService            = JwtService("mbari", "foo", "bar")
+    given jwtService: JwtService    = JwtService("mbari", "foo", "bar")
     lazy val authorizationEndpoints = new AuthorizationEndpoints(entityManagerFactory)
 
     test("auth"):
@@ -46,14 +43,13 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
             .send(backendStub)
 
         response.body match
-            case Left(e)  => fail(e)
+            case Left(e)     => fail(e)
             case Right(body) =>
-
                 assertEquals(response.code, StatusCode.Ok)
                 assert(response.body.isRight)
 
                 // println(body)
-                val d = decode[Authorization](body)
+                val d          = decode[Authorization](body)
                 assert(d.isRight)
                 val bearerAuth = d.getOrElse(throw new Exception("No bearer auth"))
                 assert(jwtService.verify(bearerAuth.accessToken))
@@ -67,29 +63,25 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
             isEncrypted = Some(false)
         )
         userService.create(userAccount) match
-            case Left(e) => fail(e.getMessage)
+            case Left(e)   => fail(e.getMessage)
             case Right(ua) =>
-
                 val backendStub = newBackendStub(authorizationEndpoints.loginEndpointImpl)
 
                 val credentials = Base64.getEncoder.encodeToString(s"${ua.username}:${userAccount.password}".getBytes)
-                val response = basicRequest
+                val response    = basicRequest
                     .post(uri"http://test.com/v1/auth/login")
                     .header("Authorization", s"BASIC $credentials")
                     .send(backendStub)
 
                 response.body match
-                    case Left(e)  =>
+                    case Left(e)     =>
                         fail(e)
                     case Right(body) =>
-
                         assertEquals(response.code, StatusCode.Ok)
                         assert(response.body.isRight)
 
                         // println(body)
-                        val d = decode[Authorization](body)
+                        val d          = decode[Authorization](body)
                         assert(d.isRight)
                         val bearerAuth = d.getOrElse(throw new Exception("No bearer auth"))
                         assert(jwtService.verify(bearerAuth.accessToken))
-
-

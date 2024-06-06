@@ -15,7 +15,7 @@ final case class SerdeConcept(
     rank: Option[String] = None,
     alternativeNames: Option[Seq[String]] = None,
     children: Option[Set[SerdeConcept]] = None,
-    aphiaId: Option[Long] = None,
+    aphiaId: Option[Long] = None
 ):
 
     def containsName(n: String): Boolean = name.equals(n) ||

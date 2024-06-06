@@ -57,10 +57,10 @@ trait HistoryServiceSuite extends DataInitializer:
     }
 
     test("findByConceptName") {
-        val root     = init(3, 6)
+        val root        = init(3, 6)
         assert(root != null)
         val conceptName = root.getPrimaryConceptName.getName
-        val expected = root
+        val expected    = root
             .getDescendants
             .asScala
             .flatMap(ExtendedHistory.from)

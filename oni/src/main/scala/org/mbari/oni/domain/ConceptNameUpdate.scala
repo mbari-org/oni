@@ -15,12 +15,9 @@ case class ConceptNameUpdate(
     nameType: Option[String] = None,
     author: Option[String] = None,
     userName: Option[String] = None
-) {
-    def updateEntity(entity: ConceptNameEntity): ConceptNameEntity = {
+):
+    def updateEntity(entity: ConceptNameEntity): ConceptNameEntity =
         newName.foreach(entity.setName)
         nameType.foreach(entity.setNameType)
         author.foreach(entity.setAuthor)
         entity
-    }
-
-}

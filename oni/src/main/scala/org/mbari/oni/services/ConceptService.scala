@@ -216,7 +216,11 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
     def create(conceptCreate: ConceptCreate): Either[Throwable, ConceptMetadata] =
 
         // -- Helper function to build the concept and history in a transaction
-        def buildInTxn(userEntity: UserAccountEntity, parent: ConceptEntity, entityManager: EntityManager): ConceptEntity =
+        def buildInTxn(
+            userEntity: UserAccountEntity,
+            parent: ConceptEntity,
+            entityManager: EntityManager
+        ): ConceptEntity =
 
             // build concept
             val concept     = new ConceptEntity()
@@ -225,19 +229,19 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             conceptCreate.rankName.foreach(v => concept.setRankName(v))
             val conceptName = new ConceptNameEntity(conceptCreate.name)
             concept.addConceptName(conceptName)
-            if (parent != null) {
+            if parent != null then
                 parent.addChildConcept(concept)
 
                 // build history
                 val history = HistoryEntityFactory.add(userEntity, parent)
                 parent.getConceptMetadata.addHistory(history)
-            }
-            else {
+            else
                 findRoot() match
-                    case Left(_) => entityManager.persist(concept)
+                    case Left(_)  => entityManager.persist(concept)
                     case Right(_) =>
-                        throw new IllegalArgumentException("Root concept already exists. Cannot create a new root concept")
-            }
+                        throw new IllegalArgumentException(
+                            "Root concept already exists. Cannot create a new root concept"
+                        )
             concept
 
         // -- Helper function to run the transaction
@@ -265,14 +269,19 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         yield concept
 
     /**
-     * Update a concept. This service does not check the users access credentials, that is done by the web service layer.
-     * @param conceptUpdate The update data
-     * @return The updated concept or an exception if any errors occur
+     * Update a concept. This service does not check the users access credentials, that is done by the web service
+     * layer.
+     * @param conceptUpdate
+     *   The update data
+     * @return
+     *   The updated concept or an exception if any errors occur
      */
     def update(conceptUpdate: ConceptUpdate): Either[Throwable, ConceptMetadata] =
 
         // -- Helper function to update the parent concept
-        def updateParent(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, parentName: Option[String])(using repo: ConceptRepository): Unit =
+        def updateParent(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, parentName: Option[String])(using
+            repo: ConceptRepository
+        ): Unit =
             parentName.foreach(name =>
                 if !conceptEntity.hasParent then
                     throw new IllegalArgumentException(s"Cannot set the parent of the root concept!")
@@ -280,59 +289,70 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 repo.findByName(name).toScala match
                     case None    => throw ConceptNameNotFound(name)
                     case Some(p) =>
-
                         // Don't allow cyclic relation
                         if conceptEntity.hasDescendent(name) then
-                            throw new IllegalArgumentException(s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation")
+                            throw new IllegalArgumentException(
+                                s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation"
+                            )
 
                         // Only update if the parent is different
                         if !conceptEntity.getParentConcept.hasConceptName(name) then
-                            val history = HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, p)
+                            val history =
+                                HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, p)
                             conceptEntity.getConceptMetadata.addHistory(history)
                             conceptEntity.getParentConcept match
-                                case null =>
+                                case null   =>
                                     p.addChildConcept(conceptEntity)
                                 case parent =>
                                     parent.removeChildConcept(conceptEntity)
                                     p.addChildConcept(conceptEntity)
             )
 
-
         // -- Helper function to update the rank level
-        def updateRankLevel(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, rankLevel: Option[String]): Unit =
-            rankLevel.foreach( v =>
+        def updateRankLevel(
+            userEntity: UserAccountEntity,
+            conceptEntity: ConceptEntity,
+            rankLevel: Option[String]
+        ): Unit =
+            rankLevel.foreach(v =>
                 if v != conceptEntity.getRankLevel then
-                        val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
-                        conceptEntity.getConceptMetadata.addHistory(history)
-                        conceptEntity.setRankLevel(v)
+                    val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
+                    conceptEntity.getConceptMetadata.addHistory(history)
+                    conceptEntity.setRankLevel(v)
             )
 
         // -- Helper function to update the rank name
-        def updateRankName(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, rankLevel: Option[String]): Unit =
-            rankLevel.foreach( v =>
+        def updateRankName(
+            userEntity: UserAccountEntity,
+            conceptEntity: ConceptEntity,
+            rankLevel: Option[String]
+        ): Unit =
+            rankLevel.foreach(v =>
                 if v != conceptEntity.getRankName then
-                        val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
-                        conceptEntity.getConceptMetadata.addHistory(history)
-                        conceptEntity.setRankName(v)
+                    val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
+                    conceptEntity.getConceptMetadata.addHistory(history)
+                    conceptEntity.setRankName(v)
             )
 
         // -- Helper function to update the aphia id
-        def updateAphiaId(conceptEntity: ConceptEntity, aphiaId: Option[Long])(using repo: ConceptRepository): Unit=
-            aphiaId.foreach( v =>
+        def updateAphiaId(conceptEntity: ConceptEntity, aphiaId: Option[Long])(using repo: ConceptRepository): Unit =
+            aphiaId.foreach(v =>
                 if v != conceptEntity.getAphiaId then
-                        repo.findByAphiaId(v).toScala match
-                            case Some(v) =>
-                                if v.getId != conceptEntity.getId then
-                                    throw new IllegalArgumentException(s"AphiaId $v already exists for " + v.getPrimaryConceptName.getName)
-                            case None =>
-                                conceptEntity.setAphiaId(v)
+                    repo.findByAphiaId(v).toScala match
+                        case Some(v) =>
+                            if v.getId != conceptEntity.getId then
+                                throw new IllegalArgumentException(
+                                    s"AphiaId $v already exists for " + v.getPrimaryConceptName.getName
+                                )
+                        case None    =>
+                            conceptEntity.setAphiaId(v)
             )
 
         def txn(userEntity: UserAccountEntity): Either[Throwable, ConceptMetadata] =
             entityManagerFactory.transaction(entityManager =>
                 given repo: ConceptRepository = new ConceptRepository(entityManager)
                 repo.findByName(conceptUpdate.name).toScala match
-                    case None    => throw ConceptNameNotFound(conceptUpdate.name)
+                    case None                => throw ConceptNameNotFound(conceptUpdate.name)
                     case Some(conceptEntity) =>
                         updateParent(userEntity, conceptEntity, conceptUpdate.parentName)
                         updateRankLevel(userEntity, conceptEntity, conceptUpdate.rankLevel)
@@ -342,40 +362,43 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             )
 
         for
-            user <- userAccountService.verifyWriteAccess(conceptUpdate.userName)
+            user    <- userAccountService.verifyWriteAccess(conceptUpdate.userName)
             concept <- txn(user.toEntity)
-        yield
-            concept
-
+        yield concept
 
     /**
      * Delete a concept and all its descendants. This service does not check the users access credentials, that is done
      * by the web service layer. Only administrators can delete concepts. This is a non recoverable operation.
-     * @param conceptDelete Information about the concept to delete
-     * @return The number of concepts deleted. This includes the concept and all its descendants
+     * @param conceptDelete
+     *   Information about the concept to delete
+     * @return
+     *   The number of concepts deleted. This includes the concept and all its descendants
      */
     def delete(conceptDelete: ConceptDelete): Either[Throwable, Int] =
 
         // -- Helper function to delete a concept
         def txn(userEntity: UserAccountEntity, name: String): Either[Throwable, Int] =
-            if !userEntity.isAdministrator then
-                throw AccessDenied(userEntity.getUserName)
+            if !userEntity.isAdministrator then throw AccessDenied(userEntity.getUserName)
 
-            handleByConceptName(name, (concept, repo) =>
-                val history = HistoryEntityFactory.delete(userEntity, concept)
-                history.approveBy(userEntity.getUserName)
+            handleByConceptName(
+                name,
+                (concept, repo) =>
+                    val history = HistoryEntityFactory.delete(userEntity, concept)
+                    history.approveBy(userEntity.getUserName)
 
-                concept.getParentConcept match
-                    case null =>
-                        repo.deleteBranchByName(name)
-                    case parent =>
-                        parent.getConceptMetadata.addHistory(history)
-                        repo.deleteBranchByName(name)
+                    concept.getParentConcept match
+                        case null   => // do nothing
+                        case parent =>
+                            parent.getConceptMetadata.addHistory(history)
 
+                    // Only delete if the user is an admin. Otherwise we just add a history
+                    if userEntity.isAdministrator then
+                        history.approveBy(userEntity.getUserName)
+                        repo.deleteBranchByName(concept.getPrimaryConceptName.getName)
+                    else 0
             )
 
         for
-            user <- userAccountService.verifyWriteAccess(conceptDelete.userName)
+            user  <- userAccountService.verifyWriteAccess(conceptDelete.userName)
             count <- txn(user.toEntity, conceptDelete.name)
-        yield
-            count
+        yield count

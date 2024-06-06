@@ -7,6 +7,4 @@
 
 package org.mbari.oni.domain
 
-case class ConceptDelete(name: String, userName: Option[String] = None) {
-
-}
+case class ConceptDelete(name: String, userName: Option[String] = None) {}

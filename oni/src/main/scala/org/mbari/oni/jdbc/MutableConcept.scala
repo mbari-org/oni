@@ -86,7 +86,7 @@ object MutableConcept:
             if parentOpt.isEmpty then
                 System
                     .getLogger(getClass.getName)
-                    .log(System.Logger.Level.INFO, s"No Parent found for $row")
+                    .log(System.Logger.Level.DEBUG, s"No Parent found for $row")
 
             /*
               Find the existing concept or create one if needed

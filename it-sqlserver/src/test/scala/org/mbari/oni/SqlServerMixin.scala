@@ -18,7 +18,10 @@ package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
+import org.slf4j.bridge.SLF4JBridgeHandler
 
 trait SqlServerMixin {
-  def entityManagerFactory: EntityManagerFactory = AzureEntityManagerFactoryProvider.entityManagerFactory
+
+    SLF4JBridgeHandler.install
+    def entityManagerFactory: EntityManagerFactory = AzureEntityManagerFactoryProvider.entityManagerFactory
 }

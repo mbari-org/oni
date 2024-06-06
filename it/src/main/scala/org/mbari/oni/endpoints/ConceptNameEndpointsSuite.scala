@@ -23,115 +23,114 @@ import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
-trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin {
+trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
-    given jwtService: JwtService = JwtService("mbari", "foo", "bar")
+    given jwtService: JwtService             = JwtService("mbari", "foo", "bar")
     lazy val endpoints: ConceptNameEndpoints = ConceptNameEndpoints(entityManagerFactory)
-    private val password = "foofoo"
+    private val password                     = "foofoo"
 
     test("findAll") {
-        val root = init(3, 3)
+        val root     = init(3, 3)
         assert(root != null)
-        val rawRoot = RawConcept.from(root)
+        val rawRoot  = RawConcept.from(root)
         val expected = rawRoot.descendantNames.sorted
         runGet(
             endpoints.allEndpointImpl,
             "http://test.com/v1/names",
-            response => {
+            response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val conceptNames = checkResponse[Page[Seq[String]]](response.body).content.sorted
                 assertEquals(conceptNames, expected)
-            }
         )
     }
 
     test("addConceptName") {
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
-        val name = rawRoot.primaryName
-        val dto = ConceptNameCreate(name = name, newName = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
+        val name    = rawRoot.primaryName
+        val dto     = ConceptNameCreate(name = name, newName = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
 
-        val attempt = testWithUserAuth( user =>
-            runPost(
-                endpoints.addConceptNameEndpointImpl,
-                "http://test.com/v1/names",
-                dto.stringify,
-                response => {
-                    assertEquals(response.code, StatusCode.Ok)
-                    val rawConcept = checkResponse[RawConcept](response.body)
-                    val obtained = rawConcept.names.map(_.name).toSeq
-                    assert(obtained.contains(dto.name))
-                    assert(obtained.contains(dto.newName))
-                    println(s"obtained: $obtained")
-                },
-                jwt = jwtService.login(user.username, password, user.toEntity)
-            )
-        , password)
+        val attempt = testWithUserAuth(
+            user =>
+                runPost(
+                    endpoints.addConceptNameEndpointImpl,
+                    "http://test.com/v1/names",
+                    dto.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val rawConcept = checkResponse[RawConcept](response.body)
+                        val obtained   = rawConcept.names.map(_.name).toSeq
+                        assert(obtained.contains(dto.name))
+                        assert(obtained.contains(dto.newName))
+//                    println(s"obtained: $obtained")
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
 
-        attempt match {
-            case Right(_) => println("Success")
+        attempt match
+            case Right(_)    => assert(true)
             case Left(error) => fail(error.toString)
-        }
     }
 
     test("updateConceptName") {
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
-        val name = rawRoot.primaryName
-        val dto = ConceptNameUpdate(name = name, newName = Some("newName"))
+        val name    = rawRoot.primaryName
+        val dto     = ConceptNameUpdate(name = name, newName = Some("newName"))
 
-        val attempt = testWithUserAuth(user =>
-            runPut(
-                endpoints.updateConceptNameEndpointImpl,
-                "http://test.com/v1/names",
-                dto.stringify,
-                response => {
-                    assertEquals(response.code, StatusCode.Ok)
-                    val rawConcept = checkResponse[RawConcept](response.body)
-                    println(rawConcept.stringify)
-                    val obtained = rawConcept.names.map(_.name).toSeq
-                    println(s"obtained: $obtained")
-                    assert(!obtained.contains(dto.name))
-                    assert(obtained.contains(dto.newName.getOrElse("")))
-                },
-                jwt = jwtService.login(user.username, password, user.toEntity)
-            )
-            , password)
+        val attempt = testWithUserAuth(
+            user =>
+                runPut(
+                    endpoints.updateConceptNameEndpointImpl,
+                    "http://test.com/v1/names",
+                    dto.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val rawConcept = checkResponse[RawConcept](response.body)
+                        println(rawConcept.stringify)
+                        val obtained   = rawConcept.names.map(_.name).toSeq
+                        println(s"obtained: $obtained")
+                        assert(!obtained.contains(dto.name))
+                        assert(obtained.contains(dto.newName.getOrElse("")))
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
 
-        attempt match {
-            case Right(_) => println("Success")
+        attempt match
+            case Right(_)    => assert(true)
             case Left(error) => fail(error.toString)
-        }
     }
 
     test("deleteConceptName") {
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
-        val name = rawRoot.names.filterNot(_.name == rawRoot.primaryName).head.name
+        val name    = rawRoot.names.filterNot(_.name == rawRoot.primaryName).head.name
 
-        val attempt = testWithUserAuth(user =>
-            runDelete(
-                endpoints.deleteConceptNameEndpointImpl,
-                s"http://test.com/v1/names/$name",
-                response => {
-                    assertEquals(response.code, StatusCode.Ok)
-                    val rawConcept = checkResponse[RawConcept](response.body)
-                    val obtained = rawConcept.names.map(_.name).toSeq
-                    assert(!obtained.contains(name))
-                },
-                jwt = jwtService.login(user.username, password, user.toEntity)
-            )
-        , password)
+        val attempt = testWithUserAuth(
+            user =>
+                runDelete(
+                    endpoints.deleteConceptNameEndpointImpl,
+                    s"http://test.com/v1/names/$name",
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val rawConcept = checkResponse[RawConcept](response.body)
+                        val obtained   = rawConcept.names.map(_.name).toSeq
+                        assert(!obtained.contains(name))
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
 
-        attempt match {
-            case Right(_) => println("Success")
+        attempt match
+            case Right(_)    => assert(true)
             case Left(error) => fail(error.toString)
-        }
 
     }
-
-
-}

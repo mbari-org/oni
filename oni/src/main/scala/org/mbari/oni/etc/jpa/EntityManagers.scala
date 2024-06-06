@@ -9,6 +9,8 @@ package org.mbari.oni.etc.jpa
 
 import jakarta.persistence.EntityManager
 import org.checkerframework.checker.units.qual.N
+import org.mbari.oni.MissingRootConcept
+
 import scala.util.control.NonFatal
 import org.mbari.oni.etc.jdk.Loggers.given
 
@@ -26,13 +28,16 @@ object EntityManagers:
                 transaction.commit()
                 Right(n)
             catch
+                case MissingRootConcept =>
+                    log.atInfo.log("Missing root concept")
+                    Left(MissingRootConcept)
                 case NonFatal(e) =>
                     log.atError.withCause(e).log("Error in transaction")
                     Left(e)
             finally
                 if transaction.isActive then
-                    log.atWarn
-                        .log(
-                            "A JPA transaction was still active after commit. This is likely due to an exception during the transaction. Rolling back"
-                        )
+//                    log.atWarn
+//                        .log(
+//                            "A JPA transaction was still active after commit. This is likely due to an exception during the transaction. Rolling back"
+//                        )
                     transaction.rollback()

@@ -142,37 +142,37 @@ trait ReferenceServiceSuite extends DataInitializer:
     }
 
     test("findByCitationGlob (glob has spaces)") {
-        val ref = TestEntityFactory.createReference()
+        val ref      = TestEntityFactory.createReference()
         val citation = ref.getCitation
-        val glob = citation.substring(5, citation.length - 5)
-        println(glob)
+        val glob     = citation.substring(5, citation.length - 5)
+//        println(glob)
         service.create(Reference.from(ref)) match
-            case Right(_) => assert(true)
+            case Right(_)    => assert(true)
             case Left(error) => fail(error.toString)
 
         // This should match only one reference
         service.findByCitationGlob(glob, 10000, 0) match
             case Right(entities) =>
                 assertEquals(entities.size, 1)
-            case Left(error) => fail(error.toString)
+            case Left(error)     => fail(error.toString)
     }
 
     test("findByDoi") {
         val refs = 0 until 10 map { _ => TestEntityFactory.createReference() }
         refs.foreach(ref =>
             service.create(Reference.from(ref)) match
-                case Right(_) => assert(true)
+                case Right(_)    => assert(true)
                 case Left(error) => fail(error.toString)
         )
 
         val expected = refs.head.getDoi
 
         service.findByDoi(expected) match
-            case Right(opt) =>
+            case Right(opt)  =>
                 assert(opt.isDefined)
                 val reference = opt.get
                 assert(reference.doi.isDefined)
-                val obtained = reference.doi.get
+                val obtained  = reference.doi.get
                 assertEquals(obtained, expected)
                 assertEquals(refs.head.getCitation, reference.citation)
             case Left(error) => fail(error.toString)
@@ -180,54 +180,52 @@ trait ReferenceServiceSuite extends DataInitializer:
     }
 
     test("addConcept") {
-        val entity = TestEntityFactory.createReference()
-        val root = init(4, 2)
+        val entity      = TestEntityFactory.createReference()
+        val root        = init(4, 2)
         val conceptName = root.getPrimaryConceptName.getName
 
         // Add to root
         val attempt0 = for
             reference0 <- service.create(Reference.from(entity))
             reference1 <- service.addConcept(reference0.id.get, conceptName)
-        yield
-            reference1
+        yield reference1
 
         val referenceId = attempt0 match
-            case Left(error) => fail(error.toString)
+            case Left(error)      => fail(error.toString)
             case Right(reference) =>
                 assert(reference.concepts.contains(conceptName))
                 assert(reference.id.isDefined)
                 reference.id.get
 
         // Add to child
-        val child = root.getChildConcepts.iterator().next()
+        val child     = root.getChildConcepts.iterator().next()
         val childName = child.getPrimaryConceptName.getName
 
-        val attempt1 = for
-            reference1 <- service.addConcept(referenceId, childName)
-        yield
-            reference1
+        val attempt1 =
+            for reference1 <- service.addConcept(referenceId, childName)
+            yield reference1
 
         attempt1 match
-            case Left(error) => fail(error.toString)
+            case Left(error)      => fail(error.toString)
             case Right(reference) =>
                 assert(reference.concepts.contains(childName))
                 assert(reference.concepts.contains(conceptName))
 
         conceptService.findByName(conceptName) match
-            case Left(error) => fail(error.toString)
+            case Left(error)    => fail(error.toString)
             case Right(concept) =>
                 val refIds = concept.references.flatMap(_.id)
                 assert(refIds.contains(referenceId))
-                println(s"--- ${concept}")
-                println(s"--- ${concept.stringify}")
+//                println(s"--- ${concept}")
+//                println(s"--- ${concept.stringify}")
     }
 
     test("removeConcept") {
-        val entity = TestEntityFactory.createReference()
-        val root = init(4, 0)
+        val entity      = TestEntityFactory.createReference()
+        val root        = init(4, 0)
         val conceptName = root.getPrimaryConceptName.getName
-        val child = root.getChildConcepts.iterator().next()
-        val childName = child.getPrimaryConceptName.getName
+        val child       = root.getChildConcepts.iterator().next()
+        val childName   = child.getPrimaryConceptName.getName
 
         // Add to root
         val attempt0 = for
@@ -243,19 +241,17 @@ trait ReferenceServiceSuite extends DataInitializer:
 
         val referenceId = attempt0 match
             case Left(error) => fail(error.toString)
-            case Right(id) => id
+            case Right(id)   => id
 
         // Remove from root
-        val attempt1 = for
-            reference1 <- service.removeConcept(referenceId, conceptName)
-        yield
-            reference1
+        val attempt1 =
+            for reference1 <- service.removeConcept(referenceId, conceptName)
+            yield reference1
 
         attempt1 match
-            case Left(error) => fail(error.toString)
+            case Left(error)      => fail(error.toString)
             case Right(reference) =>
                 assert(reference.concepts.contains(childName))
                 assert(!reference.concepts.contains(conceptName))
 
     }
-

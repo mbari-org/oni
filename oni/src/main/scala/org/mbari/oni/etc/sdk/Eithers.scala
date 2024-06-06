@@ -9,15 +9,11 @@ package org.mbari.oni.etc.sdk
 
 import java.util.Optional
 
-object Eithers {
+object Eithers:
 
     private val emptyOptionalError = new NoSuchElementException("Optional is empty")
 
     extension [B](opt: Optional[B])
-
         def toEither: Either[Throwable, B] =
             if opt.isPresent then Right(opt.get)
             else Left(emptyOptionalError)
-            
-    
-}

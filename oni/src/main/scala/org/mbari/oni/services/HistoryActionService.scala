@@ -65,24 +65,19 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory):
         )
 
     private def approve(history: HistoryEntity, user: UserAccountEntity): Boolean =
-        if (!user.isAdministrator) then false
-        else {
+        if !user.isAdministrator then false
+        else
             history.getAction match
-                case HistoryEntity.ACTION_ADD => true
-                case HistoryEntity.ACTION_DELETE => 
+                case HistoryEntity.ACTION_ADD     => true
+                case HistoryEntity.ACTION_DELETE  =>
                     history.getField match
-                        case HistoryEntity.FIELD_CONCEPT_CHILD => false // TODO
-                        case HistoryEntity.FIELD_CONCEPTNAME =>false // TODO
+                        case HistoryEntity.FIELD_CONCEPT_CHILD   => false // TODO
+                        case HistoryEntity.FIELD_CONCEPTNAME     => false // TODO
                         case HistoryEntity.FIELD_LINKREALIZATION => false // TODO
-                        case HistoryEntity.FIELD_LINKTEMPLATE => false // TODO
-                        case HistoryEntity.FIELD_MEDIA => false // TODO
-                        case _ => false
+                        case HistoryEntity.FIELD_LINKTEMPLATE    => false // TODO
+                        case HistoryEntity.FIELD_MEDIA           => false // TODO
+                        case _                                   => false
                 case HistoryEntity.ACTION_REPLACE =>
                     history.getField match
                         case HistoryEntity.FIELD_CONCEPT_PARENT => false // TODO
-                        case _ => false
-        }
-        
-        
-
-
+                        case _                                  => false

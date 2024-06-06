@@ -30,6 +30,7 @@ public class LinkRealizationRepository extends Repository {
     public Collection<LinkRealizationEntity> findAllByLinkName(String linkName) {
         return findByNamedQuery("LinkRealization.findByLinkName", Map.of("linkName", linkName));
     }
+    
 
     public void validateToConcept(LinkRealizationEntity object) {
         var conceptDAO = new ConceptRepository(entityManager);

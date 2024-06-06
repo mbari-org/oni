@@ -16,11 +16,18 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept, RawConceptName, UserAccount, UserAccountRoles}
+import org.mbari.oni.domain.{
+    ConceptNameCreate,
+    ConceptNameTypes,
+    ConceptNameUpdate,
+    RawConcept,
+    RawConceptName,
+    UserAccount,
+    UserAccountRoles
+}
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.jpa.entities.TestEntityFactory
-
 
 trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
@@ -45,11 +52,11 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("addName (new primary name)") {
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
-        val dto = ConceptNameCreate(name = name, newName = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
+        val dto     = ConceptNameCreate(name = name, newName = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
 
         val attempt = runWithUserAuth(user => conceptNameService.addName(dto.copy(userName = Some(user.username))))
 
@@ -64,11 +71,11 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
     test("addName (not a primary name)") {
 
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
-        val name = rawRoot.primaryName
-        val dto = ConceptNameCreate(name = name, newName = "newName22", nameType = ConceptNameTypes.SYNONYM.getType)
+        val name    = rawRoot.primaryName
+        val dto     = ConceptNameCreate(name = name, newName = "newName22", nameType = ConceptNameTypes.SYNONYM.getType)
 
         val attempt = runWithUserAuth(user => conceptNameService.addName(dto.copy(userName = Some(user.username))))
 
@@ -77,17 +84,18 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
                 val obtained = rawConcept.names.map(_.name).toSeq
                 assert(obtained.contains(dto.name))
                 assert(obtained.contains(dto.newName))
-            case Left(error) =>
+            case Left(error)       =>
                 fail(error.toString)
     }
 
     test("updateName") {
 
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
-        val dto = ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.PRIMARY.getType))
+        val dto     =
+            ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.PRIMARY.getType))
 
         val attempt = runWithUserAuth(user => conceptNameService.updateName(dto.copy(userName = Some(user.username))))
 
@@ -103,11 +111,12 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
     test("updateName (attempt to change primary to non-primary)") {
 
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
-        val name = rawRoot.primaryName
-        val dto = ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.COMMON.getType))
+        val name    = rawRoot.primaryName
+        val dto     =
+            ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.COMMON.getType))
 
         val attempt = runWithUserAuth(user => conceptNameService.updateName(dto.copy(userName = Some(user.username))))
 
@@ -115,12 +124,12 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
             case Right(rawConcept) =>
                 println(rawConcept.stringify)
                 fail("Should have thrown an exception")
-            case Left(error) => ()
+            case Left(error)       => ()
     }
 
     test("deleteName (attempt to delete primary name)") {
         // TODO add user account
-        val root = init(3, 3)
+        val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
@@ -131,20 +140,18 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("deleteName") {
-        val root = init(3, 4)
+        val root         = init(3, 4)
         assert(root != null)
-        val rawRoot = RawConcept.from(root)
-        val nameToDelete = rawRoot.names
+        val rawRoot      = RawConcept.from(root)
+        val nameToDelete = rawRoot
+            .names
             .find(_.nameType != ConceptNameTypes.PRIMARY.getType)
             .map(_.name)
             .getOrElse("")
         runWithUserAuth(user => conceptNameService.deleteName(nameToDelete, user.username)) match
             case Right(rawConcept) =>
                 assert(!rawConcept.names.map(_.name).toSeq.contains(nameToDelete))
-            case Left(error) =>
+            case Left(error)       =>
                 fail(error.toString)
 
     }
-
-
-

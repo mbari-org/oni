@@ -4,7 +4,11 @@
 -->
 <configuration scan="false" debug="false">
 
-  <!-- <statusListener class="ch.qos.logback.core.status.NopStatusListener" /> -->
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+    <resetJUL>true</resetJUL>
+  </contextListener>
 
   <variable name="LOGBACK_LEVEL" value="${LOGBACK_LEVEL:-INFO}" />
 

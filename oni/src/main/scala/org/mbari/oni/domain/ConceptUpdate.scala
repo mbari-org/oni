@@ -13,5 +13,5 @@ case class ConceptUpdate(
     rankLevel: Option[String] = None,
     rankName: Option[String] = None,
     aphiaId: Option[Long] = None,
-    userName: Option[String] = None) {
-}
+    userName: Option[String] = None
+) {}

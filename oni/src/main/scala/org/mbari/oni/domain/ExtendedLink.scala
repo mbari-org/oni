@@ -9,7 +9,13 @@ package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
 
-case class ExtendedLink(concept: String, linkName: String, toConcept: String, linkValue: String):
+case class ExtendedLink(
+    concept: String,
+    linkName: String,
+    toConcept: String,
+    linkValue: String,
+    id: Option[Long] = None
+):
     def toLink: Link =
         Link(linkName, toConcept, linkValue)
 
@@ -18,7 +24,7 @@ object ExtendedLink:
         link match
             case l: LinkTemplateEntity    =>
                 val concept = l.getConceptMetadata.getConcept.getPrimaryConceptName.getName
-                ExtendedLink(concept, l.getLinkName, l.getToConcept, l.getLinkValue)
+                ExtendedLink(concept, l.getLinkName, l.getToConcept, l.getLinkValue, Option(l.getId))
             case l: LinkRealizationEntity =>
                 val concept = l.getConceptMetadata.getConcept.getPrimaryConceptName.getName
-                ExtendedLink(concept, l.getLinkName, l.getToConcept, l.getLinkValue)
+                ExtendedLink(concept, l.getLinkName, l.getToConcept, l.getLinkValue, Option(l.getId))

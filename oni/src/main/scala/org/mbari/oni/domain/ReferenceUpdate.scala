@@ -9,6 +9,4 @@ package org.mbari.oni.domain
 
 import java.net.URI
 
-case class ReferenceUpdate(id: Long,
-                            citation: Option[String] = None,
-                            doi: Option[URI] = None)
+case class ReferenceUpdate(id: Long, citation: Option[String] = None, doi: Option[URI] = None)

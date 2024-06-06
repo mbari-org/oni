@@ -58,11 +58,14 @@ trait UserAuthMixin:
     /**
      * Run a function that returns unit with a user account. The user account is created before the function `f` is
      * executed and deleted after the function `f` is executed.
-     * @param f The function to run with the user account
-     * @param password The unencrypted password to use for the user account. If not provided, a random password is generated.
+     * @param f
+     *   The function to run with the user account
+     * @param password
+     *   The unencrypted password to use for the user account. If not provided, a random password is generated.
      */
     def testWithUserAuth(f: UserAccount => Unit, password: String = Strings.random(10)): Either[Throwable, Unit] =
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName, password)
+        val userAccountEntity =
+            TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName, password)
         val userAccount       = UserAccount.from(userAccountEntity)
         for
             user   <- userAccountService.create(userAccount)

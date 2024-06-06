@@ -67,4 +67,13 @@ object ConceptMetadata:
 
         val author = Option(concept.getPrimaryConceptName.getAuthor)
 
-        ConceptMetadata(name, alternateNames, media, descriptors, Option(rank), author, Option(concept.getAphiaId), references)
+        ConceptMetadata(
+            name,
+            alternateNames,
+            media,
+            descriptors,
+            Option(rank),
+            author,
+            Option(concept.getAphiaId),
+            references
+        )
