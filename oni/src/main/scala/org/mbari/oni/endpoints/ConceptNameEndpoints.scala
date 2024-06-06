@@ -51,7 +51,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     val addConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = addConceptNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => dto =>
-            handleErrors(service.addName(dto.copy(userName = Some(userAccount.username))))
+            handleErrors(service.addName(dto, userAccount.username))
         }
 
     val updateConceptNameEndpoint: Endpoint[Option[String], ConceptNameUpdate, ErrorMsg, RawConcept, Any] =
@@ -67,7 +67,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     val updateConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = updateConceptNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => dto =>
-            handleErrors(service.updateName(dto.copy(userName = Some(userAccount.username))))
+            handleErrors(service.updateName(dto, userAccount.username))
         }
 
     val deleteConceptNameEndpoint: Endpoint[Option[String], String, ErrorMsg, RawConcept, Any] = secureEndpoint

@@ -13,7 +13,7 @@ case class LinkUpdate(
     linkName: Option[String] = None,
     toConcept: Option[String] = None,
     linkValue: Option[String] = None,
-    id: Option[Long] = None
+    id: Option[Long] = None,
 ):
 
     def updateEntity(entity: LinkRealizationEntity): LinkRealizationEntity =

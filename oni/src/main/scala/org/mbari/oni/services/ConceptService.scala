@@ -213,7 +213,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
      *   The newly created concept. Or an exception if the concept already exists or the parent concept does not exist
      *   or the user does not exist.
      */
-    def create(conceptCreate: ConceptCreate): Either[Throwable, ConceptMetadata] =
+    def create(conceptCreate: ConceptCreate, userName: String): Either[Throwable, ConceptMetadata] =
 
         // -- Helper function to build the concept and history in a transaction
         def buildInTxn(
@@ -264,7 +264,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
 
         // -- Create logic. Each step is wrapped in an Either
         for
-            user    <- userAccountService.verifyWriteAccess(conceptCreate.userName)
+            user    <- userAccountService.verifyWriteAccess(Some(userName))
             concept <- txn(user.toEntity)
         yield concept
 
@@ -374,7 +374,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
      * @return
      *   The number of concepts deleted. This includes the concept and all its descendants
      */
-    def delete(conceptDelete: ConceptDelete): Either[Throwable, Int] =
+    def delete(conceptName: String, userName: String): Either[Throwable, Int] =
 
         // -- Helper function to delete a concept
         def txn(userEntity: UserAccountEntity, name: String): Either[Throwable, Int] =
@@ -399,6 +399,6 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             )
 
         for
-            user  <- userAccountService.verifyWriteAccess(conceptDelete.userName)
-            count <- txn(user.toEntity, conceptDelete.name)
+            user  <- userAccountService.verifyWriteAccess(Option(userName))
+            count <- txn(user.toEntity, conceptName)
         yield count

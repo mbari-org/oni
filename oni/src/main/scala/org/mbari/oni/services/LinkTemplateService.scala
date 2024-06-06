@@ -9,7 +9,7 @@ package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.{ConceptNameNotFound, LinkRealizationIdNotFound, LinkTemplateIdNotFound}
-import org.mbari.oni.domain.{ExtendedLink, Link, LinkUpdate}
+import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
@@ -57,25 +57,27 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 .toSeq
         )
 
-    def create(conceptName: String, link: Link): Either[Throwable, ExtendedLink] =
+    def create(link: LinkCreate, userName: String): Either[Throwable, ExtendedLink] =
         entityManagerFactory.transaction(entityManager =>
             val repo        = new LinkTemplateRepository(entityManager)
             val conceptRepo = new ConceptRepository(entityManager)
-            conceptRepo.findByName(conceptName).toScala match
+            conceptRepo.findByName(link.concept).toScala match
                 case Some(concept) =>
-                    val linkTemplate = link.toLinkTemplateEntity
+                    val linkTemplate = link.toLink.toLinkTemplateEntity
                     // Check all link templates applicable to this concept
                     val applicable   = repo.findAllApplicableToConcept(concept)
                     if applicable.contains(linkTemplate) then
                         throw new IllegalArgumentException(
-                            s"LinkTemplate, `${linkTemplate.stringValue()} already exists for concept ${conceptName}"
+                            s"LinkTemplate, `${linkTemplate.stringValue()} already exists for concept ${link.concept}"
                         )
                     concept.getConceptMetadata.addLinkTemplate(linkTemplate)
+
+                    // TODO Add history
                     ExtendedLink.from(linkTemplate)
-                case None          => throw ConceptNameNotFound(conceptName)
+                case None          => throw ConceptNameNotFound(link.concept)
         )
 
-    def update(linkUpdate: LinkUpdate): Either[Throwable, ExtendedLink] =
+    def update(linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
         linkUpdate.id match
             case None     => Left(new IllegalArgumentException("LinkTemplate id is required"))
             case Some(id) =>
@@ -84,16 +86,18 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                     repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
                         case Some(linkTemplate) =>
                             linkUpdate.updateEntity(linkTemplate)
+                                // TODO add history
                             ExtendedLink.from(linkTemplate)
                         case None               => throw LinkTemplateIdNotFound(id)
                 )
 
-    def deleteById(id: Long): Either[Throwable, Unit] =
+    def deleteById(id: Long, userName: String): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
             repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
                 case Some(linkTemplate) =>
                     linkTemplate.getConceptMetadata.removeLinkTemplate(linkTemplate)
                     entityManager.remove(linkTemplate)
+                    // TODO add history
                 case None               => throw LinkTemplateIdNotFound(id)
         )

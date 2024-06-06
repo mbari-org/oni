@@ -58,7 +58,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val name    = rawRoot.primaryName
         val dto     = ConceptNameCreate(name = name, newName = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
 
-        val attempt = runWithUserAuth(user => conceptNameService.addName(dto.copy(userName = Some(user.username))))
+        val attempt = runWithUserAuth(user => conceptNameService.addName(dto,user.username))
 
         attempt match
             case Right(rawConcept) =>
@@ -77,7 +77,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val name    = rawRoot.primaryName
         val dto     = ConceptNameCreate(name = name, newName = "newName22", nameType = ConceptNameTypes.SYNONYM.getType)
 
-        val attempt = runWithUserAuth(user => conceptNameService.addName(dto.copy(userName = Some(user.username))))
+        val attempt = runWithUserAuth(user => conceptNameService.addName(dto, user.username))
 
         attempt match
             case Right(rawConcept) =>
@@ -97,7 +97,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val dto     =
             ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.PRIMARY.getType))
 
-        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto.copy(userName = Some(user.username))))
+        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto, user.username))
 
         attempt match
             case Right(rawConcept) =>
@@ -118,7 +118,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val dto     =
             ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.COMMON.getType))
 
-        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto.copy(userName = Some(user.username))))
+        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto, user.username))
 
         attempt match
             case Right(rawConcept) =>

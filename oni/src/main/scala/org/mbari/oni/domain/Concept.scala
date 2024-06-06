@@ -8,6 +8,7 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.ConceptEntity
+import org.mbari.oni.etc.jdk.Numbers.*
 import scala.jdk.CollectionConverters.*
 
 case class Concept(
@@ -15,7 +16,8 @@ case class Concept(
     rank: Option[String] = None,
     alternativeNames: Seq[String] = Nil,
     children: Seq[Concept] = Nil,
-    aphiaId: Option[Long] = None
+    aphiaId: Option[Long] = None,
+    id: Option[Long] = None
 ):
     def containsName(n: String): Boolean = name.equals(n) ||
         alternativeNames.contains(n)
@@ -44,5 +46,6 @@ object Concept:
             Option(c.getRank),
             alternativeNames,
             c.getChildConcepts.asScala.map(from).toSeq.sortBy(_.name),
-            Option(c.getAphiaId).map(_.longValue())
+            c.getAphiaId.asLong,
+            c.getId.asLong
         )

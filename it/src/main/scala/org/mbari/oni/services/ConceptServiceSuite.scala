@@ -188,7 +188,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
     test("create root") {
 
         val attempt =
-            runWithUserAuth(user => conceptService.create(ConceptCreate("root", None, userName = Some(user.username))))
+            runWithUserAuth(user => conceptService.create(ConceptCreate("root", None), user.username))
 
         attempt match
             case Left(e)     =>
@@ -205,8 +205,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
         val attempt = runWithUserAuth(user =>
             for
-                root  <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
-                child <- conceptService.create(ConceptCreate("child", Some(root.name), userName = Some(user.username)))
+                root  <- conceptService.create(ConceptCreate("root", None), user.username)
+                child <- conceptService.create(ConceptCreate("child", Some(root.name)), user.username)
             yield child
         )
 
@@ -221,8 +221,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
         val attempt = runWithUserAuth(user =>
             for
-                root      <- conceptService.create(ConceptCreate("root", None, userName = Some(user.username)))
-                otherRoot <- conceptService.create(ConceptCreate("anotherroot", None, userName = Some(user.username)))
+                root      <- conceptService.create(ConceptCreate("root", None), user.username)
+                otherRoot <- conceptService.create(ConceptCreate("anotherroot", None), user.username)
             yield root
         )
 
@@ -330,7 +330,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             for
                 rootEntity <- conceptService.init(root)
                 child      <- Right(childEntity)
-                n          <- conceptService.delete(ConceptDelete(child.getPrimaryConceptName.getName, Some(user.username)))
+                n          <- conceptService.delete(child.getPrimaryConceptName.getName, user.username)
             yield n
         )
 

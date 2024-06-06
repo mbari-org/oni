@@ -13,8 +13,7 @@ case class ConceptNameUpdate(
     name: String,
     newName: Option[String] = None,
     nameType: Option[String] = None,
-    author: Option[String] = None,
-    userName: Option[String] = None
+    author: Option[String] = None
 ):
     def updateEntity(entity: ConceptNameEntity): ConceptNameEntity =
         newName.foreach(entity.setName)

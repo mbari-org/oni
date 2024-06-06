@@ -36,7 +36,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory):
             repo.findAllNamesAsStrings().asScala.toSeq
         )
 
-    def addName(dto: ConceptNameCreate): Either[Throwable, RawConcept] =
+    def addName(dto: ConceptNameCreate, userName: String): Either[Throwable, RawConcept] =
 
         def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
             entityManagerFactory.transaction(entityManager =>
@@ -70,11 +70,11 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory):
             )
 
         for
-            user    <- userAccountService.verifyWriteAccess(dto.userName)
+            user    <- userAccountService.verifyWriteAccess(Option(userName))
             concept <- txn(user.toEntity)
         yield concept
 
-    def updateName(dto: ConceptNameUpdate): Either[Throwable, RawConcept] =
+    def updateName(dto: ConceptNameUpdate, userName: String): Either[Throwable, RawConcept] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new ConceptNameRepository(entityManager)
@@ -114,7 +114,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory):
             )
 
         for
-            user    <- userAccountService.verifyWriteAccess(dto.userName)
+            user    <- userAccountService.verifyWriteAccess(Option(userName))
             concept <- txn(user.toEntity)
         yield concept
 

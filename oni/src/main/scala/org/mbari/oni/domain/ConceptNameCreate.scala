@@ -13,8 +13,7 @@ case class ConceptNameCreate(
     name: String,
     newName: String,
     nameType: String,
-    author: Option[String] = None,
-    userName: Option[String] = None
+    author: Option[String] = None
 ):
 
     def toEntity: ConceptNameEntity =

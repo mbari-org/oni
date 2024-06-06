@@ -9,6 +9,7 @@ package org.mbari.oni.domain
 
 import scala.jdk.CollectionConverters.*
 import org.mbari.oni.jpa.entities.ConceptEntity
+import org.mbari.oni.etc.jdk.Numbers.*
 
 /**
  * @author
@@ -23,7 +24,8 @@ case class ConceptMetadata(
     rank: Option[String] = None,
     author: Option[String] = None,
     aphiaId: Option[Long] = None,
-    references: Set[Reference] = Set.empty
+    references: Set[Reference] = Set.empty,
+    id: Option[Long] = None
 ) {}
 
 object ConceptMetadata:
@@ -74,6 +76,7 @@ object ConceptMetadata:
             descriptors,
             Option(rank),
             author,
-            Option(concept.getAphiaId),
-            references
+            concept.getAphiaId.asLong,
+            references,
+            concept.getId.asLong
         )

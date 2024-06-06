@@ -51,9 +51,8 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
     val createEndpointImpl: ServerEndpoint[Any, Identity] = createEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => conceptCreate =>
-            val createData = conceptCreate.copy(userName = Some(userAccount.username))
             service
-                .create(createData)
+                .create(conceptCreate, userAccount.username)
                 .fold(
                     error => Left(ServerError(error.getMessage)),
                     concept => Right(concept)
@@ -71,9 +70,8 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
     val deleteEndpointImpl: ServerEndpoint[Any, Identity] = deleteEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => name =>
-            val deleteData = ConceptDelete(name, Some(userAccount.username))
             service
-                .delete(deleteData)
+                .delete(name, userAccount.username)
                 .fold(
                     error => Left(ServerError(error.getMessage)),
                     _ => Right(())
