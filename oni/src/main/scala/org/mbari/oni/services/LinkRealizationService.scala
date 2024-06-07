@@ -9,10 +9,10 @@ package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.{ConceptNameNotFound, LinkRealizationIdNotFound}
-import org.mbari.oni.domain.{ExtendedLink, Link, LinkUpdate}
+import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jpa.entities.LinkRealizationEntity
+import org.mbari.oni.jpa.entities.{LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
 
 import scala.jdk.CollectionConverters.*
@@ -58,41 +58,56 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 .toSeq
         )
 
-    def create(conceptName: String, link: Link): Either[Throwable, ExtendedLink] =
-        entityManagerFactory.transaction(entityManager =>
-            val repo        = new LinkRealizationRepository(entityManager)
-            val conceptRepo = new ConceptRepository(entityManager)
-            conceptRepo.findByName(conceptName).toScala match
-                case Some(concept) =>
-                    val linkRealization = link.toLinkRealizationEntity
-                    if concept.getConceptMetadata.getLinkRealizations.contains(linkRealization) then
-                        throw new IllegalArgumentException(
-                            s"$conceptName already contains link ${linkRealization.stringValue()}"
-                        )
-                    concept.getConceptMetadata.addLinkRealization(linkRealization)
-                    ExtendedLink.from(linkRealization)
-                case None          => throw ConceptNameNotFound(conceptName)
-        )
+    def create(link: LinkCreate, userName: String): Either[Throwable, ExtendedLink] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo        = new LinkRealizationRepository(entityManager)
+                val conceptRepo = new ConceptRepository(entityManager)
+                conceptRepo.findByName(link.concept).toScala match
+                    case Some(concept) =>
+                        val linkRealization = link.toLink.toLinkRealizationEntity
+                        if concept.getConceptMetadata.getLinkRealizations.contains(linkRealization) then
+                            throw new IllegalArgumentException(
+                                s"${link.concept} already contains link ${linkRealization.stringValue()}"
+                            )
+                        concept.getConceptMetadata.addLinkRealization(linkRealization)
+                        ExtendedLink.from(linkRealization)
+                    case None          => throw ConceptNameNotFound(link.concept)
+            )
 
-    def update(linkUpdate: LinkUpdate): Either[Throwable, ExtendedLink] =
-        linkUpdate.id match
-            case None     => Left(new IllegalArgumentException("LinkRealization id is required"))
-            case Some(id) =>
-                entityManagerFactory.transaction(entityManager =>
-                    val repo = new LinkRealizationRepository(entityManager)
-                    repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
-                        case Some(linkRealization) =>
-                            linkUpdate.updateEntity(linkRealization)
-                            ExtendedLink.from(linkRealization)
-                        case None                  => throw LinkRealizationIdNotFound(id)
-                )
+        for
+            user    <- userAccountService.verifyWriteAccess(Option(userName))
+            link <- txn(user.toEntity)
+        yield link
 
-    def deleteById(id: Long): Either[Throwable, Unit] =
-        entityManagerFactory.transaction(entityManager =>
-            val repo = new LinkRealizationRepository(entityManager)
-            repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
-                case Some(linkRealization) =>
-                    linkRealization.getConceptMetadata.removeLinkRealization(linkRealization)
-                    entityManager.remove(linkRealization)
-                case None                  => throw new IllegalArgumentException(s"Link with id ${id} does not exist")
-        )
+    def update(linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new LinkRealizationRepository(entityManager)
+                repo.findByPrimaryKey(classOf[LinkRealizationEntity], linkUpdate.id).toScala match
+                    case Some(linkRealization) =>
+                        linkUpdate.updateEntity(linkRealization)
+                        ExtendedLink.from(linkRealization)
+                    case None                  => throw LinkRealizationIdNotFound(linkUpdate.id)
+            )
+
+        for
+            user <- userAccountService.verifyWriteAccess(Option(userName))
+            link <- txn(user.toEntity)
+        yield link
+
+    def deleteById(id: Long, userName: String): Either[Throwable, Unit] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, Unit] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new LinkRealizationRepository(entityManager)
+                repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
+                    case Some(linkRealization) =>
+                        linkRealization.getConceptMetadata.removeLinkRealization(linkRealization)
+                        entityManager.remove(linkRealization)
+                    case None                  => throw new IllegalArgumentException(s"Link with id ${id} does not exist")
+            )
+
+        for
+            user <- userAccountService.verifyWriteAccess(Option(userName))
+            _    <- txn(user.toEntity)
+        yield ()

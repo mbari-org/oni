@@ -84,6 +84,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                                 case Some(c) => RawConcept.from(c)
                         )
                     case Some(_) => Left(RootAlreadyExists)
+                    
+                    
 
     /**
      * Find a concept by one of its names and delete it and all its descendants.
@@ -141,14 +143,14 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
     ): Unit =
 
         // Detach the children so they can be processed separately
-        val children   = new java.util.HashSet(child.getChildConcepts)
-        children.forEach(c => child.removeChildConcept(c))
-        val childNames = children.asScala.map(_.getPrimaryConceptName.getName).mkString(", ")
+        val grandChildren   = new java.util.HashSet(child.getChildConcepts)
+        grandChildren.forEach(c => child.removeChildConcept(c))
+        val grandChildNames = grandChildren.asScala.map(_.getPrimaryConceptName.getName).mkString(", ")
 
         child.setId(null)
 
         entityManagerFactory.transaction(entityManager =>
-            log.atDebug.log(s"Inserting ${child.getPrimaryConceptName.getName} which has children: $childNames")
+            log.atDebug.log(s"Inserting ${child.getPrimaryConceptName.getName} which has children: $grandChildNames")
 
             if parent != null then
                 entityManager.find(classOf[ConceptEntity], parent.getId) match
@@ -160,7 +162,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             else entityManager.persist(child)
         )
 
-        children.forEach(cascadeInsert(child, _))
+        grandChildren.forEach(cascadeInsert(child, _))
 
     /**
      * Looks up a concept by one of it's names and then applies the function to the concept. This is a common pattern in

@@ -33,9 +33,9 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
     lazy val conceptNameService: ConceptNameService = new ConceptNameService(entityManagerFactory)
 
-    override def beforeEach(context: BeforeEach): Unit =
-        for root <- conceptService.findRoot()
-        do conceptService.deleteByName(root.name)
+//    override def beforeEach(context: BeforeEach): Unit =
+//        for root <- conceptService.findRoot()
+//        do conceptService.deleteByName(root.name)
 
     test("findAllNames") {
         val root     = init(3, 3)
@@ -151,6 +151,9 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         runWithUserAuth(user => conceptNameService.deleteName(nameToDelete, user.username)) match
             case Right(rawConcept) =>
                 assert(!rawConcept.names.map(_.name).toSeq.contains(nameToDelete))
+                conceptService.findByName(nameToDelete) match
+                    case Right(_) => fail("Should have been deleted")
+                    case Left(e)    => ()
             case Left(error)       =>
                 fail(error.toString)
 

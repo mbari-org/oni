@@ -16,19 +16,14 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{
-    ConceptCreate,
-    ConceptDelete,
-    ConceptMetadata,
-    ConceptUpdate,
-    RawConcept,
-    UserAccount,
-    UserAccountRoles
-}
+import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, UserAccount, UserAccountRoles}
 import org.mbari.oni.jpa.DatabaseFunSuite
 import org.mbari.oni.jpa.entities.{EntityUtilities, TestEntityFactory}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.jpa.repositories.TestRepository
 
+import java.nio.file.{Files, Paths}
+import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters.*
 import scala.util.Properties
 
@@ -36,6 +31,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
     lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
     lazy val historyService: HistoryService = new HistoryService(entityManagerFactory)
+
+    override val munitTimeout: Duration = Duration(120, "s")
 
     override def beforeEach(context: BeforeEach): Unit =
         for root <- conceptService.findRoot()
@@ -54,13 +51,26 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
     }
 
     test("nonAcidInit") {
-        val root = TestEntityFactory.buildRoot(4, 2)
+        val root = TestEntityFactory.buildRoot(8, 2)
         conceptService.nonAcidInit(root) match
             case Left(_)  => fail("Failed to init")
             case Right(e) =>
                 assert(e.children.nonEmpty)
 //                println(e.stringify)
     }
+
+//    test("nonAcidInit (full tree)") {
+//        val url = getClass.getResource("/kb/kb-dump.json.zip")
+//        val path = Paths.get(url.toURI)
+//        assert(Files.exists(path))
+//        TestRepository.read(path) match
+//            case None => fail("Failed to read test data")
+//            case Some(rawConcept) =>
+//                conceptService.nonAcidInit(rawConcept.toEntity) match
+//                    case Left(_) => fail("Failed to init")
+//                    case Right(e) =>
+//                        assert(e.children.nonEmpty)
+//    }
 
     test("deleteByName") {
         val root = TestEntityFactory.buildRoot(4)

@@ -12,7 +12,7 @@ import org.mbari.oni.{ConceptNameNotFound, LinkRealizationIdNotFound, LinkTempla
 import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
+import org.mbari.oni.jpa.entities.{HistoryEntityFactory, LinkRealizationEntity, LinkTemplateEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
 
 import scala.jdk.CollectionConverters.*
@@ -38,7 +38,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 case Some(concept) =>
                     concept
                         .getConceptMetadata
-                        .getLinkRealizations
+                        .getLinkTemplates
                         .asScala
                         .map(ExtendedLink.from)
                         .toSeq
@@ -58,46 +58,62 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         )
 
     def create(link: LinkCreate, userName: String): Either[Throwable, ExtendedLink] =
-        entityManagerFactory.transaction(entityManager =>
-            val repo        = new LinkTemplateRepository(entityManager)
-            val conceptRepo = new ConceptRepository(entityManager)
-            conceptRepo.findByName(link.concept).toScala match
-                case Some(concept) =>
-                    val linkTemplate = link.toLink.toLinkTemplateEntity
-                    // Check all link templates applicable to this concept
-                    val applicable   = repo.findAllApplicableToConcept(concept)
-                    if applicable.contains(linkTemplate) then
-                        throw new IllegalArgumentException(
-                            s"LinkTemplate, `${linkTemplate.stringValue()} already exists for concept ${link.concept}"
-                        )
-                    concept.getConceptMetadata.addLinkTemplate(linkTemplate)
+        def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo        = new LinkTemplateRepository(entityManager)
+                val conceptRepo = new ConceptRepository(entityManager)
+                conceptRepo.findByName(link.concept).toScala match
+                    case Some(concept) =>
+                        val linkTemplate = link.toLink.toLinkTemplateEntity
+                        // Check all link templates applicable to this concept
+                        val applicable   = repo.findAllApplicableToConcept(concept)
+                        if applicable.contains(linkTemplate) then
+                            throw new IllegalArgumentException(
+                                s"LinkTemplate, `${linkTemplate.stringValue()} already exists for concept ${link.concept}"
+                            )
+                        concept.getConceptMetadata.addLinkTemplate(linkTemplate)
 
-                    // TODO Add history
-                    ExtendedLink.from(linkTemplate)
-                case None          => throw ConceptNameNotFound(link.concept)
-        )
+                        // TODO Add history
+                        val history = HistoryEntityFactory.add(userEntity, linkTemplate)
+                        concept.getConceptMetadata.addHistory(history)
+                        ExtendedLink.from(linkTemplate)
+                    case None          => throw ConceptNameNotFound(link.concept)
+            )
+
+        for
+            user <- userAccountService.verifyWriteAccess(Option(userName))
+            link <- txn(user.toEntity)
+        yield link
 
     def update(linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
-        linkUpdate.id match
-            case None     => Left(new IllegalArgumentException("LinkTemplate id is required"))
-            case Some(id) =>
-                entityManagerFactory.transaction(entityManager =>
-                    val repo = new LinkTemplateRepository(entityManager)
-                    repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
-                        case Some(linkTemplate) =>
-                            linkUpdate.updateEntity(linkTemplate)
-                                // TODO add history
-                            ExtendedLink.from(linkTemplate)
-                        case None               => throw LinkTemplateIdNotFound(id)
-                )
+        def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new LinkTemplateRepository(entityManager)
+                repo.findByPrimaryKey(classOf[LinkTemplateEntity], linkUpdate.id).toScala match
+                    case Some(linkTemplate) =>
+                        linkUpdate.updateEntity(linkTemplate)
+                            // TODO add history
+                        ExtendedLink.from(linkTemplate)
+                    case None               => throw LinkTemplateIdNotFound(linkUpdate.id)
+            )
+        for
+            user <- userAccountService.verifyWriteAccess(Option(userName))
+            link <- txn(user.toEntity)
+        yield link
 
     def deleteById(id: Long, userName: String): Either[Throwable, Unit] =
-        entityManagerFactory.transaction(entityManager =>
-            val repo = new LinkTemplateRepository(entityManager)
-            repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
-                case Some(linkTemplate) =>
-                    linkTemplate.getConceptMetadata.removeLinkTemplate(linkTemplate)
-                    entityManager.remove(linkTemplate)
-                    // TODO add history
-                case None               => throw LinkTemplateIdNotFound(id)
-        )
+        def txn(userEntity: UserAccountEntity): Either[Throwable, Unit] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new LinkTemplateRepository(entityManager)
+                repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
+                    case Some(linkTemplate) =>
+                        linkTemplate.getConceptMetadata.removeLinkTemplate(linkTemplate)
+                        entityManager.remove(linkTemplate)
+                        // TODO add history
+                    case None               => throw LinkTemplateIdNotFound(id)
+            )
+
+        for
+            user <- userAccountService.verifyWriteAccess(Option(userName))
+            _    <- txn(user.toEntity)
+        yield ()

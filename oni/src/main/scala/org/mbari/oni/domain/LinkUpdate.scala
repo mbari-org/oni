@@ -10,10 +10,10 @@ package org.mbari.oni.domain
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
 
 case class LinkUpdate(
+    id: Long,
     linkName: Option[String] = None,
     toConcept: Option[String] = None,
     linkValue: Option[String] = None,
-    id: Option[Long] = None,
 ):
 
     def updateEntity(entity: LinkRealizationEntity): LinkRealizationEntity =
