@@ -12,7 +12,7 @@ import org.mbari.oni.{ConceptNameNotFound, LinkRealizationIdNotFound}
 import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jpa.entities.{LinkRealizationEntity, UserAccountEntity}
+import org.mbari.oni.jpa.entities.{HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
 
 import scala.jdk.CollectionConverters.*
@@ -71,6 +71,9 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                                 s"${link.concept} already contains link ${linkRealization.stringValue()}"
                             )
                         concept.getConceptMetadata.addLinkRealization(linkRealization)
+                        // Add history
+                        val history = HistoryEntityFactory.add(userEntity, linkRealization)
+                        concept.getConceptMetadata.addHistory(history)
                         ExtendedLink.from(linkRealization)
                     case None          => throw ConceptNameNotFound(link.concept)
             )
@@ -86,7 +89,12 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 val repo = new LinkRealizationRepository(entityManager)
                 repo.findByPrimaryKey(classOf[LinkRealizationEntity], linkUpdate.id).toScala match
                     case Some(linkRealization) =>
+                        val before = Link.from(linkRealization)
                         linkUpdate.updateEntity(linkRealization)
+
+                        // add history
+                        val history = HistoryEntityFactory.replaceLinkRealization(userEntity, before.toLinkRealizationEntity, linkRealization)
+                        linkRealization.getConceptMetadata.addHistory(history)
                         ExtendedLink.from(linkRealization)
                     case None                  => throw LinkRealizationIdNotFound(linkUpdate.id)
             )
@@ -102,6 +110,9 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 val repo = new LinkRealizationRepository(entityManager)
                 repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
                     case Some(linkRealization) =>
+                        // Add history
+                        val history = HistoryEntityFactory.delete(userEntity, linkRealization)
+                        linkRealization.getConceptMetadata.addHistory(history)
                         linkRealization.getConceptMetadata.removeLinkRealization(linkRealization)
                         entityManager.remove(linkRealization)
                     case None                  => throw new IllegalArgumentException(s"Link with id ${id} does not exist")
