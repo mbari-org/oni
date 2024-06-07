@@ -9,13 +9,13 @@ package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{ErrorMsg, Link}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.services.LinkService
+import sttp.shared.Identity
 import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.shared.Identity
-import org.mbari.oni.etc.circe.CirceCodecs.given
 
 class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 

@@ -7,11 +7,14 @@
 
 package org.mbari.oni.etc.circe
 
+import io.circe
 import io.circe.*
 import io.circe.generic.semiauto.*
+
 import scala.util.Try
 import java.net.URL
 import org.mbari.oni.util.HexUtil
+
 import java.net.URI
 import org.mbari.oni.domain.*
 
@@ -80,6 +83,9 @@ object CirceCodecs:
 
     given Decoder[ExtendedHistory] = deriveDecoder
     given Encoder[ExtendedHistory] = deriveEncoder
+
+    given Decoder[ExtendedLink] = deriveDecoder
+    given Encoder[ExtendedLink] = deriveEncoder
 
     given Decoder[Link] = deriveDecoder
     given Encoder[Link] = deriveEncoder

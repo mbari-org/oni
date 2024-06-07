@@ -44,6 +44,7 @@ trait Endpoints:
 
     // --- Schemas
     implicit lazy val sExtendedHistory: Schema[ExtendedHistory]     = Schema.derived[ExtendedHistory]
+    implicit lazy val sExtendedLink: Schema[ExtendedLink]           = Schema.derived[ExtendedLink]
     implicit lazy val sLink: Schema[Link]                           = Schema.derived[Link]
     implicit lazy val sURI: Schema[URI]                             = Schema.string
     implicit lazy val sURL: Schema[URL]                             = Schema.string
