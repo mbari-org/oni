@@ -8,7 +8,6 @@
 package org.mbari.oni.domain
 
 case class UserAccountUpdate(
-    username: String,
     password: Option[String] = None,
     role: Option[String] = None,
     affiliation: Option[String] = None,

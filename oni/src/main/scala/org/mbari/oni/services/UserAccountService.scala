@@ -70,10 +70,10 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
                     UserAccount.from(entity)
         )
 
-    def update(userAccount: UserAccountUpdate): Either[Throwable, UserAccount] =
+    def update(username: String, userAccount: UserAccountUpdate): Either[Throwable, UserAccount] =
         entityManagerFactory.transaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
-            repo.findByUserName(userAccount.username).toScala match
+            repo.findByUserName(username).toScala match
                 case Some(entity) =>
                     userAccount.password.foreach(entity.setPassword)
                     userAccount.role.foreach(entity.setRole)
@@ -84,7 +84,7 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
                     UserAccount.from(entity)
                 case None         =>
                     throw new IllegalArgumentException(
-                        s"UserAccount with username ${userAccount.username} does not exist"
+                        s"UserAccount with username ${username} does not exist"
                     )
         )
 

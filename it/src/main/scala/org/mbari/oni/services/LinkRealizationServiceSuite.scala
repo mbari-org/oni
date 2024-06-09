@@ -93,22 +93,22 @@ trait LinkRealizationServiceSuite extends DataInitializer with UserAuthMixin:
             case Left(error)         => fail(error.toString)
     }
 
-    test("update") {
+    test("updateById") {
         val root = init(3, 3)
         assert(root != null)
         val descendants      = root.getDescendants.asScala
         val allLinkRealizations = descendants.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
         for linkRealizations <- allLinkRealizations
             do
-                val linkUpdate = LinkUpdate(linkRealizations.getId, Some(Strings.random(10)), Some(Strings.random(10)), Some(Strings.random(10)))
-                val attempt = runWithUserAuth(user => linkRealizationService.update(linkUpdate, user.username))
+                val linkUpdate = LinkUpdate(Some(Strings.random(10)), Some(Strings.random(10)), Some(Strings.random(10)))
+                val attempt = runWithUserAuth(user => linkRealizationService.updateById(linkRealizations.getId, linkUpdate, user.username))
                 attempt match
                     case Right(obtained) =>
                         assertEquals(obtained.linkName, linkUpdate.linkName.get)
                         assertEquals(obtained.linkValue, linkUpdate.linkValue.get)
                         assertEquals(obtained.toConcept, linkUpdate.toConcept.get)
                         assert(obtained.id.isDefined)
-                        assertEquals(obtained.id.get, linkUpdate.id)
+                        assertEquals(obtained.id.get, linkRealizations.getId.longValue())
                     case Left(error)         => fail(error.toString)
     }
 

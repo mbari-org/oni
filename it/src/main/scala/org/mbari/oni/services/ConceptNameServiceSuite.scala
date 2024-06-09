@@ -95,15 +95,15 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
         val dto     =
-            ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.PRIMARY.getType))
+            ConceptNameUpdate(newName = Some("newName"), nameType = Some(ConceptNameTypes.PRIMARY.getType))
 
-        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto, user.username))
+        val attempt = runWithUserAuth(user => conceptNameService.updateName(name, dto, user.username))
 
         attempt match
             case Right(rawConcept) =>
                 println(rawConcept.stringify)
                 val obtained = rawConcept.names.map(_.name).toSeq
-                assert(!obtained.contains(dto.name))
+                assert(!obtained.contains(name))
                 assert(obtained.contains(dto.newName.getOrElse("")))
             case Left(error)       =>
                 fail(error.toString)
@@ -116,9 +116,9 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
         val dto     =
-            ConceptNameUpdate(name = name, newName = Some("newName"), nameType = Some(ConceptNameTypes.COMMON.getType))
+            ConceptNameUpdate(newName = Some("newName"), nameType = Some(ConceptNameTypes.COMMON.getType))
 
-        val attempt = runWithUserAuth(user => conceptNameService.updateName(dto, user.username))
+        val attempt = runWithUserAuth(user => conceptNameService.updateName(name, dto, user.username))
 
         attempt match
             case Right(rawConcept) =>

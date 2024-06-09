@@ -85,11 +85,11 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
             link <- txn(user.toEntity)
         yield link
 
-    def update(linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
+    def updateById(id: Long, linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new LinkTemplateRepository(entityManager)
-                repo.findByPrimaryKey(classOf[LinkTemplateEntity], linkUpdate.id).toScala match
+                repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
                     case Some(linkTemplate) =>
                         val before = Link.from(linkTemplate)
                         linkUpdate.updateEntity(linkTemplate)
@@ -97,7 +97,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                         val history = HistoryEntityFactory.replaceLinkTemplate(userEntity, before.toLinkTemplateEntity, linkTemplate)
                         linkTemplate.getConceptMetadata.addHistory(history)
                         ExtendedLink.from(linkTemplate)
-                    case None               => throw LinkTemplateIdNotFound(linkUpdate.id)
+                    case None               => throw LinkTemplateIdNotFound(id)
             )
         for
             user <- userAccountService.verifyWriteAccess(Option(userName))

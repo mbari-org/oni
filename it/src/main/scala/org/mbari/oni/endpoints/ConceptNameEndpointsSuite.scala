@@ -80,21 +80,21 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
-        val dto     = ConceptNameUpdate(name = name, newName = Some("newName"))
+        val dto     = ConceptNameUpdate(newName = Some("newName"))
 
         val attempt = testWithUserAuth(
             user =>
                 runPut(
                     endpoints.updateConceptNameEndpointImpl,
-                    "http://test.com/v1/names",
+                    s"http://test.com/v1/names/$name",
                     dto.stringify,
                     response =>
                         assertEquals(response.code, StatusCode.Ok)
                         val rawConcept = checkResponse[RawConcept](response.body)
-                        println(rawConcept.stringify)
+//                        println(rawConcept.stringify)
                         val obtained   = rawConcept.names.map(_.name).toSeq
-                        println(s"obtained: $obtained")
-                        assert(!obtained.contains(dto.name))
+//                        println(s"obtained: $obtained")
+                        assert(!obtained.contains(name))
                         assert(obtained.contains(dto.newName.getOrElse("")))
                     ,
                     jwt = jwtService.login(user.username, password, user.toEntity)

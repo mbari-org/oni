@@ -121,10 +121,10 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             handleErrors(service.create(reference))
         }
 
-    val updateReferenceEndpoint: Endpoint[Option[String], ReferenceUpdate, ErrorMsg, Reference, Any] =
+    val updateReferenceEndpoint: Endpoint[Option[String], (Long, ReferenceUpdate), ErrorMsg, Reference, Any] =
         secureEndpoint
             .put
-            .in(base)
+            .in(base / path[Long]("id"))
             .in(jsonBody[ReferenceUpdate])
             .out(jsonBody[Reference])
             .name("updateReference")
@@ -133,8 +133,8 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
 
     val updateReferenceEndpointImpl: ServerEndpoint[Any, Identity] = updateReferenceEndpoint
         .serverSecurityLogic(jwtOpt => verify(jwtOpt))
-        .serverLogic { _ => referenceUpdate =>
-            handleErrors(service.update(referenceUpdate))
+        .serverLogic { _ => (id, referenceUpdate) =>
+            handleErrors(service.updateById(id, referenceUpdate))
         }
 
     val deleteReferenceEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] =
@@ -149,7 +149,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
     val deleteReferenceEndpointImpl: ServerEndpoint[Any, Identity] = deleteReferenceEndpoint
         .serverSecurityLogic(jwtOpt => verify(jwtOpt))
         .serverLogic { _ => id =>
-            handleErrors(service.delete(id))
+            handleErrors(service.deleteById(id))
         }
 
     val addConceptEndpoint: Endpoint[Option[String], (Long, String), ErrorMsg, Reference, Any] =

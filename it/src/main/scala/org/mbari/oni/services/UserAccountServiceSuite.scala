@@ -38,8 +38,8 @@ trait UserAccountServiceSuite extends DataInitializer:
         val original = UserAccount("test2", "password", "admin")
         val either   = for
             created <- userAccountService.create(original)
-            update  <- Right(UserAccountUpdate("test2", Some("newpassword"), Some("plebeian"), Some("MBARI")))
-            updated <- userAccountService.update(update)
+            update  <- Right(UserAccountUpdate(Some("newpassword"), Some("plebeian"), Some("MBARI")))
+            updated <- userAccountService.update("test2", update)
         yield
             assertEquals(updated.username, "test2")
             assertEquals(updated.role, "plebeian")

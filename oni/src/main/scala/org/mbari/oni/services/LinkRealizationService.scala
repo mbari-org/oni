@@ -83,11 +83,11 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
             link <- txn(user.toEntity)
         yield link
 
-    def update(linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
+    def updateById(id: Long, linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new LinkRealizationRepository(entityManager)
-                repo.findByPrimaryKey(classOf[LinkRealizationEntity], linkUpdate.id).toScala match
+                repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
                     case Some(linkRealization) =>
                         val before = Link.from(linkRealization)
                         linkUpdate.updateEntity(linkRealization)
@@ -96,7 +96,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                         val history = HistoryEntityFactory.replaceLinkRealization(userEntity, before.toLinkRealizationEntity, linkRealization)
                         linkRealization.getConceptMetadata.addHistory(history)
                         ExtendedLink.from(linkRealization)
-                    case None                  => throw LinkRealizationIdNotFound(linkUpdate.id)
+                    case None                  => throw LinkRealizationIdNotFound(id)
             )
 
         for

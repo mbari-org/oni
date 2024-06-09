@@ -10,7 +10,6 @@ package org.mbari.oni.domain
 import org.mbari.oni.jpa.entities.ConceptNameEntity
 
 case class ConceptNameUpdate(
-    name: String,
     newName: Option[String] = None,
     nameType: Option[String] = None,
     author: Option[String] = None

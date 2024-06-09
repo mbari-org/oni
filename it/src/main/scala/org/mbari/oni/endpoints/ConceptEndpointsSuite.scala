@@ -160,7 +160,6 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 val root          = init(3, 0)
                 val grandChild    = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
                 val conceptUpdate = ConceptUpdate(
-                    grandChild.getPrimaryConceptName.getName,
                     Some(root.getPrimaryConceptName.getName),
                     rankLevel = Some("yoyoyo"),
                     rankName = Some("yayaya"),
@@ -169,7 +168,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
 
                 runPut(
                     endpoints.updateEndpointImpl,
-                    "http://test.com/v1/concept",
+                    s"http://test.com/v1/concept/${grandChild.getPrimaryConceptName.getName}",
                     conceptUpdate.stringify,
                     response =>
                         assertEquals(response.code, StatusCode.Ok)

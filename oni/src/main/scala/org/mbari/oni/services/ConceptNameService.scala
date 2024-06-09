@@ -74,14 +74,14 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory):
             concept <- txn(user.toEntity)
         yield concept
 
-    def updateName(dto: ConceptNameUpdate, userName: String): Either[Throwable, RawConcept] =
+    def updateName(name: String, dto: ConceptNameUpdate, userName: String): Either[Throwable, RawConcept] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new ConceptNameRepository(entityManager)
 
                 // Make sure the old name exists
-                val conceptNameOpt      = repo.findByName(dto.name).toScala
-                if conceptNameOpt.isEmpty then throw ConceptNameNotFound(dto.name)
+                val conceptNameOpt      = repo.findByName(name).toScala
+                if conceptNameOpt.isEmpty then throw ConceptNameNotFound(name)
                 val existingConceptName = conceptNameOpt.get // EXISTING NAME
                 val existingNameType    = ConceptNameTypes.fromString(existingConceptName.getNameType)
 
@@ -90,7 +90,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory):
                     case Some(newName) =>
                         val newConceptNameOpt = repo.findByName(newName).toScala
                         if newConceptNameOpt.isDefined then throw ConceptNameAlreadyExists(newName)
-                        val history           = HistoryEntityFactory.replaceConceptName(userEntity, dto.name, newName)
+                        val history           = HistoryEntityFactory.replaceConceptName(userEntity, name, newName)
                         existingConceptName.getConcept.getConceptMetadata.addHistory(history)
                     case None          => ()
 

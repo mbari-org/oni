@@ -100,15 +100,15 @@ trait LinkTemplateServiceSuite extends DataInitializer with UserAuthMixin:
         val allLinkTemplates = descendants.flatMap(_.getConceptMetadata.getLinkTemplates.asScala).toSeq
         for linkTemplate <- allLinkTemplates
         do
-            val linkUpdate = LinkUpdate(linkTemplate.getId, Some(Strings.random(10)), Some(Strings.random(10)), Some(Strings.random(10)))
-            val attempt = runWithUserAuth(user => linkTemplateService.update(linkUpdate, user.username))
+            val linkUpdate = LinkUpdate(Some(Strings.random(10)), Some(Strings.random(10)), Some(Strings.random(10)))
+            val attempt = runWithUserAuth(user => linkTemplateService.updateById(linkTemplate.getId, linkUpdate, user.username))
             attempt match
                 case Right(obtained) =>
                     assertEquals(obtained.linkName, linkUpdate.linkName.get)
                     assertEquals(obtained.linkValue, linkUpdate.linkValue.get)
                     assertEquals(obtained.toConcept, linkUpdate.toConcept.get)
                     assert(obtained.id.isDefined)
-                    assertEquals(obtained.id.get, linkUpdate.id)
+                    assertEquals(obtained.id.get, linkTemplate.getId.longValue())
                 case Left(error)         => fail(error.toString)
     }
 

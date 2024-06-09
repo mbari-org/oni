@@ -101,10 +101,10 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         }
 
     // update
-    val updateEndpoint: Endpoint[Option[String], UserAccountUpdate, ErrorMsg, UserAccount, Any] =
+    val updateEndpoint: Endpoint[Option[String], (String, UserAccountUpdate), ErrorMsg, UserAccount, Any] =
         secureEndpoint
             .put
-            .in(base)
+            .in(base / path[String]("username"))
             .in(jsonBody[UserAccountUpdate])
             .out(jsonBody[UserAccount])
             .name("updateUserAccount")
@@ -113,8 +113,8 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
 
     val updateEndpointImpl: ServerEndpoint[Any, Identity] = updateEndpoint
         .serverSecurityLogic(jwtOpt => verify(jwtOpt))
-        .serverLogic { _ => userAccountUpdate =>
-            handleErrors(service.update(userAccountUpdate))
+        .serverLogic { _ => (username, userAccountUpdate) =>
+            handleErrors(service.update(username, userAccountUpdate))
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(

@@ -255,13 +255,13 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                 rootEntity   <- conceptService.init(root)
                 child        <- Right(rootEntity.getChildConcepts.iterator().next())
                 updatedChild <- conceptService.update(
+                                    child.getPrimaryConceptName.getName,
                                     ConceptUpdate(
-                                        child.getPrimaryConceptName.getName,
                                         rankLevel = Some("supersuper"),
                                         rankName = Some("genera"),
-                                        aphiaId = Some(1234),
-                                        userName = Some(user.username)
-                                    )
+                                        aphiaId = Some(1234)
+                                    ),
+                                    user.username
                                 )
             yield updatedChild
         )
@@ -305,11 +305,11 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                 rootEntity        <- conceptService.init(root)
                 grandChildEntity  <- Right(grandChild)
                 updatedGrandChild <- conceptService.update(
+                                        grandChildEntity.getPrimaryConceptName.getName,
                                          ConceptUpdate(
-                                             grandChildEntity.getPrimaryConceptName.getName,
                                              parentName = Some(rootEntity.getPrimaryConceptName.getName),
-                                             userName = Some(user.username)
-                                         )
+                                         ),
+                                         user.username
                                      )
             yield updatedGrandChild
         )

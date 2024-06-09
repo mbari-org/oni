@@ -38,7 +38,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         super.beforeEach(context)
         referenceService.findAll(10000, 0) match
             case Right(entities) =>
-                entities.foreach(entity => referenceService.delete(entity.id.get))
+                entities.foreach(entity => referenceService.deleteById(entity.id.get))
             case Left(error)     => log.atDebug.withCause(error).log("Failed to delete all reference entities")
 
     private def initRefs(n: Int): Seq[Reference] =
@@ -72,10 +72,10 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
     test("update") {
         val refs   = initRefs(1)
         val ref    = refs.head
-        val update = ReferenceUpdate(ref.id.getOrElse(-1), citation = Some("Updated citation"))
+        val update = ReferenceUpdate(citation = Some("Updated citation"))
         runPut(
             endpoints.updateReferenceEndpointImpl,
-            s"http://test.com/v1/reference",
+            s"http://test.com/v1/reference/${ref.id.getOrElse(-1)}",
             update.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)

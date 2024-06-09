@@ -71,22 +71,22 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
             Reference.from(entity)
         )
 
-    def update(reference: ReferenceUpdate): Either[Throwable, Reference] =
+    def updateById(id: Long, reference: ReferenceUpdate): Either[Throwable, Reference] =
         entityManagerFactory.transaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
 
-            repo.findById(reference.id).toScala match
+            repo.findById(id).toScala match
                 case Some(entity) =>
                     reference.doi.foreach(entity.setDoi)
                     reference.citation.foreach(entity.setCitation)
                     Reference.from(entity)
                 case None         =>
                     throw new IllegalArgumentException(
-                        s"Reference with id '${reference.id}' not found"
+                        s"Reference with id '${id}' not found"
                     )
         )
 
-    def delete(id: Long): Either[Throwable, Unit] =
+    def deleteById(id: Long): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
             repo.findById(id).toScala match

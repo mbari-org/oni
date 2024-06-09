@@ -32,7 +32,7 @@ trait ReferenceServiceSuite extends DataInitializer:
         super.beforeEach(context)
         service.findAll(10000, 0) match
             case Right(entities) =>
-                entities.foreach(entity => service.delete(entity.id.get))
+                entities.foreach(entity => service.deleteById(entity.id.get))
             case Left(error)     => log.atDebug.withCause(error).log("Failed to delete all reference entities")
 
     test("create") {
@@ -67,8 +67,8 @@ trait ReferenceServiceSuite extends DataInitializer:
 
                 // Update the DOI
                 val update1 =
-                    ReferenceUpdate(entity.id.get, doi = Some(URI.create("https://doi.org/10.1109/OCEANS.2006.306879")))
-                service.update(update1) match
+                    ReferenceUpdate(doi = Some(URI.create("https://doi.org/10.1109/OCEANS.2006.306879")))
+                service.updateById(entity.id.get, update1) match
                     case Right(entity) =>
                         assert(entity != null)
                         assertEquals(entity.doi, update1.doi)
@@ -76,12 +76,11 @@ trait ReferenceServiceSuite extends DataInitializer:
 
                 // Update the citation
                 val update2 = ReferenceUpdate(
-                    entity.id.get,
                     citation = Some(
                         "B. M. Schlining and N. J. Stout, \"MBARI's Video Annotation and Reference System,\" OCEANS 2006, Boston, MA, USA, 2006, pp. 1-5"
                     )
                 )
-                service.update(update2) match
+                service.updateById(entity.id.get, update2) match
                     case Right(entity) =>
                         assert(entity != null)
                         assertEquals(entity.citation, update2.citation.get)
@@ -99,7 +98,7 @@ trait ReferenceServiceSuite extends DataInitializer:
         service.create(ref) match
             case Right(entity) =>
                 assert(entity.id.isDefined)
-                service.delete(entity.id.get) match
+                service.deleteById(entity.id.get) match
                     case Right(_)    => assert(true)
                     case Left(error) => fail(error.toString)
 

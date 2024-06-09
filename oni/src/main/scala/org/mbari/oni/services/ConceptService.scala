@@ -278,7 +278,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
      * @return
      *   The updated concept or an exception if any errors occur
      */
-    def update(conceptUpdate: ConceptUpdate): Either[Throwable, ConceptMetadata] =
+    def update(name: String, conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
 
         // -- Helper function to update the parent concept
         def updateParent(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, parentName: Option[String])(using
@@ -353,8 +353,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         def txn(userEntity: UserAccountEntity): Either[Throwable, ConceptMetadata] =
             entityManagerFactory.transaction(entityManager =>
                 given repo: ConceptRepository = new ConceptRepository(entityManager)
-                repo.findByName(conceptUpdate.name).toScala match
-                    case None                => throw ConceptNameNotFound(conceptUpdate.name)
+                repo.findByName(name).toScala match
+                    case None                => throw ConceptNameNotFound(name)
                     case Some(conceptEntity) =>
                         updateParent(userEntity, conceptEntity, conceptUpdate.parentName)
                         updateRankLevel(userEntity, conceptEntity, conceptUpdate.rankLevel)
@@ -364,7 +364,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             )
 
         for
-            user    <- userAccountService.verifyWriteAccess(conceptUpdate.userName)
+            user    <- userAccountService.verifyWriteAccess(Option(userName))
             concept <- txn(user.toEntity)
         yield concept
 
