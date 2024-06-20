@@ -8,9 +8,24 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, ChildConceptNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, MissingRootConcept, OniException, RootAlreadyExists}
+import org.mbari.oni.{
+    AccessDenied,
+    AccessDeniedMissingCredentials,
+    ChildConceptNotFound,
+    ConceptNameAlreadyExists,
+    ConceptNameNotFound,
+    MissingRootConcept,
+    OniException,
+    RootAlreadyExists
+}
 import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, SimpleConcept}
-import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
+import org.mbari.oni.jpa.entities.{
+    ConceptEntity,
+    ConceptNameEntity,
+    HistoryEntity,
+    HistoryEntityFactory,
+    UserAccountEntity
+}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.ConceptRepository
 import org.mbari.oni.etc.jdk.Loggers.given
@@ -21,7 +36,7 @@ import scala.jdk.OptionConverters.*
 class ConceptService(entityManagerFactory: EntityManagerFactory):
 
     private val log                = System.getLogger(getClass.getName)
-    private val historyService     = HistoryService(entityManagerFactory)
+//    private val historyService     = HistoryService(entityManagerFactory)
     private val userAccountService = UserAccountService(entityManagerFactory)
 
     /**
@@ -70,8 +85,6 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                                 case Some(c) => RawConcept.from(c)
                         )
                     case Some(_) => Left(RootAlreadyExists)
-                    
-                    
 
     /**
      * Find a concept by one of its names and delete it and all its descendants.
@@ -223,8 +236,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 // build history
                 val history = HistoryEntityFactory.add(userEntity, parent)
                 parent.getConceptMetadata.addHistory(history)
-                if userEntity.isAdministrator then
-                    history.approveBy(userEntity.getUserName)
+                if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
             else
                 findRoot() match
                     case Left(_)  => entityManager.persist(concept)
@@ -290,8 +302,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                             val history =
                                 HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, p)
                             conceptEntity.getConceptMetadata.addHistory(history)
-                            if userEntity.isAdministrator then
-                                history.approveBy(userEntity.getUserName)
+                            if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                             conceptEntity.getParentConcept match
                                 case null   =>
                                     p.addChildConcept(conceptEntity)
@@ -310,8 +321,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 if v != conceptEntity.getRankLevel then
                     val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
                     conceptEntity.getConceptMetadata.addHistory(history)
-                    if userEntity.isAdministrator then
-                        history.approveBy(userEntity.getUserName)
+                    if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                     conceptEntity.setRankLevel(v)
             )
 
@@ -325,8 +335,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 if v != conceptEntity.getRankName then
                     val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
                     conceptEntity.getConceptMetadata.addHistory(history)
-                    if userEntity.isAdministrator then
-                        history.approveBy(userEntity.getUserName)
+                    if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                     conceptEntity.setRankName(v)
             )
 
@@ -398,41 +407,68 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             count <- txn(user.toEntity, conceptName)
         yield count
 
-    def inTxnRejectAddChildHistory(historyEntity: HistoryEntity, userEntity: UserAccountEntity, entityManager: EntityManager): Either[Throwable, Boolean] =
+    def inTxnRejectAddChildHistory(
+        historyEntity: HistoryEntity,
+        userEntity: UserAccountEntity,
+        entityManager: EntityManager
+    ): Either[Throwable, Boolean] =
         try
-            val repo = ConceptRepository(entityManager)
+            val repo          = ConceptRepository(entityManager)
             val parentConcept = historyEntity.getConceptMetadata.getConcept
-            val childConcept = parentConcept.getChildConcepts
+            val childConcept  = parentConcept
+                .getChildConcepts
                 .stream()
                 .filter(c => c.getPrimaryConceptName.getName == historyEntity.getNewValue)
                 .findFirst()
                 .toScala
 
             childConcept match
-                case None => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getNewValue)
+                case None        => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getNewValue)
                 case Some(child) =>
                     repo.deleteBranchByName(child.getName)
                     Right(true)
-        catch
-            case e: Throwable => Left(e)
+        catch case e: Throwable => Left(e)
 
-
-    def inTxnApproveDeleteChildHistory(historyEntity: HistoryEntity, userEntity: UserAccountEntity, entityManager: EntityManager): Either[Throwable, Boolean] =
+    def inTxnApproveDelete(
+        historyEntity: HistoryEntity,
+        userEntity: UserAccountEntity,
+        entityManager: EntityManager
+    ): Either[Throwable, Boolean] =
         try
-            val repo = ConceptRepository(entityManager)
+            val repo          = ConceptRepository(entityManager)
             val parentConcept = historyEntity.getConceptMetadata.getConcept
-            val childConcept = parentConcept.getChildConcepts
+            val childConcept  = parentConcept
+                .getChildConcepts
                 .stream()
                 .filter(c => c.getPrimaryConceptName.getName == historyEntity.getNewValue)
                 .findFirst()
                 .toScala
 
             childConcept match
-                case None => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getNewValue)
+                case None        => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getNewValue)
                 case Some(child) =>
                     val n = repo.deleteBranchByName(child.getName)
-                    if (n == 0) then
+                    if n == 0 then
                         log.atWarn.log(s"Failed to delete child concept ${child.getName}. No nodes were deleted.")
                     Right(n > 0)
-        catch
-            case e: Throwable => Left(e)
+        catch case e: Throwable => Left(e)
+
+    def inTxnRejectReplaceParent(
+        historyEntity: HistoryEntity,
+        userEntity: UserAccountEntity,
+        entityManager: EntityManager
+    ): Either[Throwable, Boolean] =
+        try
+            val repo             = ConceptRepository(entityManager)
+            val concept          = historyEntity.getConceptMetadata.getConcept
+            val oldParentConcept = repo.findByName(historyEntity.getOldValue).toScala match
+                case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
+                case Some(p) => p
+
+            concept.getParentConcept match
+                case null   => throw new IllegalArgumentException(s"Cannot set the parent of the root concept!")
+                case parent =>
+                    parent.removeChildConcept(concept)
+                    oldParentConcept.addChildConcept(concept)
+                    Right(true)
+        catch case e: Throwable => Left(e)

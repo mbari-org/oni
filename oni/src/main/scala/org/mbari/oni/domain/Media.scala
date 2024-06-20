@@ -23,8 +23,10 @@ case class Media(
     url: URL,
     caption: Option[String] = None,
     credit: Option[String] = None,
-    mimeType: String,
-    isPrimary: Boolean
+    mimeType: String = "application/octet-stream",
+    isPrimary: Boolean = false,
+    conceptName: Option[String] = None,
+    id: Option[Long] = None
 )
 
 enum MediaType(name: String):
@@ -35,12 +37,25 @@ enum MediaType(name: String):
 object Media:
 
     def from(media: MediaEntity): Media =
+        val conceptName = Try(media.getConceptMetadata.getConcept.getName).toOption
         Media(
             URI.create(media.getUrl).toURL,
             Option(media.getCaption),
             Option(media.getCredit),
             resolveMimeType(media.getType, media.getUrl),
-            media.isPrimary
+            media.isPrimary,
+            conceptName,
+            Option(media.getId)
+        )
+
+    def from(namedMedia: NamedMedia): Media =
+        Media(
+            namedMedia.url,
+            Option(namedMedia.caption),
+            Option(namedMedia.credit),
+            resolveMimeType(namedMedia.mimeType, namedMedia.url.toExternalForm),
+            namedMedia.isPrimary,
+            Option(namedMedia.name)
         )
 
     def resolveMimeType(t: String, url: String): String =

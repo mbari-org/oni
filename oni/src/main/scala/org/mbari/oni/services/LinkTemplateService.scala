@@ -7,12 +7,18 @@
 
 package org.mbari.oni.services
 
-import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.{ConceptNameNotFound, LinkRealizationIdNotFound, LinkTemplateIdNotFound}
-import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkUpdate}
+import jakarta.persistence.{EntityManager, EntityManagerFactory}
+import org.mbari.oni.{ConceptNameNotFound, ItemNotFound, LinkRealizationIdNotFound, LinkTemplateIdNotFound}
+import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jpa.entities.{HistoryEntityFactory, LinkRealizationEntity, LinkTemplateEntity, UserAccountEntity}
+import org.mbari.oni.jpa.entities.{
+    HistoryEntity,
+    HistoryEntityFactory,
+    LinkRealizationEntity,
+    LinkTemplateEntity,
+    UserAccountEntity
+}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
 
 import scala.jdk.CollectionConverters.*
@@ -91,10 +97,14 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 val repo = new LinkTemplateRepository(entityManager)
                 repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
                     case Some(linkTemplate) =>
-                        val before = Link.from(linkTemplate)
+                        val before  = Link.from(linkTemplate)
                         linkUpdate.updateEntity(linkTemplate)
                         // add history
-                        val history = HistoryEntityFactory.replaceLinkTemplate(userEntity, before.toLinkTemplateEntity, linkTemplate)
+                        val history = HistoryEntityFactory.replaceLinkTemplate(
+                            userEntity,
+                            before.toLinkTemplateEntity,
+                            linkTemplate
+                        )
                         linkTemplate.getConceptMetadata.addHistory(history)
                         ExtendedLink.from(linkTemplate)
                     case None               => throw LinkTemplateIdNotFound(id)
@@ -113,8 +123,10 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                         // Add history
                         val history = HistoryEntityFactory.delete(userEntity, linkTemplate)
                         linkTemplate.getConceptMetadata.addHistory(history)
-                        linkTemplate.getConceptMetadata.removeLinkTemplate(linkTemplate)
-                        entityManager.remove(linkTemplate)
+                        if userEntity.isAdministrator then
+                            history.approveBy(userEntity.getUserName)
+                            linkTemplate.getConceptMetadata.removeLinkTemplate(linkTemplate)
+                            entityManager.remove(linkTemplate)
                     case None               => throw LinkTemplateIdNotFound(id)
             )
 
@@ -122,3 +134,43 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
             user <- userAccountService.verifyWriteAccess(Option(userName))
             _    <- txn(user.toEntity)
         yield ()
+
+    def inTxnRejectAdd(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        val conceptMetadata = history.getConceptMetadata
+        val concept         = conceptMetadata.getConcept
+        val opt             = conceptMetadata
+            .getLinkTemplates
+            .stream()
+            .filter(lr => lr.stringValue() == history.getNewValue)
+            .findFirst()
+            .toScala
+
+        opt match
+            case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
+            case Some(lr) =>
+                conceptMetadata.removeLinkTemplate(lr)
+                Right(true)
+
+    def inTxnApproveDelete(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        val conceptMetadata = history.getConceptMetadata
+        val concept         = conceptMetadata.getConcept
+        val opt             = conceptMetadata
+            .getLinkTemplates
+            .stream()
+            .filter(lr => lr.stringValue() == history.getOldValue)
+            .findFirst()
+            .toScala
+
+        opt match
+            case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
+            case Some(lr) =>
+                conceptMetadata.removeLinkTemplate(lr)
+                Right(true)

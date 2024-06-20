@@ -9,7 +9,14 @@ package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
 import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
-import org.mbari.oni.domain.{ConceptMetadata, ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept, RawConceptName}
+import org.mbari.oni.domain.{
+    ConceptMetadata,
+    ConceptNameCreate,
+    ConceptNameTypes,
+    ConceptNameUpdate,
+    RawConcept,
+    RawConceptName
+}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptNameRepository, ConceptRepository}
@@ -30,7 +37,6 @@ trait ConceptNameServiceBase:
 class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends ConceptNameServiceBase:
 
     private val log                = System.getLogger(getClass.getName)
-    private val historyService     = HistoryService(entityManagerFactory)
     private val userAccountService = UserAccountService(entityManagerFactory)
 
     def findAllNames(limit: Int, offset: Int): Either[Throwable, Seq[String]] =
@@ -67,13 +73,10 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                 concept.addConceptName(newConceptName)
 
                 val history = HistoryEntityFactory.add(userEntity, newConceptName)
-                if newNameType == ConceptNameTypes.PRIMARY then
-                    history.setOldValue(oldConceptName.getName)
+                if newNameType == ConceptNameTypes.PRIMARY then history.setOldValue(oldConceptName.getName)
                 concept.getConceptMetadata.addHistory(history)
 
-
-                if userEntity.isAdministrator then
-                    history.approveBy(userEntity.getUserName)
+                if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
 
                 RawConcept.from(concept, false)
             )
@@ -101,8 +104,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                         if newConceptNameOpt.isDefined then throw ConceptNameAlreadyExists(newName)
                         val history           = HistoryEntityFactory.replaceConceptName(userEntity, name, newName)
                         existingConceptName.getConcept.getConceptMetadata.addHistory(history)
-                        if userEntity.isAdministrator then
-                            history.approveBy(userEntity.getUserName)
+                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                     case None          => ()
 
                 // If the name type is changing, make sure the primary name is not being changed
@@ -160,11 +162,14 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
             concept <- txn(user.toEntity)
         yield concept
 
-
-    def inTxnRejectAddConceptName(historyEntity: HistoryEntity, userEntity: UserAccountEntity, entityManager: EntityManager): Either[Throwable, Boolean] =
+    def inTxnRejectAddConceptName(
+        historyEntity: HistoryEntity,
+        userEntity: UserAccountEntity,
+        entityManager: EntityManager
+    ): Either[Throwable, Boolean] =
         val concept = historyEntity.getConceptMetadata.getConcept
-        concept.getConceptNames.asScala.find(_.getName == historyEntity.getNewValue) match
-            case None => Left(ConceptNameNotFound(historyEntity.getNewValue))
+        Option(concept.getConceptName(historyEntity.getNewValue)) match
+            case None              => Left(ConceptNameNotFound(historyEntity.getNewValue))
             case Some(conceptName) =>
                 if conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType) then
                     // Find the old primary name
@@ -172,8 +177,19 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                         .foreach(oldPrimaryName => concept.removeConceptName(oldPrimaryName))
                     // set the concept name to the old primary name
                     conceptName.setName(historyEntity.getOldValue)
-                else
-                    concept.removeConceptName(conceptName)
+                else concept.removeConceptName(conceptName)
                 Right(true)
 
-
+    def inTxnApproveDelete(
+        historyEntity: HistoryEntity,
+        userEntity: UserAccountEntity,
+        entityManager: EntityManager
+    ): Either[Throwable, Boolean] =
+        val concept = historyEntity.getConceptMetadata.getConcept
+        Option(concept.getConceptName(historyEntity.getOldValue)) match
+            case None              => Left(ConceptNameNotFound(historyEntity.getOldValue))
+            case Some(conceptName) =>
+                val repo = ConceptRepository(entityManager)
+                concept.removeConceptName(conceptName)
+                repo.delete(conceptName)
+                Right(true)

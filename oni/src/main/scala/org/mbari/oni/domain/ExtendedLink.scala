@@ -19,7 +19,11 @@ case class ExtendedLink(
     def toLink: Link =
         Link(linkName, toConcept, linkValue)
 
+    def stringValue: String =
+        s"$concept${ILink.DELIMITER}$linkName${ILink.DELIMITER}$toConcept${ILink.DELIMITER}$linkValue"
+
 object ExtendedLink:
+
     def from(link: LinkTemplateEntity | LinkRealizationEntity): ExtendedLink =
         link match
             case l: LinkTemplateEntity    =>

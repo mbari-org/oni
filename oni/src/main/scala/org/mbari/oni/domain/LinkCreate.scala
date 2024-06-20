@@ -11,14 +11,13 @@ case class LinkCreate(
     concept: String,
     linkName: String,
     toConcept: String = ILink.VALUE_SELF,
-    linkValue: String = ILink.VALUE_NIL,
-) {
+    linkValue: String = ILink.VALUE_NIL
+):
 
     /**
-     * Convert this object to a Link. You can convert a link to a
-     * LinkRealizationEntity or LinkTemplateEntity
-     * @return A Link representaiton of this object
+     * Convert this object to a Link. You can convert a link to a LinkRealizationEntity or LinkTemplateEntity
+     * @return
+     *   A Link representaiton of this object
      */
     def toLink: Link =
         Link(linkName, toConcept, linkValue)
-}

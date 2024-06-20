@@ -16,7 +16,15 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, UserAccount, UserAccountRoles}
+import org.mbari.oni.domain.{
+    ConceptCreate,
+    ConceptDelete,
+    ConceptMetadata,
+    ConceptUpdate,
+    RawConcept,
+    UserAccount,
+    UserAccountRoles
+}
 import org.mbari.oni.jpa.DatabaseFunSuite
 import org.mbari.oni.jpa.entities.{EntityUtilities, TestEntityFactory}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
@@ -305,9 +313,9 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                 rootEntity        <- conceptService.init(root)
                 grandChildEntity  <- Right(grandChild)
                 updatedGrandChild <- conceptService.update(
-                                        grandChildEntity.getPrimaryConceptName.getName,
+                                         grandChildEntity.getPrimaryConceptName.getName,
                                          ConceptUpdate(
-                                             parentName = Some(rootEntity.getPrimaryConceptName.getName),
+                                             parentName = Some(rootEntity.getPrimaryConceptName.getName)
                                          ),
                                          user.username
                                      )

@@ -126,14 +126,15 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         handleErrors(service.findByGlob(name)).map(_.toSeq.sortBy(_.name))
     }
 
-    val updateEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] = secureEndpoint
-        .put
-        .in(base/ path[String]("name"))
-        .in(jsonBody[ConceptUpdate])
-        .out(jsonBody[ConceptMetadata])
-        .name("updateConcept")
-        .description("Update a concept")
-        .tag(tag)
+    val updateEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
+        secureEndpoint
+            .put
+            .in(base / path[String]("name"))
+            .in(jsonBody[ConceptUpdate])
+            .out(jsonBody[ConceptMetadata])
+            .name("updateConcept")
+            .description("Update a concept")
+            .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Identity] = updateEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))

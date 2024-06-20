@@ -28,6 +28,7 @@ case class ConceptNameNotFound(name: String)
 case class HistoryHasBeenPreviouslyProcessed(id: Long)
     extends Exception(s"History with id `$id` has already been processed")
     with OniException
+case class ItemNotFound(msg: String)                       extends Exception(msg) with NotFoundException
 case class LinkRealizationIdNotFound(id: Long)
     extends Exception(s"LinkRealization with `$id` was not found")
     with NotFoundException

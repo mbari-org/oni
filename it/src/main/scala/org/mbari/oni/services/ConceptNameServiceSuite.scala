@@ -58,7 +58,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val name    = rawRoot.primaryName
         val dto     = ConceptNameCreate(name = name, newName = "newName", nameType = ConceptNameTypes.PRIMARY.getType)
 
-        val attempt = runWithUserAuth(user => conceptNameService.addName(dto,user.username))
+        val attempt = runWithUserAuth(user => conceptNameService.addName(dto, user.username))
 
         attempt match
             case Right(rawConcept) =>
@@ -153,7 +153,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
                 assert(!rawConcept.names.map(_.name).toSeq.contains(nameToDelete))
                 conceptService.findByName(nameToDelete) match
                     case Right(_) => fail("Should have been deleted")
-                    case Left(e)    => ()
+                    case Left(e)  => ()
             case Left(error)       =>
                 fail(error.toString)
 

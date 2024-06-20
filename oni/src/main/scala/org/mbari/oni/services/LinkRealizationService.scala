@@ -7,12 +7,12 @@
 
 package org.mbari.oni.services
 
-import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.{ConceptNameNotFound, LinkRealizationIdNotFound}
-import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkUpdate}
+import jakarta.persistence.{EntityManager, EntityManagerFactory}
+import org.mbari.oni.{ConceptNameNotFound, ItemNotFound, LinkRealizationIdNotFound}
+import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jpa.entities.{HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
+import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
 
 import scala.jdk.CollectionConverters.*
@@ -72,14 +72,15 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                             )
                         concept.getConceptMetadata.addLinkRealization(linkRealization)
                         // Add history
-                        val history = HistoryEntityFactory.add(userEntity, linkRealization)
+                        val history         = HistoryEntityFactory.add(userEntity, linkRealization)
                         concept.getConceptMetadata.addHistory(history)
+                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                         ExtendedLink.from(linkRealization)
                     case None          => throw ConceptNameNotFound(link.concept)
             )
 
         for
-            user    <- userAccountService.verifyWriteAccess(Option(userName))
+            user <- userAccountService.verifyWriteAccess(Option(userName))
             link <- txn(user.toEntity)
         yield link
 
@@ -93,7 +94,11 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                         linkUpdate.updateEntity(linkRealization)
 
                         // add history
-                        val history = HistoryEntityFactory.replaceLinkRealization(userEntity, before.toLinkRealizationEntity, linkRealization)
+                        val history = HistoryEntityFactory.replaceLinkRealization(
+                            userEntity,
+                            before.toLinkRealizationEntity,
+                            linkRealization
+                        )
                         linkRealization.getConceptMetadata.addHistory(history)
                         ExtendedLink.from(linkRealization)
                     case None                  => throw LinkRealizationIdNotFound(id)
@@ -113,8 +118,10 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                         // Add history
                         val history = HistoryEntityFactory.delete(userEntity, linkRealization)
                         linkRealization.getConceptMetadata.addHistory(history)
-                        linkRealization.getConceptMetadata.removeLinkRealization(linkRealization)
-                        entityManager.remove(linkRealization)
+                        if userEntity.isAdministrator then
+                            history.approveBy(userEntity.getUserName)
+                            linkRealization.getConceptMetadata.removeLinkRealization(linkRealization)
+                            entityManager.remove(linkRealization)
                     case None                  => throw new IllegalArgumentException(s"Link with id ${id} does not exist")
             )
 
@@ -122,3 +129,43 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
             user <- userAccountService.verifyWriteAccess(Option(userName))
             _    <- txn(user.toEntity)
         yield ()
+
+    def inTxnRejectAdd(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        val conceptMetadata = history.getConceptMetadata
+        val concept         = conceptMetadata.getConcept
+        val opt             = conceptMetadata
+            .getLinkRealizations
+            .stream()
+            .filter(lr => lr.stringValue() == history.getNewValue)
+            .findFirst()
+            .toScala
+
+        opt match
+            case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
+            case Some(lr) =>
+                conceptMetadata.removeLinkRealization(lr)
+                Right(true)
+
+    def inTxnApproveDelete(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        val conceptMetadata = history.getConceptMetadata
+        val concept         = conceptMetadata.getConcept
+        val opt             = conceptMetadata
+            .getLinkRealizations
+            .stream()
+            .filter(lr => lr.stringValue() == history.getOldValue)
+            .findFirst()
+            .toScala
+
+        opt match
+            case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
+            case Some(lr) =>
+                conceptMetadata.removeLinkRealization(lr)
+                Right(true)

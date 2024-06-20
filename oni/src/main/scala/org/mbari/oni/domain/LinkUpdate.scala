@@ -12,7 +12,7 @@ import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
 case class LinkUpdate(
     linkName: Option[String] = None,
     toConcept: Option[String] = None,
-    linkValue: Option[String] = None,
+    linkValue: Option[String] = None
 ):
 
     def updateEntity(entity: LinkRealizationEntity): LinkRealizationEntity =

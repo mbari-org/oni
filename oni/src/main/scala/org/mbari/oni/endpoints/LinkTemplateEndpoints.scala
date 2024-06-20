@@ -20,8 +20,8 @@ import sttp.tapir.server.ServerEndpoint
 class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
     private val service = LinkTemplateService(entityManagerFactory)
-    private val base = "linktemplates"
-    private val tag = "LinkTemplates"
+    private val base    = "linktemplates"
+    private val tag     = "LinkTemplates"
 
     val findLinkTemplateById: Endpoint[Unit, Long, ErrorMsg, ExtendedLink, Any] = openEndpoint
         .get
@@ -36,8 +36,6 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory) extends 
             handleErrors(service.findById(id))
         }
 
-
     override def all: List[Endpoint[_, _, _, _, _]] = ???
 
     override def allImpl: List[ServerEndpoint[Any, Identity]] = ???
-

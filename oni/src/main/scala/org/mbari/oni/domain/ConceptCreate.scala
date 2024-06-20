@@ -12,4 +12,5 @@ case class ConceptCreate(
     parentName: Option[String] = None,
     rankLevel: Option[String] = None,
     rankName: Option[String] = None,
-    aphiaId: Option[Long] = None)
+    aphiaId: Option[Long] = None
+)

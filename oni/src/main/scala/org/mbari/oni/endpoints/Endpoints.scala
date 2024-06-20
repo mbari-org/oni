@@ -62,7 +62,8 @@ trait Endpoints:
     implicit lazy val sConceptUpdate: Schema[ConceptUpdate]                       = Schema.derived[ConceptUpdate]
     implicit lazy val sConceptMetadata: Schema[ConceptMetadata]                   = Schema.derived[ConceptMetadata]
     implicit lazy val sConceptName: Schema[RawConceptName]                        = Schema.derived[RawConceptName]
-    implicit lazy val sPageSeqExtendedHistory: Schema[Page[Seq[ExtendedHistory]]] = Schema.derived[Page[Seq[ExtendedHistory]]]
+    implicit lazy val sPageSeqExtendedHistory: Schema[Page[Seq[ExtendedHistory]]] =
+        Schema.derived[Page[Seq[ExtendedHistory]]]
     implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]                   = Schema.derived[Page[Seq[String]]]
     implicit lazy val sUserAccount: Schema[UserAccount]                           = Schema.derived[UserAccount]
     implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate]               = Schema.derived[UserAccountUpdate]
