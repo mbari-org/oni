@@ -23,7 +23,6 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
     private val log                = System.getLogger(getClass.getName)
     private val historyService     = HistoryService(entityManagerFactory)
     private val userAccountService = UserAccountService(entityManagerFactory)
-    private val historyActionService = HistoryActionService(entityManagerFactory)
 
     /**
      * Inserts an entire tree of concepts in the database. Requires that the database is empty. This is an ACID
