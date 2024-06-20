@@ -16,12 +16,18 @@ case class AccessDenied(user: String)
     extends Exception(s"I'm sorry `$user`, I can not let you do that.")
     with AccessException
 case class AphiaIdNotFound(aphiaId: Long)                  extends Exception(s"AphiaId `$aphiaId` was not found") with NotFoundException
+case class ChildConceptNotFound(parentName: String, childName: String)
+    extends Exception(s"Child concept `$childName` not found under `$parentName`")
+    with NotFoundException
 case class ConceptNameAlreadyExists(name: String)
     extends Exception(s"Concept name `$name` already exists")
     with OniException
 case class ConceptNameNotFound(name: String)
     extends Exception(s"Concept name `$name` was not found")
     with NotFoundException
+case class HistoryHasBeenPreviouslyProcessed(id: Long)
+    extends Exception(s"History with id `$id` has already been processed")
+    with OniException
 case class LinkRealizationIdNotFound(id: Long)
     extends Exception(s"LinkRealization with `$id` was not found")
     with NotFoundException

@@ -34,7 +34,7 @@ trait HistoryServiceSuite extends DataInitializer:
             .flatMap(ExtendedHistory.from)
             .toSet
             .filter(_.processedTimestamp.isEmpty)
-        historyService.findAllPending() match
+        historyService.findAllPending(100, 0) match
             case Left(e)         => fail(e.getMessage)
             case Right(obtained) =>
                 assertEquals(expected.size, obtained.size)

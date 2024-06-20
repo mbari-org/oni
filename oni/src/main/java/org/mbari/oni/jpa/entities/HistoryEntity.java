@@ -170,6 +170,12 @@ public class HistoryEntity implements Serializable, IPersistentObject {
         setProcessorName(approverName);
         setProcessedDate(new Date());
     }
+
+    public void rejectBy(String approverName) {
+        setApproved(false);
+        setProcessorName(approverName);
+        setProcessedDate(new Date());
+    }
     
 
     public boolean isAdd() {

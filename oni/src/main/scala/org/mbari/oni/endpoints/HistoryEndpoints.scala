@@ -8,7 +8,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, ExtendedHistory}
+import org.mbari.oni.domain.{ErrorMsg, ExtendedHistory, Page}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.services.HistoryService
 import sttp.tapir.*
@@ -22,29 +22,42 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
     private val service = HistoryService(entityManagerFactory)
     private val base    = "history"
     private val tag     = "History"
+    private val defaultLimit = 100
 
-    val pendingEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[ExtendedHistory], Any] = openEndpoint
+    val pendingEndpoint: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
         .get
         .in(base / "pending")
-        .out(jsonBody[Seq[ExtendedHistory]])
+        .in(paging)
+        .out(jsonBody[Page[Seq[ExtendedHistory]]])
         .name("pending")
         .description("Get all pending change requests")
         .tag(tag)
 
-    val pendingEndpointImpl: ServerEndpoint[Any, Identity] = pendingEndpoint.serverLogic { _ =>
-        handleErrors(service.findAllPending())
+    val pendingEndpointImpl: ServerEndpoint[Any, Identity] = pendingEndpoint.serverLogic { paging =>
+        val limit  = paging.limit.getOrElse(defaultLimit)
+        val offset = paging.offset.getOrElse(0)
+        val attempt = for
+            pending <- service.findAllPending(limit, offset)
+        yield Page(pending, limit, offset)
+        handleErrors(attempt)
     }
 
-    val approvedEndpoints: Endpoint[Unit, Unit, ErrorMsg, Seq[ExtendedHistory], Any] = openEndpoint
+    val approvedEndpoints: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
         .get
         .in(base / "approved")
-        .out(jsonBody[Seq[ExtendedHistory]])
+        .in(paging)
+        .out(jsonBody[Page[Seq[ExtendedHistory]]])
         .name("approved")
         .description("Get all approved change requests")
         .tag(tag)
 
-    val approvedEndpointsImpl: ServerEndpoint[Any, Identity] = approvedEndpoints.serverLogic { _ =>
-        handleErrors(service.findAllApproved())
+    val approvedEndpointsImpl: ServerEndpoint[Any, Identity] = approvedEndpoints.serverLogic { paging =>
+        val limit  = paging.limit.getOrElse(defaultLimit)
+        val offset = paging.offset.getOrElse(0)
+        val attempt = for
+            approved <- service.findAllApproved()
+        yield Page(approved, limit, offset)
+        handleErrors(attempt)
     }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(

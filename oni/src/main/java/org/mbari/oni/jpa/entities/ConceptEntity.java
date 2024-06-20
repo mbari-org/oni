@@ -216,6 +216,10 @@ public class ConceptEntity implements Serializable, IPersistentObject {
 
     }
 
+    public String getName() {
+        return getPrimaryConceptName().getName();
+    }
+
     public List<ConceptNameEntity> getAlternativeConceptNames() {
 
         return getConceptNames().stream()

@@ -43,28 +43,29 @@ trait Endpoints:
     val log: System.Logger = System.getLogger(getClass.getName)
 
     // --- Schemas
-    implicit lazy val sExtendedHistory: Schema[ExtendedHistory]     = Schema.derived[ExtendedHistory]
-    implicit lazy val sExtendedLink: Schema[ExtendedLink]           = Schema.derived[ExtendedLink]
-    implicit lazy val sLink: Schema[Link]                           = Schema.derived[Link]
-    implicit lazy val sURI: Schema[URI]                             = Schema.string
-    implicit lazy val sURL: Schema[URL]                             = Schema.string
-    implicit lazy val sInstant: Schema[Instant]                     = Schema.string
-    implicit lazy val sDoi: Schema[ReferenceQuery]                  = Schema.derived[ReferenceQuery]
-    implicit lazy val sMedia: Schema[Media]                         = Schema.derived[Media]
-    implicit lazy val sPaging: Schema[Paging]                       = Schema.derived[Paging]
-    implicit lazy val sPrefNode: Schema[PrefNode]                   = Schema.derived[PrefNode]
-    implicit lazy val sReference: Schema[Reference]                 = Schema.derived[Reference]
-    implicit lazy val sReferenceUpdate: Schema[ReferenceUpdate]     = Schema.derived[ReferenceUpdate]
-    implicit lazy val sConceptCreate: Schema[ConceptCreate]         = Schema.derived[ConceptCreate]
-    implicit lazy val sConceptDelete: Schema[ConceptDelete]         = Schema.derived[ConceptDelete]
-    implicit lazy val sConceptNameCreate: Schema[ConceptNameCreate] = Schema.derived[ConceptNameCreate]
-    implicit lazy val sConceptNameUpdate: Schema[ConceptNameUpdate] = Schema.derived[ConceptNameUpdate]
-    implicit lazy val sConceptUpdate: Schema[ConceptUpdate]         = Schema.derived[ConceptUpdate]
-    implicit lazy val sConceptMetadata: Schema[ConceptMetadata]     = Schema.derived[ConceptMetadata]
-    implicit lazy val sConceptName: Schema[RawConceptName]          = Schema.derived[RawConceptName]
-    implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]     = Schema.derived[Page[Seq[String]]]
-    implicit lazy val sUserAccount: Schema[UserAccount]             = Schema.derived[UserAccount]
-    implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate] = Schema.derived[UserAccountUpdate]
+    implicit lazy val sExtendedHistory: Schema[ExtendedHistory]                   = Schema.derived[ExtendedHistory]
+    implicit lazy val sExtendedLink: Schema[ExtendedLink]                         = Schema.derived[ExtendedLink]
+    implicit lazy val sLink: Schema[Link]                                         = Schema.derived[Link]
+    implicit lazy val sURI: Schema[URI]                                           = Schema.string
+    implicit lazy val sURL: Schema[URL]                                           = Schema.string
+    implicit lazy val sInstant: Schema[Instant]                                   = Schema.string
+    implicit lazy val sDoi: Schema[ReferenceQuery]                                = Schema.derived[ReferenceQuery]
+    implicit lazy val sMedia: Schema[Media]                                       = Schema.derived[Media]
+    implicit lazy val sPaging: Schema[Paging]                                     = Schema.derived[Paging]
+    implicit lazy val sPrefNode: Schema[PrefNode]                                 = Schema.derived[PrefNode]
+    implicit lazy val sReference: Schema[Reference]                               = Schema.derived[Reference]
+    implicit lazy val sReferenceUpdate: Schema[ReferenceUpdate]                   = Schema.derived[ReferenceUpdate]
+    implicit lazy val sConceptCreate: Schema[ConceptCreate]                       = Schema.derived[ConceptCreate]
+    implicit lazy val sConceptDelete: Schema[ConceptDelete]                       = Schema.derived[ConceptDelete]
+    implicit lazy val sConceptNameCreate: Schema[ConceptNameCreate]               = Schema.derived[ConceptNameCreate]
+    implicit lazy val sConceptNameUpdate: Schema[ConceptNameUpdate]               = Schema.derived[ConceptNameUpdate]
+    implicit lazy val sConceptUpdate: Schema[ConceptUpdate]                       = Schema.derived[ConceptUpdate]
+    implicit lazy val sConceptMetadata: Schema[ConceptMetadata]                   = Schema.derived[ConceptMetadata]
+    implicit lazy val sConceptName: Schema[RawConceptName]                        = Schema.derived[RawConceptName]
+    implicit lazy val sPageSeqExtendedHistory: Schema[Page[Seq[ExtendedHistory]]] = Schema.derived[Page[Seq[ExtendedHistory]]]
+    implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]                   = Schema.derived[Page[Seq[String]]]
+    implicit lazy val sUserAccount: Schema[UserAccount]                           = Schema.derived[UserAccount]
+    implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate]               = Schema.derived[UserAccountUpdate]
 
     // Make Tapir recursive types happy by using `implicit def`, not lazy val
     // https://tapir.softwaremill.com/en/latest/endpoint/schemas.html#derivation-for-recursive-types-in-scala3

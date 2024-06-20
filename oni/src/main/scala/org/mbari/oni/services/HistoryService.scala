@@ -18,10 +18,10 @@ import scala.jdk.OptionConverters.*
 
 class HistoryService(entityManagerFactory: EntityManagerFactory):
 
-    def findAllPending(): Either[Throwable, Seq[ExtendedHistory]] =
+    def findAllPending(limit: Int, offset: Int): Either[Throwable, Seq[ExtendedHistory]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = HistoryRepository(entityManager)
-            repo.findPendingHistories()
+            repo.findPendingHistories(limit, offset)
                 .asScala
                 .toSeq
                 .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h))

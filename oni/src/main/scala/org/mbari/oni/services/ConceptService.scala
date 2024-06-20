@@ -8,23 +8,9 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{
-    AccessDenied,
-    AccessDeniedMissingCredentials,
-    ConceptNameAlreadyExists,
-    ConceptNameNotFound,
-    MissingRootConcept,
-    OniException,
-    RootAlreadyExists
-}
+import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, ChildConceptNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, MissingRootConcept, OniException, RootAlreadyExists}
 import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, SimpleConcept}
-import org.mbari.oni.jpa.entities.{
-    ConceptEntity,
-    ConceptNameEntity,
-    HistoryEntity,
-    HistoryEntityFactory,
-    UserAccountEntity
-}
+import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.ConceptRepository
 import org.mbari.oni.etc.jdk.Loggers.given
@@ -37,6 +23,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
     private val log                = System.getLogger(getClass.getName)
     private val historyService     = HistoryService(entityManagerFactory)
     private val userAccountService = UserAccountService(entityManagerFactory)
+    private val historyActionService = HistoryActionService(entityManagerFactory)
 
     /**
      * Inserts an entire tree of concepts in the database. Requires that the database is empty. This is an ACID
@@ -237,6 +224,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 // build history
                 val history = HistoryEntityFactory.add(userEntity, parent)
                 parent.getConceptMetadata.addHistory(history)
+                if userEntity.isAdministrator then
+                    history.approveBy(userEntity.getUserName)
             else
                 findRoot() match
                     case Left(_)  => entityManager.persist(concept)
@@ -302,6 +291,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                             val history =
                                 HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, p)
                             conceptEntity.getConceptMetadata.addHistory(history)
+                            if userEntity.isAdministrator then
+                                history.approveBy(userEntity.getUserName)
                             conceptEntity.getParentConcept match
                                 case null   =>
                                     p.addChildConcept(conceptEntity)
@@ -320,6 +311,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 if v != conceptEntity.getRankLevel then
                     val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
                     conceptEntity.getConceptMetadata.addHistory(history)
+                    if userEntity.isAdministrator then
+                        history.approveBy(userEntity.getUserName)
                     conceptEntity.setRankLevel(v)
             )
 
@@ -333,6 +326,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 if v != conceptEntity.getRankName then
                     val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
                     conceptEntity.getConceptMetadata.addHistory(history)
+                    if userEntity.isAdministrator then
+                        history.approveBy(userEntity.getUserName)
                     conceptEntity.setRankName(v)
             )
 
@@ -380,13 +375,12 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
 
         // -- Helper function to delete a concept
         def txn(userEntity: UserAccountEntity, name: String): Either[Throwable, Int] =
-            if !userEntity.isAdministrator then throw AccessDenied(userEntity.getUserName)
+            if userEntity.isReadOnly then throw AccessDenied(userEntity.getUserName)
 
             handleByConceptName(
                 name,
                 (concept, repo) =>
                     val history = HistoryEntityFactory.delete(userEntity, concept)
-                    history.approveBy(userEntity.getUserName)
 
                     concept.getParentConcept match
                         case null   => // do nothing
@@ -404,3 +398,42 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             user  <- userAccountService.verifyWriteAccess(Option(userName))
             count <- txn(user.toEntity, conceptName)
         yield count
+
+    def inTxnRejectAddChildHistory(historyEntity: HistoryEntity, userEntity: UserAccountEntity, entityManager: EntityManager): Either[Throwable, Boolean] =
+        try
+            val repo = ConceptRepository(entityManager)
+            val parentConcept = historyEntity.getConceptMetadata.getConcept
+            val childConcept = parentConcept.getChildConcepts
+                .stream()
+                .filter(c => c.getPrimaryConceptName.getName == historyEntity.getNewValue)
+                .findFirst()
+                .toScala
+
+            childConcept match
+                case None => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getNewValue)
+                case Some(child) =>
+                    repo.deleteBranchByName(child.getName)
+                    Right(true)
+        catch
+            case e: Throwable => Left(e)
+
+
+    def inTxnApproveDeleteChildHistory(historyEntity: HistoryEntity, userEntity: UserAccountEntity, entityManager: EntityManager): Either[Throwable, Boolean] =
+        try
+            val repo = ConceptRepository(entityManager)
+            val parentConcept = historyEntity.getConceptMetadata.getConcept
+            val childConcept = parentConcept.getChildConcepts
+                .stream()
+                .filter(c => c.getPrimaryConceptName.getName == historyEntity.getNewValue)
+                .findFirst()
+                .toScala
+
+            childConcept match
+                case None => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getNewValue)
+                case Some(child) =>
+                    val n = repo.deleteBranchByName(child.getName)
+                    if (n == 0) then
+                        log.atWarn.log(s"Failed to delete child concept ${child.getName}. No nodes were deleted.")
+                    Right(n > 0)
+        catch
+            case e: Throwable => Left(e)

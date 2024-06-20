@@ -84,6 +84,9 @@ object CirceCodecs:
     given Decoder[ExtendedHistory] = deriveDecoder
     given Encoder[ExtendedHistory] = deriveEncoder
 
+    given page2Decoder: Decoder[Page[Seq[ExtendedHistory]]] = deriveDecoder
+    given page2Encoder: Encoder[Page[Seq[ExtendedHistory]]] = deriveEncoder
+    
     given Decoder[ExtendedLink] = deriveDecoder
     given Encoder[ExtendedLink] = deriveEncoder
 

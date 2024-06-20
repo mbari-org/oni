@@ -7,40 +7,47 @@
 
 package org.mbari.oni.services
 
-import jakarta.persistence.EntityManagerFactory
+import jakarta.persistence.{EntityManager, EntityManagerFactory}
+import org.mbari.oni.{AccessDenied, ChildConceptNotFound, ConceptNameNotFound, HistoryHasBeenPreviouslyProcessed}
 import org.mbari.oni.domain.ExtendedHistory
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, UserAccountEntity}
-import org.mbari.oni.jpa.repositories.{HistoryRepository, UserAccountRepository}
+import org.mbari.oni.jpa.repositories.{ConceptRepository, HistoryRepository, UserAccountRepository}
 import org.mbari.oni.etc.sdk.Eithers.*
 
 import java.time.Instant
 import java.util.Date
+import scala.jdk.CollectionConverters.*
+import scala.jdk.OptionConverters.*
+import scala.util.Try
+
+type HistoryAction = (HistoryEntity, UserAccountEntity, EntityManager) => Either[Throwable, Boolean]
 
 class HistoryActionService(entityManagerFactory: EntityManagerFactory):
 
     private val log                = System.getLogger(getClass.getName)
     private val historyService     = HistoryService(entityManagerFactory)
     private val userAccountService = UserAccountService(entityManagerFactory)
-
+    private val conceptService     = ConceptService(entityManagerFactory)
+    private val conceptNameService = ConceptNameService(entityManagerFactory)
+    private val okHistoryAction    = (history: HistoryEntity, user: UserAccountEntity, entityManger: EntityManager) => Right[Throwable, Boolean](true)
     /**
      * Process a history record
      * @param historyId
      *   The history record id (primary key)
      * @param username
      *   The username of the user processing the history
-     * @param fn
+     * @param action
      *   A function that takes a HistoryEntity and a UserAccountEntity and returns a boolean. A true indicates
      *   successful processing.
      * @param approved
      *   true if approved, false if rejected.
      * @return
      */
-    def process(
-        historyId: Long,
-        username: String,
-        fn: (HistoryEntity, UserAccountEntity) => Boolean,
-        approved: Boolean
+    private def process(
+                           historyId: Long,
+                           username: String,
+                           approved: Boolean
     ): Either[Throwable, ExtendedHistory] =
         entityManagerFactory.transaction(entityManager =>
             // find user account entity
@@ -49,35 +56,69 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory):
 
             val attempt = for
                 userEntity    <- userRepo.findByUserName(username).toEither
+                _             <- if !userEntity.isAdministrator then Left(AccessDenied(username)) else Right(true)
                 historyEntity <- historyRepo.findByPrimaryKey(classOf[HistoryEntity], historyId).toEither
+                _             <- if historyEntity.isProcessed then Left(HistoryHasBeenPreviouslyProcessed(historyId)) else Right(true)
+                action        = lookupHistoryAction(historyEntity, approved)
+                ok            <- action(historyEntity, userEntity, entityManager)
             yield
-                val ok = fn(historyEntity, userEntity)
                 if ok then
-                    historyEntity.setApproved(approved)
-                    historyEntity.setProcessedDate(Date.from(Instant.now()))
-                    historyEntity.setProcessorName(userEntity.getUserName)
+                    if approved then
+                        historyEntity.approveBy(userEntity.getUserName)
+                    else
+                        historyEntity.rejectBy(userEntity.getUserName)
                     historyEntity
-                else throw new Exception("Failed to process history")
+                else throw new Exception("Unable to process history")
 
             attempt match
                 case Left(e)  => throw e
                 case Right(v) => ExtendedHistory.from(v.getConceptMetadata.getConcept.getPrimaryConceptName.getName, v)
         )
 
-    private def approve(history: HistoryEntity, user: UserAccountEntity): Boolean =
-        if !user.isAdministrator then false
+    def approve(historyId: Long, username: String): Either[Throwable, ExtendedHistory] =
+        process(historyId, username, true)
+
+    def reject(historyId: Long, username: String): Either[Throwable, ExtendedHistory] =
+        process(historyId, username, false)
+
+
+    private def lookupHistoryAction(historyEntity: HistoryEntity, approved: Boolean): HistoryAction =
+        if approved then
+            lookupApproveHistoryAction(historyEntity)
         else
-            history.getAction match
-                case HistoryEntity.ACTION_ADD     => true
-                case HistoryEntity.ACTION_DELETE  =>
-                    history.getField match
-                        case HistoryEntity.FIELD_CONCEPT_CHILD   => false // TODO
-                        case HistoryEntity.FIELD_CONCEPTNAME     => false // TODO
-                        case HistoryEntity.FIELD_LINKREALIZATION => false // TODO
-                        case HistoryEntity.FIELD_LINKTEMPLATE    => false // TODO
-                        case HistoryEntity.FIELD_MEDIA           => false // TODO
-                        case _                                   => false
-                case HistoryEntity.ACTION_REPLACE =>
-                    history.getField match
-                        case HistoryEntity.FIELD_CONCEPT_PARENT => false // TODO
-                        case _                                  => false
+            lookupRejectHistoryAction(historyEntity)
+
+    private def lookupApproveHistoryAction(historyEntity: HistoryEntity): HistoryAction =
+        historyEntity.getAction match
+            case HistoryEntity.ACTION_ADD     => okHistoryAction
+            case HistoryEntity.ACTION_DELETE  =>
+                historyEntity.getField match
+                    case HistoryEntity.FIELD_CONCEPT_CHILD   => conceptService.inTxnApproveDeleteChildHistory
+                    case HistoryEntity.FIELD_CONCEPTNAME     => okHistoryAction // TODO
+                    case HistoryEntity.FIELD_LINKREALIZATION => okHistoryAction // TODO
+                    case HistoryEntity.FIELD_LINKTEMPLATE    => okHistoryAction // TODO
+                    case HistoryEntity.FIELD_MEDIA           => okHistoryAction // TODO
+                    case _                                   => okHistoryAction // TODO
+            case HistoryEntity.ACTION_REPLACE =>
+                historyEntity.getField match
+                    case HistoryEntity.FIELD_CONCEPT_PARENT => okHistoryAction // TODO
+                    case _                                  => okHistoryAction // TODO
+
+    private def lookupRejectHistoryAction(historyEntity: HistoryEntity): HistoryAction =
+        historyEntity.getAction match
+            case HistoryEntity.ACTION_ADD     =>
+                historyEntity.getField match
+                    case HistoryEntity.FIELD_CONCEPT_CHILD   => conceptService.inTxnRejectAddChildHistory
+                    case HistoryEntity.FIELD_CONCEPTNAME     => conceptNameService.inTxnRejectAddConceptName
+                    case HistoryEntity.FIELD_LINKREALIZATION => okHistoryAction // TODO
+                    case HistoryEntity.FIELD_LINKTEMPLATE    => okHistoryAction // TODO
+                    case HistoryEntity.FIELD_MEDIA           => okHistoryAction // TODO
+                    case _                                   => okHistoryAction // TODO
+            case HistoryEntity.ACTION_DELETE  => okHistoryAction
+            case HistoryEntity.ACTION_REPLACE =>
+                historyEntity.getField match
+                    case HistoryEntity.FIELD_CONCEPT_PARENT => okHistoryAction // TODO
+                    case _                                  => okHistoryAction // TODO
+
+
+

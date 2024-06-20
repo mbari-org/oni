@@ -32,8 +32,8 @@ public class HistoryRepository extends Repository {
         return new HashSet<>(findByNamedQuery("History.findAll"));
     }
 
-    public Set<HistoryEntity> findPendingHistories() {
-        return new HashSet<>(findByNamedQuery("History.findPendingApproval"));
+    public Set<HistoryEntity> findPendingHistories(int limit, int offset) {
+        return new HashSet<>(findByNamedQuery("History.findPendingApproval", limit, offset));
     }
 
     public Set<HistoryEntity> findApprovedHistories() {
