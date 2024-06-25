@@ -234,7 +234,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 parent.addChildConcept(concept)
 
                 // build history
-                val history = HistoryEntityFactory.add(userEntity, parent)
+                val history = HistoryEntityFactory.add(userEntity, concept)
                 parent.getConceptMetadata.addHistory(history)
                 if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
             else
@@ -268,7 +268,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         for
             user    <- userAccountService.verifyWriteAccess(Some(userName))
             concept <- txn(user.toEntity)
-        yield concept
+            c <- findByName(conceptCreate.name)
+        yield c
 
     /**
      * Update a concept. This service does not check the users access credentials, that is done by the web service
@@ -285,30 +286,32 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             repo: ConceptRepository
         ): Unit =
             parentName.foreach(name =>
+                // Don't allow the root concept to have a parent
                 if !conceptEntity.hasParent then
                     throw new IllegalArgumentException(s"Cannot set the parent of the root concept!")
 
+                // Don't allow cyclic relation
+                if conceptEntity.hasDescendent(name) then
+                    throw new IllegalArgumentException(
+                        s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation"
+                    )
+
                 repo.findByName(name).toScala match
                     case None    => throw ConceptNameNotFound(name)
-                    case Some(p) =>
-                        // Don't allow cyclic relation
-                        if conceptEntity.hasDescendent(name) then
-                            throw new IllegalArgumentException(
-                                s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation"
-                            )
+                    case Some(parentEntity) =>
 
                         // Only update if the parent is different
                         if !conceptEntity.getParentConcept.hasConceptName(name) then
                             val history =
-                                HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, p)
+                                HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, parentEntity)
                             conceptEntity.getConceptMetadata.addHistory(history)
                             if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                             conceptEntity.getParentConcept match
                                 case null   =>
-                                    p.addChildConcept(conceptEntity)
+                                    parentEntity.addChildConcept(conceptEntity)
                                 case parent =>
                                     parent.removeChildConcept(conceptEntity)
-                                    p.addChildConcept(conceptEntity)
+                                    parentEntity.addChildConcept(conceptEntity)
             )
 
         // -- Helper function to update the rank level

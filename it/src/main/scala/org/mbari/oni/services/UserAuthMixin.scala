@@ -41,19 +41,22 @@ trait UserAuthMixin:
      * executed and deleted after the function `f` is executed.
      * @param f
      *   The function to run with the user account
+     * @param role
+     *  The role of the user account. Default is `UserAccountRoles.ADMINISTRATOR.getRoleName`
      * @tparam T
      *   The return type of the function
      * @return
      *   The result of the function `f`
      */
-    def runWithUserAuth[T](f: UserAccount => Either[Throwable, T]): Either[Throwable, T] =
-        val userAccountEntity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+    def runWithUserAuth[T](f: UserAccount => Either[Throwable, T], role: String = UserAccountRoles.ADMINISTRATOR.getRoleName): Either[Throwable, T] =
+        val userAccountEntity = TestEntityFactory.createUserAccount(role)
         val userAccount       = UserAccount.from(userAccountEntity)
         for
             user   <- userAccountService.create(userAccount)
             result <- f.apply(user)
             _      <- userAccountService.deleteByUserName(user.username)
         yield result
+
 
     /**
      * Run a function that returns unit with a user account. The user account is created before the function `f` is

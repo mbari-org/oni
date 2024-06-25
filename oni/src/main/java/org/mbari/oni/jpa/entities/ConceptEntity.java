@@ -208,6 +208,15 @@ public class ConceptEntity implements Serializable, IPersistentObject {
     }
 
     public ConceptNameEntity getPrimaryConceptName() {
+//        ConceptNameEntity conceptNameEntity = null;
+//        for (ConceptNameEntity cn : getConceptNames()) {
+//            if (cn.getNameType().equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType())) {
+//                conceptNameEntity = cn;
+//                break;
+//            }
+//        }
+//        return conceptNameEntity;
+
 
         return getConceptNames().stream()
                 .filter(cn -> cn.getNameType().equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType()))

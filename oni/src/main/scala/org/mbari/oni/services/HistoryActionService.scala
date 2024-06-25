@@ -82,7 +82,8 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory, fastPhylo
 
             attempt match
                 case Left(e)  => throw e
-                case Right(v) => ExtendedHistory.from(v.getConceptMetadata.getConcept.getPrimaryConceptName.getName, v)
+                case Right(v) =>
+                    ExtendedHistory.from(v.getConceptMetadata.getConcept.getName, v)
         )
 
     def approve(historyId: Long, username: String): Either[Throwable, ExtendedHistory] =

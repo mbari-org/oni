@@ -50,7 +50,7 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
     @ManyToOne(
         optional = false,
         targetEntity = ConceptEntity.class,
-        fetch = FetchType.EAGER,
+        fetch = FetchType.LAZY,
         cascade = {CascadeType.MERGE, CascadeType.REFRESH}
     )
     @JoinColumn(

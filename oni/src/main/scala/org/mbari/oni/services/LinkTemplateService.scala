@@ -153,6 +153,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
             case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
             case Some(lr) =>
                 conceptMetadata.removeLinkTemplate(lr)
+                entityManger.remove(lr)
                 Right(true)
 
     def inTxnApproveDelete(

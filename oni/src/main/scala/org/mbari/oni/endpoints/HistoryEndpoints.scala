@@ -8,18 +8,23 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, ExtendedHistory, Page}
+import org.mbari.oni.AccessDenied
+import org.mbari.oni.domain.{ErrorMsg, ExtendedHistory, Page, ServerError, Unauthorized}
 import org.mbari.oni.etc.circe.CirceCodecs.given
-import org.mbari.oni.services.HistoryService
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.jdbc.FastPhylogenyService
+import org.mbari.oni.services.{HistoryActionService, HistoryService}
 import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.shared.Identity
 
-class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
+class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)
+                      (using jwtService: JwtService) extends Endpoints:
 
     private val service      = HistoryService(entityManagerFactory)
+    private val historyActionService = HistoryActionService(entityManagerFactory, fastPhylogenyService)
     private val base         = "history"
     private val tag          = "History"
     private val defaultLimit = 100
@@ -60,12 +65,75 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpo
         handleErrors(attempt)
     }
 
+    val deleteEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
+        .delete
+        .in(base / path[Long])
+        .out(jsonBody[Unit])
+        .name("deleteHistory")
+        .description("Delete a history record")
+        .tag(tag)
+
+    val deleteEndpointImpl: ServerEndpoint[Any, Identity] = deleteEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => id =>
+            if (userAccount.isAdministrator) {
+                service.deleteById(id)
+                    .fold(
+                        error => Left(ServerError(error.getMessage)),
+                        _ => Right(())
+                    )
+            } else Left(Unauthorized(s"User, ${userAccount.username} is not an administrator"))
+        }
+
+    def approveEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
+        .post
+        .in(base / "approve" / path[Long])
+        .out(jsonBody[ExtendedHistory])
+        .name("approveHistory")
+        .description("Approve a history record")
+        .tag(tag)
+
+    def approveEndpointImpl: ServerEndpoint[Any, Identity] = approveEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => id =>
+            historyActionService.approve(id, userAccount.username)
+                .fold(
+                    error => Left(ServerError(error.getMessage)),
+                    history => Right(history)
+                )
+        }
+
+
+    def rejectEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
+        .post
+        .in(base / "reject" / path[Long])
+        .out(jsonBody[ExtendedHistory])
+        .name("rejectHistory")
+        .description("Reject a history record")
+        .tag(tag)
+
+    def rejectEndpointImpl: ServerEndpoint[Any, Identity] = rejectEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => id =>
+            historyActionService.reject(id, userAccount.username)
+                .fold(
+                    error => Left(ServerError(error.getMessage)),
+                    history => Right(history)
+                )
+        }
+
     override def all: List[Endpoint[_, _, _, _, _]] = List(
+        deleteEndpoint,
         approvedEndpoints,
-        pendingEndpoint
+        pendingEndpoint,
+        approveEndpoint,
+        rejectEndpoint
     )
 
     override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+        deleteEndpointImpl,
         approvedEndpointsImpl,
-        pendingEndpointImpl
+        pendingEndpointImpl,
+        approveEndpointImpl,
+        rejectEndpointImpl
     )

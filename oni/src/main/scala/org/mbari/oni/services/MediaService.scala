@@ -122,6 +122,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                 Left(ItemNotFound(s"${concept.getName} does not have a media with URL of ${history.getNewValue}"))
             case Some(m) =>
                 conceptMetadata.removeMedia(m)
+                entityManger.remove(m)
                 Right(true)
 
     def inTxnApproveDelete(

@@ -2,7 +2,7 @@
 
 ![Build](https://github.com/mbari-org/oni/actions/workflows/test.yml/badge.svg)
 
-![MBARI logo](oni/src/docs/assets/images/logo-mbari-3b.png)
+![MBARI logo](oni/src/docs/_assets/images/logo-mbari-3b.png)
 
 ## Overview
 

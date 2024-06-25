@@ -32,7 +32,7 @@ object EntityManagers:
                     log.atInfo.log("Missing root concept")
                     Left(MissingRootConcept)
                 case NonFatal(e) =>
-                    log.atError.withCause(e).log("Error in transaction")
+                    log.atError.withCause(e).log("Error in transaction: " + e.getCause)
                     Left(e)
             finally
                 if transaction.isActive then

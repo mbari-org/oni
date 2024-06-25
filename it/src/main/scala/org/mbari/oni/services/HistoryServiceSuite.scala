@@ -17,6 +17,7 @@
 package org.mbari.oni.services
 
 import org.mbari.oni.domain.{ExtendedHistory, RawConcept}
+import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
 
 import scala.jdk.CollectionConverters.*
@@ -70,4 +71,48 @@ trait HistoryServiceSuite extends DataInitializer:
             case Left(e)         => fail(e.getMessage)
             case Right(obtained) =>
                 assertEquals(expected.size, obtained.size)
+    }
+
+    test("findById") {
+        val root     = init(2, 6)
+        assert(root != null)
+        val opt = root
+            .getDescendants
+            .asScala
+            .flatMap(ExtendedHistory.from)
+            .toSet
+            .headOption
+
+
+        val result = for
+            expected <- opt
+            id <- expected.id
+        yield
+            historyService.findById(id) match
+                case Left(e)         => fail(e.getMessage)
+                case Right(obtained) =>
+                    assertEquals(expected, obtained)
+    }
+
+    test("deleteById") {
+        val root = init(2, 6)
+        assert(root != null)
+        val opt = root
+            .getDescendants
+            .asScala
+            .flatMap(ExtendedHistory.from)
+            .toSet
+            .headOption
+
+        val result = for
+            expected <- opt
+            id <- expected.id
+        yield
+            historyService.deleteById(id) match
+                case Left(e) => fail(e.getMessage)
+                case Right(_) =>
+                    historyService.findById(id) match
+                        case Left(_) => assert(true)
+                        case Right(_) => fail("History not deleted")
+
     }

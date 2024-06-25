@@ -148,6 +148,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
             case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
             case Some(lr) =>
                 conceptMetadata.removeLinkRealization(lr)
+                entityManger.remove(lr)
                 Right(true)
 
     def inTxnApproveDelete(

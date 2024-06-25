@@ -43,7 +43,7 @@ object ExtendedHistory:
         )
 
     def from(concept: ConceptEntity): Set[ExtendedHistory] =
-        val name = concept.getPrimaryConceptName.getName
+        val name = concept.getName
         concept
             .getConceptMetadata
             .getHistories

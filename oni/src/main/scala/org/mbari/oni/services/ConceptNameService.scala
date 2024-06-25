@@ -167,18 +167,23 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
         userEntity: UserAccountEntity,
         entityManager: EntityManager
     ): Either[Throwable, Boolean] =
-        val concept = historyEntity.getConceptMetadata.getConcept
-        Option(concept.getConceptName(historyEntity.getNewValue)) match
-            case None              => Left(ConceptNameNotFound(historyEntity.getNewValue))
-            case Some(conceptName) =>
-                if conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType) then
-                    // Find the old primary name
-                    Option(concept.getConceptName(historyEntity.getOldValue))
-                        .foreach(oldPrimaryName => concept.removeConceptName(oldPrimaryName))
-                    // set the concept name to the old primary name
-                    conceptName.setName(historyEntity.getOldValue)
-                else concept.removeConceptName(conceptName)
-                Right(true)
+        try
+            val concept = historyEntity.getConceptMetadata.getConcept
+            Option(concept.getConceptName(historyEntity.getNewValue)) match
+                case None              => Left(ConceptNameNotFound(historyEntity.getNewValue))
+                case Some(conceptName) =>
+                    if conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType) then
+                        // Find the old primary name
+                        Option(concept.getConceptName(historyEntity.getOldValue))
+                            .foreach(oldPrimaryName => concept.removeConceptName(oldPrimaryName))
+                        // set the concept name to the old primary name
+                        conceptName.setName(historyEntity.getOldValue)
+                    else
+                        concept.removeConceptName(conceptName)
+                        entityManager.remove(conceptName)
+                    Right(true)
+        catch
+            case e: Throwable => Left(e)
 
     def inTxnApproveDelete(
         historyEntity: HistoryEntity,

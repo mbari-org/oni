@@ -57,6 +57,8 @@ case class UserAccount(
         entity.setId(id.map(_.asInstanceOf[java.lang.Long]).orNull)
         entity
 
+    lazy val isAdministrator: Boolean = role == UserAccountRoles.ADMINISTRATOR.getRoleName
+
 object UserAccount:
 
     def from(userAccount: UserAccountEntity): UserAccount = UserAccount(

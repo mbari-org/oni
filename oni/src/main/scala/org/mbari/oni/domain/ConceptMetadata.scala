@@ -17,15 +17,15 @@ import org.mbari.oni.etc.jdk.Numbers.*
  * @since 2016-11-17T15:54:00
  */
 case class ConceptMetadata(
-    name: String,
-    alternateNames: Set[String] = Set.empty,
-    media: Set[Media] = Set.empty,
-    descriptors: Set[Link] = Set.empty,
-    rank: Option[String] = None,
-    author: Option[String] = None,
-    aphiaId: Option[Long] = None,
-    references: Set[Reference] = Set.empty,
-    id: Option[Long] = None
+                              name: String,
+                              alternateNames: Set[String] = Set.empty,
+                              media: Set[Media] = Set.empty,
+                              linkRealizations: Set[Link] = Set.empty,
+                              rank: Option[String] = None,
+                              author: Option[String] = None,
+                              aphiaId: Option[Long] = None,
+                              references: Set[Reference] = Set.empty,
+                              id: Option[Long] = None
 ) {}
 
 object ConceptMetadata:
@@ -46,7 +46,7 @@ object ConceptMetadata:
             .toSet
             .map(Media.from)
 
-        val descriptors = concept
+        val linkRealizations = concept
             .getConceptMetadata
             .getLinkRealizations
             .asScala
@@ -73,7 +73,7 @@ object ConceptMetadata:
             name,
             alternateNames,
             media,
-            descriptors,
+            linkRealizations,
             Option(rank),
             author,
             concept.getAphiaId.asLong,

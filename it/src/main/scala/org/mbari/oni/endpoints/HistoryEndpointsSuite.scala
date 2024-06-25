@@ -20,10 +20,15 @@ import org.mbari.oni.domain.{ExtendedHistory, Page}
 import org.mbari.oni.jpa.DataInitializer
 import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.jdbc.FastPhylogenyService
 
 trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer:
 
-    lazy val endpoints: HistoryEndpoints = HistoryEndpoints(entityManagerFactory)
+
+    given jwtService: JwtService         = JwtService("mbari", "foo", "bar")
+    lazy val fastPhylogenyService = new FastPhylogenyService(entityManagerFactory)
+    lazy val endpoints: HistoryEndpoints = HistoryEndpoints(entityManagerFactory, fastPhylogenyService)
 
     test("pending") {
         init(3, 5)

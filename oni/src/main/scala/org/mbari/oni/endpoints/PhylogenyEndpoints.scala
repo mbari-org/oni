@@ -20,7 +20,8 @@ import jakarta.persistence.EntityManagerFactory
 
 class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
-    private val service = FastPhylogenyService(entityManagerFactory)
+    /** This services does caching so we should share it  */
+    val service: FastPhylogenyService = FastPhylogenyService(entityManagerFactory)
     private val base    = "phylogeny"
     private val tag     = "Phylogeny"
 
