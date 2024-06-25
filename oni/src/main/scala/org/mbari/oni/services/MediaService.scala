@@ -143,5 +143,6 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             case None    =>
                 Left(ItemNotFound(s"${concept.getName} does not have a media with URL of ${history.getOldValue}"))
             case Some(m) =>
-                conceptMetadata.addMedia(m)
+                conceptMetadata.removeMedia(m)
+                entityManger.remove(m)
                 Right(true)

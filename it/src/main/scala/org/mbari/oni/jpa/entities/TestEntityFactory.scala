@@ -39,6 +39,13 @@ object TestEntityFactory:
         if depth > 1 then buildTree(root, depth - 1, maxBreadth)
         root
 
+    def buildShallowTree(numChildren: Int = 1): ConceptEntity =
+        val root = buildRoot(1, 0)
+        for _ <- 0 until numChildren do
+            val entity = buildNode(0)
+            root.addChildConcept(entity)
+        root
+
     private def buildTree(parent: ConceptEntity, depth: Int = 0, maxBreadth: Int = 0): Unit =
         if depth > 0 then
             val numberChildren = if maxBreadth > 1 then random.between(1, maxBreadth + 1) else 1

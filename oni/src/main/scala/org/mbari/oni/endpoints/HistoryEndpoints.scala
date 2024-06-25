@@ -20,14 +20,15 @@ import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.shared.Identity
 
-class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)
-                      (using jwtService: JwtService) extends Endpoints:
+class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
+    jwtService: JwtService
+) extends Endpoints:
 
-    private val service      = HistoryService(entityManagerFactory)
+    private val service              = HistoryService(entityManagerFactory)
     private val historyActionService = HistoryActionService(entityManagerFactory, fastPhylogenyService)
-    private val base         = "history"
-    private val tag          = "History"
-    private val defaultLimit = 100
+    private val base                 = "history"
+    private val tag                  = "History"
+    private val defaultLimit         = 100
 
     val pendingEndpoint: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
         .get
@@ -65,6 +66,32 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         handleErrors(attempt)
     }
 
+    val findByIdEndpoint = openEndpoint
+        .get
+        .in(base / path[Long])
+        .out(jsonBody[ExtendedHistory])
+        .name("findHistoryById")
+        .description("Find a history record by its id")
+        .tag(tag)
+
+    val findByIdEndpointImpl: ServerEndpoint[Any, Identity] = findByIdEndpoint
+        .serverLogic { id =>
+            handleErrors(service.findById(id))
+        }
+
+    val findByConceptNameEndpoint = openEndpoint
+        .get
+        .in(base / "concept" / path[String])
+        .out(jsonBody[Seq[ExtendedHistory]])
+        .name("findHistoryByConceptName")
+        .description("Find a history record by its concept name")
+        .tag(tag)
+
+    val findByConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = findByConceptNameEndpoint
+        .serverLogic { conceptName =>
+            handleErrors(service.findByConceptName(conceptName))
+        }
+
     val deleteEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
         .delete
         .in(base / path[Long])
@@ -76,46 +103,48 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
     val deleteEndpointImpl: ServerEndpoint[Any, Identity] = deleteEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => id =>
-            if (userAccount.isAdministrator) {
-                service.deleteById(id)
+            if userAccount.isAdministrator then
+                service
+                    .deleteById(id)
                     .fold(
                         error => Left(ServerError(error.getMessage)),
                         _ => Right(())
                     )
-            } else Left(Unauthorized(s"User, ${userAccount.username} is not an administrator"))
+            else Left(Unauthorized(s"User, ${userAccount.username} is not an administrator"))
         }
 
-    def approveEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
-        .post
+    val approveEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
+        .put
         .in(base / "approve" / path[Long])
         .out(jsonBody[ExtendedHistory])
         .name("approveHistory")
         .description("Approve a history record")
         .tag(tag)
 
-    def approveEndpointImpl: ServerEndpoint[Any, Identity] = approveEndpoint
+    val approveEndpointImpl: ServerEndpoint[Any, Identity] = approveEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => id =>
-            historyActionService.approve(id, userAccount.username)
+            historyActionService
+                .approve(id, userAccount.username)
                 .fold(
                     error => Left(ServerError(error.getMessage)),
                     history => Right(history)
                 )
         }
 
-
-    def rejectEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
-        .post
+    val rejectEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
+        .put
         .in(base / "reject" / path[Long])
         .out(jsonBody[ExtendedHistory])
         .name("rejectHistory")
         .description("Reject a history record")
         .tag(tag)
 
-    def rejectEndpointImpl: ServerEndpoint[Any, Identity] = rejectEndpoint
+    val rejectEndpointImpl: ServerEndpoint[Any, Identity] = rejectEndpoint
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => id =>
-            historyActionService.reject(id, userAccount.username)
+            historyActionService
+                .reject(id, userAccount.username)
                 .fold(
                     error => Left(ServerError(error.getMessage)),
                     history => Right(history)
@@ -123,17 +152,21 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
-        deleteEndpoint,
+        findByConceptNameEndpoint,
+        approveEndpoint,
+        rejectEndpoint,
         approvedEndpoints,
         pendingEndpoint,
-        approveEndpoint,
-        rejectEndpoint
+        deleteEndpoint,
+        findByIdEndpoint
     )
 
     override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
-        deleteEndpointImpl,
+        findByConceptNameEndpointImpl,
+        approveEndpointImpl,
+        rejectEndpointImpl,
         approvedEndpointsImpl,
         pendingEndpointImpl,
-        approveEndpointImpl,
-        rejectEndpointImpl
+        deleteEndpointImpl,
+        findByIdEndpointImpl
     )

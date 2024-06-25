@@ -8,7 +8,10 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.domain.ILink
+import org.mbari.oni.jpa.IPersistentObject
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
+
+import org.mbari.oni.etc.jdk.Numbers.{*, given}
 
 /**
  * @author
@@ -32,5 +35,5 @@ case class Link(linkName: String, toConcept: String, linkValue: String, id: Opti
         l
 
 object Link:
-    def from(link: ILink): Link =
-        Link(link.getLinkName, link.getToConcept, link.getLinkValue)
+    def from(link: ILink with IPersistentObject): Link =
+        Link(link.getLinkName, link.getToConcept, link.getLinkValue, longConverter(link.getId))

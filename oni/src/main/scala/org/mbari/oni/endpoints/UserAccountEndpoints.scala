@@ -70,8 +70,8 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     }
 
     // deleteByUserName
-    val deleteByUserNameEndpoint: Endpoint[Unit, String, ErrorMsg, Unit, Any] =
-        openEndpoint
+    val deleteByUserNameEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] =
+        secureEndpoint
             .delete
             .in(base / path[String]("name"))
             .out(jsonBody[Unit])
@@ -79,9 +79,11 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Delete a user account by username")
             .tag(tag)
 
-    val deleteByUserNameEndpointImpl: ServerEndpoint[Any, Identity] = deleteByUserNameEndpoint.serverLogic { name =>
-        handleErrors(service.deleteByUserName(name))
-    }
+    val deleteByUserNameEndpointImpl: ServerEndpoint[Any, Identity] = deleteByUserNameEndpoint
+        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+        .serverLogic { _ => name =>
+            handleErrors(service.deleteByUserName(name))
+        }
 
     // create
     val createEndpoint: Endpoint[Option[String], UserAccount, ErrorMsg, UserAccount, Any] =

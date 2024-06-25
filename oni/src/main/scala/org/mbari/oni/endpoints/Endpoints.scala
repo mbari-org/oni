@@ -50,6 +50,8 @@ trait Endpoints:
     implicit lazy val sURL: Schema[URL]                                           = Schema.string
     implicit lazy val sInstant: Schema[Instant]                                   = Schema.string
     implicit lazy val sDoi: Schema[ReferenceQuery]                                = Schema.derived[ReferenceQuery]
+    implicit lazy val sLinkCreate: Schema[LinkCreate]                             = Schema.derived[LinkCreate]
+    implicit lazy val sLinkUpdate: Schema[LinkUpdate]                             = Schema.derived[LinkUpdate]
     implicit lazy val sMedia: Schema[Media]                                       = Schema.derived[Media]
     implicit lazy val sPaging: Schema[Paging]                                     = Schema.derived[Paging]
     implicit lazy val sPrefNode: Schema[PrefNode]                                 = Schema.derived[PrefNode]

@@ -56,7 +56,8 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
             targetEntity = HistoryEntity.class,
             mappedBy = "conceptMetadata",
             fetch = FetchType.LAZY,
-            cascade = {CascadeType.ALL}
+            cascade = {CascadeType.ALL},
+            orphanRemoval = true
     )
     @OrderBy(value = "creationDate")
     private Set<HistoryEntity> histories;
@@ -82,7 +83,8 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
             targetEntity = LinkRealizationEntity.class,
             mappedBy = "conceptMetadata",
             fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
     private Set<LinkRealizationEntity> linkRealizations;
 
@@ -90,7 +92,8 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
             targetEntity = LinkTemplateEntity.class,
             mappedBy = "conceptMetadata",
             fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
     private Set<LinkTemplateEntity> linkTemplates;
 
@@ -99,7 +102,8 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
             targetEntity = MediaEntity.class,
             mappedBy = "conceptMetadata",
             fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
     )
     private Set<MediaEntity> medias;
 

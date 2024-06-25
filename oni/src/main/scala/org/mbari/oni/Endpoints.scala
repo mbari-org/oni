@@ -8,7 +8,18 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
+import org.mbari.oni.endpoints.{
+    AuthorizationEndpoints,
+    ConceptEndpoints,
+    ConceptNameEndpoints,
+    HealthEndpoints,
+    HistoryEndpoints,
+    LinkEndpoints,
+    PhylogenyEndpoints,
+    PrefNodeEndpoints,
+    ReferenceEndpoints,
+    UserAccountEndpoints
+}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
@@ -23,7 +34,7 @@ object Endpoints:
 
     val entityMangerFactory: EntityManagerFactory = AppConfig.DefaultEntityManagerFactory
 
-    val phylogenyEndpoints: PhylogenyEndpoints         = PhylogenyEndpoints(entityMangerFactory)
+    val phylogenyEndpoints: PhylogenyEndpoints = PhylogenyEndpoints(entityMangerFactory)
 
     val authorizationEndpoints: AuthorizationEndpoints = AuthorizationEndpoints(entityMangerFactory)
     val conceptEndpoints: ConceptEndpoints             = ConceptEndpoints(entityMangerFactory)

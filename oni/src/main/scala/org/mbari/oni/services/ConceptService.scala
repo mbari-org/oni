@@ -29,6 +29,7 @@ import org.mbari.oni.jpa.entities.{
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.ConceptRepository
 import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -268,7 +269,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         for
             user    <- userAccountService.verifyWriteAccess(Some(userName))
             concept <- txn(user.toEntity)
-            c <- findByName(conceptCreate.name)
+            c       <- findByName(conceptCreate.name)
         yield c
 
     /**
@@ -297,13 +298,16 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                     )
 
                 repo.findByName(name).toScala match
-                    case None    => throw ConceptNameNotFound(name)
+                    case None               => throw ConceptNameNotFound(name)
                     case Some(parentEntity) =>
-
                         // Only update if the parent is different
                         if !conceptEntity.getParentConcept.hasConceptName(name) then
                             val history =
-                                HistoryEntityFactory.replaceParentConcept(userEntity, conceptEntity.getParentConcept, parentEntity)
+                                HistoryEntityFactory.replaceParentConcept(
+                                    userEntity,
+                                    conceptEntity.getParentConcept,
+                                    parentEntity
+                                )
                             conceptEntity.getConceptMetadata.addHistory(history)
                             if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                             conceptEntity.getParentConcept match
@@ -443,12 +447,12 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             val childConcept  = parentConcept
                 .getChildConcepts
                 .stream()
-                .filter(c => c.getPrimaryConceptName.getName == historyEntity.getNewValue)
+                .filter(c => c.getName == historyEntity.getOldValue)
                 .findFirst()
                 .toScala
 
             childConcept match
-                case None        => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getNewValue)
+                case None        => throw ChildConceptNotFound(parentConcept.getName, historyEntity.getOldValue)
                 case Some(child) =>
                     val n = repo.deleteBranchByName(child.getName)
                     if n == 0 then
@@ -462,16 +466,24 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         entityManager: EntityManager
     ): Either[Throwable, Boolean] =
         try
-            val repo             = ConceptRepository(entityManager)
-            val concept          = historyEntity.getConceptMetadata.getConcept
+            val repo    = ConceptRepository(entityManager)
+            val concept = historyEntity.getConceptMetadata.getConcept
+
+            val newParentConcept = repo.findByName(historyEntity.getNewValue).toScala match
+                case None    => throw ConceptNameNotFound(historyEntity.getNewValue)
+                case Some(p) => p
             val oldParentConcept = repo.findByName(historyEntity.getOldValue).toScala match
                 case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
                 case Some(p) => p
 
-            concept.getParentConcept match
-                case null   => throw new IllegalArgumentException(s"Cannot set the parent of the root concept!")
-                case parent =>
-                    parent.removeChildConcept(concept)
-                    oldParentConcept.addChildConcept(concept)
-                    Right(true)
+            val cc = entityManager.merge(concept) // Required!!
+//            newParentConcept.removeChildConcept(concept)
+            oldParentConcept.addChildConcept(cc)
+//            entityManager.merge(oldParentConcept)
+            log.atInfo
+                .log(
+                    s"Rejected replace parent. Moving ${concept.getName} from ${newParentConcept.getName} back to ${oldParentConcept.getName} "
+                )
+            Right(true)
+
         catch case e: Throwable => Left(e)

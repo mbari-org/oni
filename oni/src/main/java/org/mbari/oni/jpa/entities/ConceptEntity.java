@@ -56,7 +56,8 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         mappedBy = "concept",
         fetch = FetchType.LAZY,
         cascade = { CascadeType.ALL },
-        targetEntity = ConceptMetadataEntity.class
+        targetEntity = ConceptMetadataEntity.class,
+        orphanRemoval = true
     )
     private ConceptMetadataEntity conceptMetadata;
 

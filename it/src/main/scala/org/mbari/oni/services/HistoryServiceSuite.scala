@@ -74,30 +74,28 @@ trait HistoryServiceSuite extends DataInitializer:
     }
 
     test("findById") {
-        val root     = init(2, 6)
+        val root = init(2, 6)
         assert(root != null)
-        val opt = root
+        val opt  = root
             .getDescendants
             .asScala
             .flatMap(ExtendedHistory.from)
             .toSet
             .headOption
 
-
         val result = for
             expected <- opt
-            id <- expected.id
-        yield
-            historyService.findById(id) match
-                case Left(e)         => fail(e.getMessage)
-                case Right(obtained) =>
-                    assertEquals(expected, obtained)
+            id       <- expected.id
+        yield historyService.findById(id) match
+            case Left(e)         => fail(e.getMessage)
+            case Right(obtained) =>
+                assertEquals(expected, obtained)
     }
 
     test("deleteById") {
         val root = init(2, 6)
         assert(root != null)
-        val opt = root
+        val opt  = root
             .getDescendants
             .asScala
             .flatMap(ExtendedHistory.from)
@@ -106,13 +104,12 @@ trait HistoryServiceSuite extends DataInitializer:
 
         val result = for
             expected <- opt
-            id <- expected.id
-        yield
-            historyService.deleteById(id) match
-                case Left(e) => fail(e.getMessage)
-                case Right(_) =>
-                    historyService.findById(id) match
-                        case Left(_) => assert(true)
-                        case Right(_) => fail("History not deleted")
+            id       <- expected.id
+        yield historyService.deleteById(id) match
+            case Left(e)  => fail(e.getMessage)
+            case Right(_) =>
+                historyService.findById(id) match
+                    case Left(_)  => assert(true)
+                    case Right(_) => fail("History not deleted")
 
     }

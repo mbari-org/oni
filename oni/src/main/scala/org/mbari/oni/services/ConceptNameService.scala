@@ -141,6 +141,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                 if conceptNameOpt.isEmpty then throw ConceptNameNotFound(name)
 
                 val conceptName = conceptNameOpt.get
+
                 if conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType) then
                     throw new IllegalArgumentException("Cannot delete a primary name. Use add name instead.")
 
@@ -182,8 +183,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                         concept.removeConceptName(conceptName)
                         entityManager.remove(conceptName)
                     Right(true)
-        catch
-            case e: Throwable => Left(e)
+        catch case e: Throwable => Left(e)
 
     def inTxnApproveDelete(
         historyEntity: HistoryEntity,

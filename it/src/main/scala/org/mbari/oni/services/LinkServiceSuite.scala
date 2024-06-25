@@ -71,7 +71,7 @@ trait LinkServiceSuite extends DataInitializer:
                 linkService.findLinkTemplatesByNameForConcept(expected.concept, expected.linkName) match
                     case Left(e)       => fail(e.getMessage)
                     case Right(actual) =>
-                        assertEquals(expected.toLink, actual.head)
+                        assertEquals(expected.toLink, actual.head.copy(id = None))
             case None           => fail("No link templates found")
     }
 
@@ -92,6 +92,6 @@ trait LinkServiceSuite extends DataInitializer:
                 linkService.findLinkRealizationsByLinkName(expected.linkName) match
                     case Left(e)       => fail(e.getMessage)
                     case Right(actual) =>
-                        assertEquals(expected, actual.head)
+                        assertEquals(expected, actual.head.copy(id = None))
             case None           => fail("No link templates found")
     }

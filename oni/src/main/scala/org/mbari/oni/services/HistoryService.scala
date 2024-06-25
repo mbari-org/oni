@@ -42,7 +42,8 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
     def findById(id: Long): Either[Throwable, ExtendedHistory] =
         entityManagerFactory.transaction(entityManager =>
             val repo = HistoryRepository(entityManager)
-            val opt = repo.findByPrimaryKey(classOf[HistoryEntity], id)
+            val opt  = repo
+                .findByPrimaryKey(classOf[HistoryEntity], id)
                 .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h))
                 .toScala
 

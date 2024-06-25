@@ -20,10 +20,10 @@ import jakarta.persistence.EntityManagerFactory
 
 class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
 
-    /** This services does caching so we should share it  */
+    /** This services does caching so we should share it */
     val service: FastPhylogenyService = FastPhylogenyService(entityManagerFactory)
-    private val base    = "phylogeny"
-    private val tag     = "Phylogeny"
+    private val base                  = "phylogeny"
+    private val tag                   = "Phylogeny"
 
     val upEndpoint: Endpoint[Unit, String, ErrorMsg, SerdeConcept, Any] = openEndpoint
         .get

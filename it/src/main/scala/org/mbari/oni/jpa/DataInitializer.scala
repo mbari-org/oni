@@ -23,7 +23,7 @@ import org.mbari.oni.jdbc.FastPhylogenyService
 
 trait DataInitializer extends DatabaseFunSuite:
 
-    protected val log = System.getLogger(getClass.getName)
+    protected val log: System.Logger = System.getLogger(getClass.getName)
 
     lazy val conceptService: ConceptService = new ConceptService(entityManagerFactory)
 
@@ -35,6 +35,16 @@ trait DataInitializer extends DatabaseFunSuite:
                 log.atError.withCause(error).log("Failed to initialize test data")
                 throw error
 
+    def initShallowTree(numChildren: Int): ConceptEntity =
+        val root = TestEntityFactory.buildShallowTree(numChildren)
+        conceptService.init(root) match
+            case Right(entity) => entity
+            case Left(error)   =>
+                log.atError.withCause(error).log("Failed to initialize test data")
+                throw error
+
     override def beforeEach(context: BeforeEach): Unit =
-        for root <- conceptService.findRoot()
+        for
+            root <- conceptService.findRoot()
+            _    <- Some(log.atDebug.log(s"Deleting root concept: ${root.name}"))
         do conceptService.deleteByName(root.name)

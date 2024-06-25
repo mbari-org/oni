@@ -93,6 +93,12 @@ object CirceCodecs:
     given Decoder[Link] = deriveDecoder
     given Encoder[Link] = deriveEncoder
 
+    given Decoder[LinkCreate] = deriveDecoder
+    given Encoder[LinkCreate] = deriveEncoder
+
+    given Decoder[LinkUpdate] = deriveDecoder
+    given Encoder[LinkUpdate] = deriveEncoder
+
     given Decoder[Media] = deriveDecoder
     given Encoder[Media] = deriveEncoder
 
