@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.endpoints
+package org.mbari.oni.services
 
-import org.mbari.oni.SqlServerMixin
+import org.mbari.oni.PostgresMixin
 
-class SqlServerLinkRealizationEndpointsSuite extends LinkRealizationEndpointsSuite with SqlServerMixin {
+class PostgresLinkServiceSuite extends LinkServiceSuite with PostgresMixin {
 
 }

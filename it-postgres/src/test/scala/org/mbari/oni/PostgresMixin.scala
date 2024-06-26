@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.endpoints
+package org.mbari.oni
 
-import org.mbari.oni.SqlServerMixin
+import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.jpa.PostgresEntityManagerFactoryProvider
 
-class SqlServerLinkRealizationEndpointsSuite extends LinkRealizationEndpointsSuite with SqlServerMixin {
+trait PostgresMixin {
+
+
+
+    def entityManagerFactory: EntityManagerFactory = PostgresEntityManagerFactoryProvider.entityManagerFactory
+
 
 }
