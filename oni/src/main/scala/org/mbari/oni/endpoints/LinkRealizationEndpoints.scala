@@ -89,6 +89,13 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Update a link realization")
         .tag(tag)
 
+
+    val updateImpl: ServerEndpoint[Any, Identity] = update
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => (id, linkUpdate) =>
+            handleErrors(service.updateById(id, linkUpdate, userAccount.username))
+        }
+
     val delete: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
         .delete
         .in(base / path[Long]("id"))
@@ -121,6 +128,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkRealizationsByConceptNameImpl,
         findLinkRealizationByPrototypeImpl,
         createImpl,
+        updateImpl,
         deleteImpl,
         findLinkRealizationByIdImpl
     )

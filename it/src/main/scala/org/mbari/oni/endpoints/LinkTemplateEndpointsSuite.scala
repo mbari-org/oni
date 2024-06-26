@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ExtendedLink, LinkCreate, LinkUpdate}
+import org.mbari.oni.domain.{ExtendedLink, ILink, LinkCreate, LinkUpdate}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.UserAuthMixin
@@ -50,7 +50,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             endpoints.findLinkTemplateByConceptNameImpl,
             s"http://test.com/v1/linktemplates/concept/$conceptName",
             response => {
-                println(response.body)
+//                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
                     .sortBy(_.linkName)
@@ -69,7 +69,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             "http://test.com/v1/linktemplates/prototype",
             prototype.stringify,
             response => {
-                println(response.body)
+//                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
                 assertEquals(obtained, Seq(link))
@@ -80,14 +80,14 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
     test("create") {
         val root = init(1, 0)
         val linkTemplate = TestEntityFactory.createLinkTemplate()
-        val linkCreate = LinkCreate(root.getName, linkTemplate.getLinkName, linkTemplate.getLinkValue)
+        val linkCreate = LinkCreate(root.getName, linkTemplate.getLinkName, ILink.VALUE_SELF, linkTemplate.getLinkValue)
         val attempt = testWithUserAuth(user =>
             runPost(
                 endpoints.createLinkTemplateImpl,
                 "http://test.com/v1/linktemplates",
                 linkCreate.stringify,
                 response => {
-                    println(response.body)
+//                    println(response.body)
                     assertEquals(response.code, StatusCode.Ok)
                     val obtained = checkResponse[ExtendedLink](response.body)
                     assertEquals(obtained.toLink, linkCreate.toLink)
@@ -111,7 +111,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 s"http://test.com/v1/linktemplates/${link.id.get}",
                 linkUpdate.stringify,
                 response => {
-                    println(response.body)
+//                    println(response.body)
                     assertEquals(response.code, StatusCode.Ok)
                     val obtained = checkResponse[ExtendedLink](response.body)
                     assertEquals(obtained.linkValue, linkUpdate.linkValue.getOrElse(""))
@@ -120,6 +120,9 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             ),
             password
         )
+        attempt match
+            case Left(value)  => fail(value.toString)
+            case Right(value) => assert(true)
 
     }
 
@@ -147,7 +150,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             endpoints.findLinkTemplateByIdImpl,
             s"http://test.com/v1/linktemplates/${link.id.get}",
             response => {
-                println(response.body)
+//                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[ExtendedLink](response.body)
                 assertEquals(obtained, link)
