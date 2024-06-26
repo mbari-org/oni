@@ -22,8 +22,7 @@ import org.mbari.oni.jpa.DataInitializer
 import scala.jdk.CollectionConverters.*
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.services.{UserAccountService, UserAuthMixin}
+import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
 
 trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:

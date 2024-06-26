@@ -9,7 +9,7 @@ package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.ConceptNameNotFound
-import org.mbari.oni.domain.Link
+import org.mbari.oni.domain.{ExtendedLink, Link}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
 
@@ -59,11 +59,11 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
                 case None          => throw ConceptNameNotFound(conceptName)
         )
 
-    def findLinkRealizationsByLinkName(linkName: String): Either[Throwable, Seq[Link]] =
+    def findLinkRealizationsByLinkName(linkName: String): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
             repo.findAllByLinkName(linkName)
                 .asScala
-                .map(Link.from)
+                .map(ExtendedLink.from)
                 .toSeq
         )

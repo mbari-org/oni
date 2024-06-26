@@ -8,7 +8,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, Link}
+import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.services.LinkService
 import sttp.shared.Identity
@@ -29,7 +29,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .in(base)
         .out(jsonBody[Seq[Link]])
         .name("links")
-        .description("Get all links")
+        .description("Get all link templates")
         .tag(tag)
 
     val allLinksEndpointImpl: ServerEndpoint[Any, Identity] = allLinksEndpoint.serverLogic { _ =>
@@ -64,10 +64,10 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         }
 
     // get link realizations for a concept
-    val linkRealizationsEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[Link], Any] = openEndpoint
+    val linkRealizationsEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
         .get
         .in(base / "query" / "linkrealizations" / path[String]("linkName"))
-        .out(jsonBody[Seq[Link]])
+        .out(jsonBody[Seq[ExtendedLink]])
         .name("linkRealizations")
         .description("Get all link realizations for a link name")
         .tag(tag)

@@ -88,6 +88,13 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
         .description("Update a link template")
         .tag(tag)
 
+
+    val updateLinkTemplateImpl: ServerEndpoint[Any, Identity] = updateLinkTemplate
+        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+        .serverLogic { userAccount => (id, link) =>
+            handleErrors(service.updateById(id, link, userAccount.username))
+        }
+
     val deleteLinkTemplate: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
         .delete
         .in(base / path[Long]("id"))
@@ -120,6 +127,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
         findLinkTemplateByConceptNameImpl,
         findLinkTemplateByPrototypeImpl,
         createLinkTemplateImpl,
+        updateLinkTemplateImpl,
         deleteLinkTemplateImpl,
         findLinkTemplateByIdImpl
     )

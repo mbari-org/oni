@@ -16,12 +16,19 @@
 
 package org.mbari.oni.endpoints
 
+import org.mbari.oni.domain.ExtendedLink
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.UserAuthMixin
 
+import scala.jdk.CollectionConverters.*
+
 trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
-    test("findLinkRealizationsByConceptName") {}
+   
+
+    test("findLinkRealizationsByConceptName") {
+        
+    }
     test("findLinkRealizationByPrototype") {}
     test("create") {}
     test("update") {}

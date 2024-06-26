@@ -86,12 +86,11 @@ trait LinkServiceSuite extends DataInitializer:
             .sortBy(_.getLinkName)
             .map(ExtendedLink.from)
             .headOption
-            .map(_.toLink)
         opt match
             case Some(expected) =>
                 linkService.findLinkRealizationsByLinkName(expected.linkName) match
                     case Left(e)       => fail(e.getMessage)
                     case Right(actual) =>
-                        assertEquals(expected, actual.head.copy(id = None))
+                        assertEquals(actual.head, expected)
             case None           => fail("No link templates found")
     }
