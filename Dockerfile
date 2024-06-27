@@ -22,4 +22,4 @@ COPY oni/target/universal/stage/ ${APP_HOME}/
 
 EXPOSE 8080
 
-ENTRYPOINT $APP_HOME/bin/annosaurus
+ENTRYPOINT $APP_HOME/bin/oni
