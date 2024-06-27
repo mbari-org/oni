@@ -15,7 +15,6 @@ ARCH=$(uname -m)
 if [[ $ARCH == 'arm64' ]]; then
     # https://betterprogramming.pub/how-to-actually-deploy-docker-images-built-on-a-m1-macs-with-apple-silicon-a35e39318e97
     docker buildx build \
-      -f oni/src/docker/Dockerfile \
       --platform linux/amd64,linux/arm64 \
       -t mbari/oni:${VCS_REF} \
       -t mbari/oni:latest \
@@ -24,7 +23,6 @@ if [[ $ARCH == 'arm64' ]]; then
 else
     docker build --build-arg BUILD_DATE=$BUILD_DATE \
                  --build-arg VCS_REF=$VCS_REF \
-                 -f oni/src/docker/Dockerfile \
                   -t mbari/oni:${VCS_REF} \
                   -t mbari/oni:latest . && \
     docker push mbari/oni

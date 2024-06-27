@@ -81,7 +81,7 @@ trait LinkServiceSuite extends DataInitializer:
         val opt  = root
             .getDescendants
             .asScala
-            .flatMap(_.getConceptMetadata.getLinkTemplates.asScala)
+            .flatMap(_.getConceptMetadata.getLinkRealizations.asScala)
             .toSeq
             .sortBy(_.getLinkName)
             .map(ExtendedLink.from)
