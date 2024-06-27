@@ -76,7 +76,7 @@ object ConceptMetadata:
             linkRealizations,
             Option(rank),
             author,
-            Option(concept.getAphiaId),
+            concept.getAphiaId.asLong,
             references,
             concept.getId.asLong
         )

@@ -17,7 +17,7 @@ object Numbers:
         def asLong: Option[Long]     = Numbers.longConverter(obj)
         def asInt: Option[Int]       = Numbers.intConverter(obj)
 
-    def doubleConverter(obj: Object | Number | Double): Option[Double] =
+    def doubleConverter(obj: Object | Number | Double | Null): Option[Double] =
         obj match
             case null      => None
             case d: Double => Some(d)
@@ -25,7 +25,7 @@ object Numbers:
             case s: String => Try(s.toDouble).toOption
             case _         => None
 
-    def floatConverter(obj: Object | Number | Float): Option[Float] =
+    def floatConverter(obj: Object | Number | Float | Null): Option[Float] =
         obj match
             case null      => None
             case f: Float  => Some(f)
@@ -33,7 +33,7 @@ object Numbers:
             case s: String => Try(s.toFloat).toOption
             case _         => None
 
-    def longConverter(obj: Object | Number | Long): Option[Long] =
+    def longConverter(obj: Object | Number | Long | Null): Option[Long] =
         obj match
             case null      => None
             case l: Long   => Some(l)
@@ -41,7 +41,7 @@ object Numbers:
             case s: String => Try(s.toLong).toOption
             case _         => None
 
-    def intConverter(obj: Object | Number | Int): Option[Int] =
+    def intConverter(obj: Object | Number | Int | Null): Option[Int] =
         obj match
             case null      => None
             case i: Int    => Some(i)
