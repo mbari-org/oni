@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 
 import jakarta.persistence.*;
 
-import org.hibernate.type.NumericBooleanConverter;
+
 import org.mbari.oni.jpa.KeyNullifier;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.TransactionLogger;
@@ -73,8 +73,7 @@ public class MediaEntity implements Serializable, IPersistentObject {
     Long id;
 
     @Column(name = "PrimaryMedia")
-    @Convert(converter = NumericBooleanConverter.class)
-    Boolean primaryMedia;
+    Short primaryMedia = 0;
 
     @Column(name = "MediaType", length = 5)
     String type;
@@ -142,7 +141,7 @@ public class MediaEntity implements Serializable, IPersistentObject {
     }
 
     public Boolean isPrimary() {
-        return primaryMedia;
+        return primaryMedia != null && primaryMedia == 1;
     }
 
     public void setCaption(String caption) {
@@ -162,7 +161,7 @@ public class MediaEntity implements Serializable, IPersistentObject {
     }
 
     public void setPrimary(Boolean primary) {
-        this.primaryMedia = primary;
+        this.primaryMedia = primary ? (short) 1 : 0;
     }
 
     public void setType(String type) {
