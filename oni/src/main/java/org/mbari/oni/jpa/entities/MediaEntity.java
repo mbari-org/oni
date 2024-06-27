@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 
 import jakarta.persistence.*;
 
+import org.hibernate.type.NumericBooleanConverter;
 import org.mbari.oni.jpa.KeyNullifier;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.TransactionLogger;
@@ -72,6 +73,7 @@ public class MediaEntity implements Serializable, IPersistentObject {
     Long id;
 
     @Column(name = "PrimaryMedia")
+    @Convert(converter = NumericBooleanConverter.class)
     Boolean primaryMedia;
 
     @Column(name = "MediaType", length = 5)
