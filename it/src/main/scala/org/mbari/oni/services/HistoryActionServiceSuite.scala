@@ -358,15 +358,15 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
                                )
             historyOpt      <-
                 historyService.findByConceptName(b.getName).map(_.find(_.field == HistoryEntity.FIELD_CONCEPT_PARENT))
+//            _ <- Right(println(historyOpt.stringify))
             history         <- historyOpt.toRight(new Exception("History not found"))
             approvedHistory <- runWithUserAuth(user => historyActionService.reject(history.id.get, user.username))
         yield
             assert(!approvedHistory.approved)
-            println(history.stringify)
+            println(approvedHistory.stringify)
             service.findRawByName(root.getName, true).map(xs => println(xs.stringify))
             service.findChildrenByParentName(a.getName) match
                 case Right(concepts) =>
-                    println(b.getName)
                     println(concepts.stringify)
                     val xs = concepts.filter(_.name == b.getName)
                     assert(xs.isEmpty)

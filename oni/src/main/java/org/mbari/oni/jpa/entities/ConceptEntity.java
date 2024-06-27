@@ -94,7 +94,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         fetch = FetchType.LAZY,
         optional = true,
         targetEntity = ConceptEntity.class,
-        cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH }
+        cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.REFRESH}
     )
     @JoinColumn(
             name = "ParentConceptID_FK",

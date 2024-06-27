@@ -109,7 +109,6 @@ trait LinkEndpointsSuite extends EndpointsSuite with DataInitializer with UserAu
                 println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
-                    .map(_.copy(id = None)) // The expected dont' have the ids but the obtained do
                     .sortBy(_.linkName)
 
                 assertEquals(obtained.size, 1)

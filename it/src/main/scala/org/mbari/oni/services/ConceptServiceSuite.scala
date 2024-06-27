@@ -274,20 +274,6 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             yield updatedChild
         )
 
-//        val attempt = for
-//            user         <- userAccountService.create(userAccount)
-//            rootEntity   <- conceptService.init(root)
-//            child        <- Right(rootEntity.getChildConcepts.iterator().next())
-//            updatedChild <- conceptService.update(
-//                                ConceptUpdate(
-//                                    child.getPrimaryConceptName.getName,
-//                                    rankLevel = Some("supersuper"),
-//                                    rankName = Some("genera"),
-//                                    aphiaId = Some(1234),
-//                                    userName = Some(user.username)
-//                                )
-//                            )
-//        yield updatedChild
 
         attempt match
             case Left(e)      =>
@@ -305,8 +291,13 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
     test("update parent") {
 
-        val root       = TestEntityFactory.buildRoot(3, 0)
-        val grandChild = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+        val root       = TestEntityFactory.buildRoot(3)
+        val grandChild = root.getChildConcepts
+            .iterator()
+            .next()
+            .getChildConcepts
+            .iterator()
+            .next()
 
         val attempt = runWithUserAuth(user =>
             for
@@ -336,6 +327,47 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                         fail("Failed to find history")
                     case Right(found) =>
                         assertEquals(found.size, 1)
+    }
+
+    test("update (parent multiple times)") {
+        val root = TestEntityFactory.buildRoot(5)
+        val grandChild = root.getChildConcepts
+            .iterator()
+            .next()
+            .getChildConcepts
+            .iterator()
+            .next()
+        val childsParent = grandChild.getParentConcept
+
+        val update1 = ConceptUpdate(parentName = Some(root.getName))
+        val update2 = ConceptUpdate(parentName = Some(childsParent.getName))
+
+        val attempt = runWithUserAuth(user =>
+            for
+                rootEntity <- conceptService.init(root)
+                grandChildEntity <- Right(grandChild)
+                updatedGrandChild1 <- conceptService.update( grandChildEntity.getName, update1, user.username)
+                updatedGrandChild2 <- conceptService.update( grandChildEntity.getName, update2, user.username)
+
+            yield updatedGrandChild2
+        )
+
+        attempt match
+            case Left(e) =>
+                fail("Failed to update")
+            case Right(grandChild) =>
+                conceptService.findParentByChildName(grandChild.name) match
+                    case Left(e) =>
+                        fail("Failed to find parent")
+                    case Right(found) =>
+                        assertEquals(found.name, childsParent.getName)
+                historyService.findByConceptName(grandChild.name) match
+                    case Left(e) =>
+                        fail("Failed to find history")
+                    case Right(found) =>
+                        assertEquals(found.size, 2)
+
+
     }
 
     test("delete") {

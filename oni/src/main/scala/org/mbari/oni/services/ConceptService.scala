@@ -469,20 +469,19 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             val repo    = ConceptRepository(entityManager)
             val concept = historyEntity.getConceptMetadata.getConcept
 
-            val newParentConcept = repo.findByName(historyEntity.getNewValue).toScala match
-                case None    => throw ConceptNameNotFound(historyEntity.getNewValue)
+            val parent = repo.findByName(concept.getParentConcept.getName).toScala match
+                case None => throw ConceptNameNotFound(historyEntity.getOldValue)
                 case Some(p) => p
+
             val oldParentConcept = repo.findByName(historyEntity.getOldValue).toScala match
                 case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
                 case Some(p) => p
 
-            val cc = entityManager.merge(concept) // Required!!
-//            newParentConcept.removeChildConcept(concept)
-            oldParentConcept.addChildConcept(cc)
-//            entityManager.merge(oldParentConcept)
+            parent.removeChildConcept(concept)
+            oldParentConcept.addChildConcept(concept)
             log.atInfo
                 .log(
-                    s"Rejected replace parent. Moving ${concept.getName} from ${newParentConcept.getName} back to ${oldParentConcept.getName} "
+                    s"Rejected replace parent. Moving ${concept.getName} from ${parent.getName} back to ${oldParentConcept.getName} "
                 )
             Right(true)
 
