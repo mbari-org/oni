@@ -66,5 +66,5 @@ alter table if exists History add constraint fk_History__ConceptDelegate_id fore
 alter table if exists LinkRealization add constraint fk_LinkRealization__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
 alter table if exists LinkTemplate add constraint fk_LinkTempate__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
 alter table if exists Media add constraint fk_Media__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
-alter table if exists Reference_ConceptDelegate add constraint FKsifea3n684ed8l2co24qmgn0l foreign key (ConceptDelegateID_FK) references ConceptDelegate;
-alter table if exists Reference_ConceptDelegate add constraint FKg6okgoad1u4167wxfsdt7amui foreign key (ReferenceID_FK) references Reference;
+alter table if exists Reference_ConceptDelegate add constraint fk_RCD__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
+alter table if exists Reference_ConceptDelegate add constraint fk_RCD__Reference_id foreign key (ReferenceID_FK) references Reference;

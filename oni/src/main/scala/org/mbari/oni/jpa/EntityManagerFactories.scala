@@ -45,6 +45,14 @@ object EntityManagerFactories:
 
     def apply(properties: Map[String, String]): EntityManagerFactory =
         val props = PRODUCTION_PROPS ++ properties
+        if log.isLoggable(Level.INFO) then
+            val props = properties
+                .map(a => s"${a._1} : ${a._2}")
+                .toList
+                .sorted
+                .mkString("\n")
+            log.atInfo.log(s"Requested EntityManager Properties:\n${props}")
+
         val emf   = Persistence.createEntityManagerFactory("oni", props.asJava)
         if log.isLoggable(Level.INFO) then
             val props = emf
@@ -55,7 +63,7 @@ object EntityManagerFactories:
                 .toList
                 .sorted
                 .mkString("\n")
-            log.atInfo.log(s"EntityManager Properties:\n${props}")
+            log.atInfo.log(s"Actual EntityManager Properties:\n${props}")
         emf
 
     def apply(
