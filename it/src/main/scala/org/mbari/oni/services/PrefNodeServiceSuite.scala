@@ -22,6 +22,13 @@ trait PrefNodeServiceSuite extends DataInitializer:
 
     lazy val prefNodeService = new PrefNodeService(entityManagerFactory)
 
+    override def beforeEach(context: BeforeEach): Unit =
+        super.beforeEach(context)
+        prefNodeService.findAll() match
+            case Left(e)          => fail(e.getMessage)
+            case Right(prefNodes) =>
+                prefNodes.foreach(prefNode => prefNodeService.delete(prefNode.name, prefNode.key))
+
     test("create") {
         val name  = "test"
         val key   = "key"
@@ -118,4 +125,22 @@ trait PrefNodeServiceSuite extends DataInitializer:
                         assertEquals(name, foundPrefNode.name)
                         assertEquals(key, foundPrefNode.key)
                         assertEquals(value, foundPrefNode.value)
+    }
+
+    test("findAll") {
+        for i <- 1 to 30 do
+            val name  = s"name_$i"
+            val key   = s"key_$i"
+            val value = s"value_$i"
+            prefNodeService.create(name, key, value) match
+                case Left(e)         => fail(e.getMessage)
+                case Right(prefNode) =>
+                    assertEquals(name, prefNode.name)
+                    assertEquals(key, prefNode.key)
+                    assertEquals(value, prefNode.value)
+
+        prefNodeService.findAll() match
+            case Left(e)          => fail(e.getMessage)
+            case Right(prefNodes) =>
+                assertEquals(30, prefNodes.size)
     }

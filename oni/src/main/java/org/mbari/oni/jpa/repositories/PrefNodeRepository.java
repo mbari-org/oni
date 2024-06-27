@@ -56,4 +56,8 @@ public class PrefNodeRepository extends Repository {
     public List<PreferenceNodeEntity> findByNodeNameLike(String name) {
         return findByNamedQuery("PreferenceNode.findAllLikeNodeName", Map.of("nodeName", name + '%'));
     }
+
+    public List<PreferenceNodeEntity> findAll(int limit, int offset) {
+        return findByNamedQuery("PreferenceNode.findAll", limit, offset);
+    }
 }

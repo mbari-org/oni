@@ -98,11 +98,18 @@ trait EndpointsSuite extends munit.FunSuite:
     def runGet(
         ep: ServerEndpoint[Any, Identity],
         uri: String,
-        assertions: Response[Either[String, String]] => Unit
+        assertions: Response[Either[String, String]] => Unit,
+        jwt: Option[String] = None
     ): Unit =
         val backendStub = newBackendStub(ep)
         val u           = uri"$uri"
-        val request     = basicRequest.get(u)
+        val request = jwt match
+            case None         => basicRequest.get(u)
+            case Some(bearer) =>
+                basicRequest
+                    .get(u)
+                    .auth
+                    .bearer(bearer)
         log.atDebug.log("--REQUEST: " + request)
         val response    = request.send(backendStub)
         log.atDebug.log("--RESPONSE: " + response)

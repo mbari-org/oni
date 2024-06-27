@@ -60,6 +60,6 @@ object Loggers:
     given Conversion[Logger, LoggerBuilder] with
         def apply(logger: Logger): LoggerBuilder = LoggerBuilder(logger)
 
-    def apply(name: String) = System.getLogger(name)
+    def apply(name: String): Logger = System.getLogger(name)
 
-    def apply(clazz: Class[?]) = System.getLogger(clazz.getName)
+    def apply(clazz: Class[?]): Logger = System.getLogger(clazz.getName)

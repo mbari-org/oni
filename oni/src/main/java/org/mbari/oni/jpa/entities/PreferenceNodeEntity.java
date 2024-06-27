@@ -31,8 +31,10 @@ import jakarta.persistence.UniqueConstraint;
 @Table(name = "Prefs", uniqueConstraints = {@UniqueConstraint(columnNames = {"NodeName", "PrefKey"})})
 @IdClass(PreferenceNodeCompositeKey.class)
 @EntityListeners({ TransactionLogger.class })
-@NamedQueries({ @NamedQuery(name = "PreferenceNode.findAllLikeNodeName",
-                            query = "SELECT p FROM PreferenceNode p WHERE p.nodeName LIKE :nodeName") ,
+@NamedQueries({ @NamedQuery(name = "PreferenceNode.findAll",
+                           query = "SELECT p FROM PreferenceNode p"),
+                @NamedQuery(name = "PreferenceNode.findAllLikeNodeName",
+                            query = "SELECT p FROM PreferenceNode p WHERE p.nodeName LIKE :nodeName"),
                 @NamedQuery(name = "PreferenceNode.findByNodeNameAndPrefKey",
                             query = "SELECT p FROM PreferenceNode p WHERE p.nodeName = :nodeName AND p.prefKey = :prefKey") ,
                 @NamedQuery(name = "PreferenceNode.findAllByNodeName",

@@ -16,8 +16,8 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.PostgresMixin
+import org.mbari.oni.SqlServerMixin
 
-class PostgresAuthorizationEndpointsSuite extends AuthorizationEndpointsSuite with PostgresMixin {
+class SqlServerPrefNodeEndpointsSuite extends PrefNodeEndpointsSuite with SqlServerMixin {
 
 }
