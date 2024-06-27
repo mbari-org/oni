@@ -8,23 +8,13 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{
-    AuthorizationEndpoints,
-    ConceptEndpoints,
-    ConceptNameEndpoints,
-    HealthEndpoints,
-    HistoryEndpoints,
-    LinkEndpoints,
-    PhylogenyEndpoints,
-    PrefNodeEndpoints,
-    ReferenceEndpoints,
-    UserAccountEndpoints
-}
+import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
 import sttp.shared.Identity
+import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 object Endpoints:
 
@@ -46,20 +36,24 @@ object Endpoints:
     val referenceEndpoints: ReferenceEndpoints         = ReferenceEndpoints(entityMangerFactory)
     val userAccountEndpoints: UserAccountEndpoints     = UserAccountEndpoints(entityMangerFactory)
 
+    val endpoints: List[ServerEndpoint[Any, Identity]] = List(
+        authorizationEndpoints,
+        conceptEndpoints,
+        conceptNameEndpoints,
+        healthEndpoints,
+        historyEndpoints,
+        linkEndpoints,
+        phylogenyEndpoints,
+        prefNodeEndpoints,
+        referenceEndpoints,
+        userAccountEndpoints
+    ).flatMap(_.allImpl)
+
+    val docEndpoints: List[ServerEndpoint[Any, Identity]] =
+        SwaggerInterpreter().fromServerEndpoints(endpoints, AppConfig.Name, AppConfig.Version)
+
     val prometheusMetrics: PrometheusMetrics[Identity] = PrometheusMetrics.default[Identity]()
     val metricsEndpoint: ServerEndpoint[Any, Identity] = prometheusMetrics.metricsEndpoint
 
-    val endpoints: List[ServerEndpoint[Any, Identity]] = List(
-        authorizationEndpoints.allImpl,
-        conceptEndpoints.allImpl,
-        conceptNameEndpoints.allImpl,
-        healthEndpoints.allImpl,
-        historyEndpoints.allImpl,
-        linkEndpoints.allImpl,
-        phylogenyEndpoints.allImpl,
-        prefNodeEndpoints.allImpl,
-        referenceEndpoints.allImpl,
-        userAccountEndpoints.allImpl
-    ).flatten
 
-    val allImpl: List[ServerEndpoint[Any, Identity]] = endpoints ++ List(metricsEndpoint)
+    val allImpl: List[ServerEndpoint[Any, Identity]] = endpoints ++ docEndpoints ++ List(metricsEndpoint)
