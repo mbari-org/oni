@@ -50,18 +50,16 @@ object Reflect:
     def toFormBody[T: ClassTag](t: T): String =
         toMap(t)
             .filter { case (_, v) => // Remove nulls and None
-                v match {
+                v match
                     case null => false
                     case None => false
-                    case _ => true
-                }
+                    case _    => true
             }
             .map { // Convert Some(x) to x
                 case (k, v) =>
-                    val d = v match {
+                    val d = v match
                         case Some(x) => x
-                        case x => x
-                    }
+                        case x       => x
                     k -> d
             }
             .map { case (k, v) => s"$k=$v" }

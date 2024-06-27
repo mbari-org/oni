@@ -31,88 +31,85 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
 
-    lazy val endpoints = new LinkRealizationEndpoints(entityManagerFactory)
+    lazy val endpoints   = new LinkRealizationEndpoints(entityManagerFactory)
     private val password = "foofoofoo"
 
-    def createLinkRealizations(): Seq[ExtendedLink] = {
+    def createLinkRealizations(): Seq[ExtendedLink] =
         val root = init(1, 6)
         root.getDescendants
-          .asScala
-          .flatMap(_.getConceptMetadata.getLinkRealizations.asScala)
-          .toSeq
-          .map(ExtendedLink.from)
-          .sortBy(_.linkName)
-    }
+            .asScala
+            .flatMap(_.getConceptMetadata.getLinkRealizations.asScala)
+            .toSeq
+            .map(ExtendedLink.from)
+            .sortBy(_.linkName)
 
     test("findLinkRealizationsByConceptName") {
-        val links = createLinkRealizations()
+        val links       = createLinkRealizations()
         val conceptName = links.head.concept
         runGet(
             endpoints.findLinkRealizationsByConceptNameImpl,
             s"http://test.com/v1/linkrealizations/concept/$conceptName",
-            response => {
+            response =>
 //                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
-                  .sortBy(_.linkName)
+                    .sortBy(_.linkName)
                 assertEquals(obtained.size, links.size)
                 assertEquals(obtained, links)
-            }
         )
     }
     test("findLinkRealizationByPrototype") {
-        val links = createLinkRealizations()
-        val link = links.head
+        val links     = createLinkRealizations()
+        val link      = links.head
         val prototype = link.toLink
         runPost(
             endpoints.findLinkRealizationByPrototypeImpl,
             s"http://test.com/v1/linkrealizations/prototype",
             prototype.stringify,
-            response => {
+            response =>
 //                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
                 assertEquals(obtained, Seq(link))
-
-            }
         )
     }
 
     test("create") {
-        val root = init(1, 0)
+        val root            = init(1, 0)
         val linkRealization = TestEntityFactory.createLinkRealization()
-        val linkCreate = LinkCreate(root.getName, linkRealization.getLinkName, ILink.VALUE_SELF, linkRealization.getLinkValue)
-        val attempt = testWithUserAuth(user =>
+        val linkCreate      =
+            LinkCreate(root.getName, linkRealization.getLinkName, ILink.VALUE_SELF, linkRealization.getLinkValue)
+        val attempt         = testWithUserAuth(user =>
             runPost(
                 endpoints.createImpl,
                 "http://test.com/v1/linkrealizations",
                 linkCreate.stringify,
-                response => {
+                response =>
 //                    println(response.body)
                     assertEquals(response.code, StatusCode.Ok)
                     val obtained = checkResponse[ExtendedLink](response.body)
                     assertEquals(obtained, ExtendedLink.from(linkRealization))
-
-                })
+            )
         )
     }
     test("update") {
-        val links = createLinkRealizations()
-        val link = links.head
+        val links      = createLinkRealizations()
+        val link       = links.head
         val linkUpdate = LinkUpdate(linkValue = Some(Strings.random(11)))
-        val attempt = testWithUserAuth(user =>
-            runPut(
-                endpoints.updateImpl,
-                s"http://test.com/v1/linkrealizations/${link.id.get}",
-                linkUpdate.stringify,
-                response => {
+        val attempt    = testWithUserAuth(
+            user =>
+                runPut(
+                    endpoints.updateImpl,
+                    s"http://test.com/v1/linkrealizations/${link.id.get}",
+                    linkUpdate.stringify,
+                    response =>
 //                    println(response.body)
-                    assertEquals(response.code, StatusCode.Ok)
-                    val obtained = checkResponse[ExtendedLink](response.body)
-                    assertEquals(obtained.linkValue, linkUpdate.linkValue.getOrElse(""))
-                },
-                jwt = jwtService.login(user.username, password, user.toEntity)
-            ),
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[ExtendedLink](response.body)
+                        assertEquals(obtained.linkValue, linkUpdate.linkValue.getOrElse(""))
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
             password
         )
 
@@ -122,15 +119,16 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
     }
 
     test("delete") {
-        val links = createLinkRealizations()
-        val link = links.head
-        val attempt = testWithUserAuth(user =>
-            runDelete(
-                endpoints.deleteImpl,
-                s"http://test.com/v1/linkrealizations/${link.id.get}",
-                response => assertEquals(response.code, StatusCode.Ok),
-                jwt = jwtService.login(user.username, password, user.toEntity)
-            ),
+        val links   = createLinkRealizations()
+        val link    = links.head
+        val attempt = testWithUserAuth(
+            user =>
+                runDelete(
+                    endpoints.deleteImpl,
+                    s"http://test.com/v1/linkrealizations/${link.id.get}",
+                    response => assertEquals(response.code, StatusCode.Ok),
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
             password
         )
         attempt match
@@ -140,15 +138,14 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
 
     test("findLinkRealizationById") {
         val links = createLinkRealizations()
-        val link = links.head
+        val link  = links.head
         runGet(
             endpoints.findLinkRealizationByIdImpl,
             s"http://test.com/v1/linkrealizations/${link.id.get}",
-            response => {
+            response =>
 //                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[ExtendedLink](response.body)
                 assertEquals(obtained, link)
-            }
         )
     }

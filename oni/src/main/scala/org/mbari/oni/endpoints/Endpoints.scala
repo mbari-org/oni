@@ -95,7 +95,8 @@ trait Endpoints:
         )
 
     val paging: EndpointInput[Paging] =
-        query[Option[Int]]("offset").description("Offset for paging")
+        query[Option[Int]]("offset")
+            .description("Offset for paging")
             .and(query[Option[Int]]("limit").description("Limit for paging"))
             .mapTo[Paging]
 

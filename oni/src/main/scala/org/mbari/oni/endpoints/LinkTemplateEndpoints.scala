@@ -88,7 +88,6 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
         .description("Update a link template")
         .tag(tag)
 
-
     val updateLinkTemplateImpl: ServerEndpoint[Any, Identity] = updateLinkTemplate
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => (id, link) =>

@@ -31,7 +31,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .get
             .in(base)
             .in(paging)
-             .out(jsonBody[Seq[PrefNode]])
+            .out(jsonBody[Seq[PrefNode]])
             .name("allPrefNodes")
             .description("Get all prefNodes. This endpoint is only available to administrators.")
             .tag(tag)
@@ -39,10 +39,10 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
     val findAllImpl: ServerEndpoint[Any, Identity] = findAll
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => paging =>
-            if (userAccount.isAdministrator) handleErrors(service.findAll(paging.limit.getOrElse(100), paging.offset.getOrElse(0)))
+            if userAccount.isAdministrator then
+                handleErrors(service.findAll(paging.limit.getOrElse(100), paging.offset.getOrElse(0)))
             else Left(Unauthorized("You must be an admin to access this endpoint"))
         }
-
 
     val findByNodeNameAndKey: Endpoint[Unit, (String, Option[String]), ErrorMsg, Seq[PrefNode], Any] =
         openEndpoint

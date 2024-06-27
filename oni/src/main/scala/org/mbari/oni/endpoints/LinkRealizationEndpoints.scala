@@ -89,7 +89,6 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Update a link realization")
         .tag(tag)
 
-
     val updateImpl: ServerEndpoint[Any, Identity] = update
         .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
         .serverLogic { userAccount => (id, linkUpdate) =>

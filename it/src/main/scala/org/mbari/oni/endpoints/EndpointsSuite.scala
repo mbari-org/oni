@@ -103,7 +103,7 @@ trait EndpointsSuite extends munit.FunSuite:
     ): Unit =
         val backendStub = newBackendStub(ep)
         val u           = uri"$uri"
-        val request = jwt match
+        val request     = jwt match
             case None         => basicRequest.get(u)
             case Some(bearer) =>
                 basicRequest
