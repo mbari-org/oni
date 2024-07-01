@@ -1,6 +1,7 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity}
+import org.mbari.oni.etc.circe.CirceCodecs.{given, *}
 
 class ConceptMetadataSuite extends munit.FunSuite {
 
@@ -16,10 +17,12 @@ class ConceptMetadataSuite extends munit.FunSuite {
         assertEquals(metadata.rank, Some("rankLevelrankName"))
         assertEquals(metadata.id, None)
         assertEquals(metadata.aphiaId, None)
+//        println(metadata.stringify)
 
         concept.setAphiaId(10)
         val metadata2 = ConceptMetadata.from(concept)
         assertEquals(metadata2.aphiaId, Some(10L))
+//        println(metadata2.stringify)
 
     }
 

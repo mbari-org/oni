@@ -35,5 +35,5 @@ case class Link(linkName: String, toConcept: String, linkValue: String, id: Opti
         l
 
 object Link:
-    def from(link: ILink with IPersistentObject): Link =
+    def from(link: ILink & IPersistentObject): Link =
         Link(link.getLinkName, link.getToConcept, link.getLinkValue, longConverter(link.getId))

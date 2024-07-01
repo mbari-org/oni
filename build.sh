@@ -1,37 +1,20 @@
 #!/usr/bin/env bash
 
-echo "--- Building oni (reminder: run docker login first!!)"
-
-BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"`
-VCS_REF=`git tag | sort -V | tail -1`
-
 SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-echo "Working directory is $SCRIPT_DIR"
-cd $SCRIPT_DIR
-
-sbt stage
+echo $SCRIPT_DIR
 
 ARCH=$(uname -m)
 if [[ $ARCH == 'arm64' ]]; then
+    sbt 'Docker / stage'
+    cd $SCRIPT_DIR/oni/target/docker/stage
+    VCS_REF=`git tag | sort -V | grep -E '^\d' | tail -1`
     # https://betterprogramming.pub/how-to-actually-deploy-docker-images-built-on-a-m1-macs-with-apple-silicon-a35e39318e97
     docker buildx build \
       --platform linux/amd64,linux/arm64 \
       -t mbari/oni:${VCS_REF} \
       -t mbari/oni:latest \
-      --push . && \
-    docker pull mbari/oni:${VCS_REF}
+      --push . \
+    && docker pull mbari/oni:${VCS_REF}
 else
-    docker build --build-arg BUILD_DATE=$BUILD_DATE \
-                 --build-arg VCS_REF=$VCS_REF \
-                  -t mbari/oni:${VCS_REF} \
-                  -t mbari/oni:latest . && \
-    docker push mbari/oni
+    sbt 'Docker / publish'
 fi
-
-
-# For M1 use:
-# docker buildx build --load  -t mbari/oni:latest .
-
-
-# sbt stage && \
-#     docker build -t mbari/oni:latest

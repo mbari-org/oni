@@ -34,8 +34,10 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
             conceptRepo.findByName(conceptName).toScala match
                 case Some(concept) =>
                     repo.findAllApplicableToConcept(concept)
-                        .asScala
+                        .stream()
                         .map(Link.from)
+                        .toList
+                        .asScala
                         .toSeq
                 case None          => throw ConceptNameNotFound(conceptName)
         )

@@ -45,6 +45,7 @@ object Main:
 
         WebServer
             .builder()
+            .writeBufferSize(131072)   // Big buffer to handle full kb tree
             .routing(builder => builder.any(handler))
             .port(port)
             .build()

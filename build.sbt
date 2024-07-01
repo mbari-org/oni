@@ -45,15 +45,18 @@ ThisBuild / Test / javaOptions ++= Seq(
 lazy val oni = project
   .in(file("oni"))
   .enablePlugins(
-    AutomateHeaderPlugin, 
-    GitBranchPrompt, 
-    GitVersioning, 
+    AutomateHeaderPlugin,
+    DockerPlugin,
+    GitBranchPrompt,
+    GitVersioning,
     JavaAppPackaging
   )
   .settings(
     // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
     // Use `show gitCurrentTags` in sbt to update/see the tags
-
+    dockerBaseImage    := "eclipse-temurin:21",
+    dockerExposedPorts := Seq(8080),
+    dockerUpdateLatest := true,
     git.gitTagToVersionNumber := { tag: String =>
       if(tag matches "[0-9]+\\..*") Some(tag)
       else None
@@ -73,7 +76,7 @@ lazy val oni = project
         """Copyright (c) Monterey Bay Aquarium Research Institute 2024
         |
         |oni code is non-public software. Unauthorized copying of this file,
-        |via any medium is strictly prohibited. Proprietary and confidential. 
+        |via any medium is strictly prohibited. Proprietary and confidential.
         |""".stripMargin
       )
     ),
