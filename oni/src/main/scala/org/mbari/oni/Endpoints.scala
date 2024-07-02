@@ -2,13 +2,24 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
+import org.mbari.oni.endpoints.{
+    AuthorizationEndpoints,
+    ConceptEndpoints,
+    ConceptNameEndpoints,
+    HealthEndpoints,
+    HistoryEndpoints,
+    LinkEndpoints,
+    PhylogenyEndpoints,
+    PrefNodeEndpoints,
+    ReferenceEndpoints,
+    UserAccountEndpoints
+}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
@@ -54,6 +65,5 @@ object Endpoints:
 
     val prometheusMetrics: PrometheusMetrics[Identity] = PrometheusMetrics.default[Identity]()
     val metricsEndpoint: ServerEndpoint[Any, Identity] = prometheusMetrics.metricsEndpoint
-
 
     val allImpl: List[ServerEndpoint[Any, Identity]] = endpoints ++ docEndpoints ++ List(metricsEndpoint)

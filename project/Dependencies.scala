@@ -3,13 +3,18 @@ object Dependencies {
 
     lazy val auth0 = "com.auth0" % "java-jwt" % "4.4.0"
 
-    val circeVersion      = "0.14.8"
+    val circeVersion      = "0.14.9"
     lazy val circeCore    = "io.circe" %% "circe-core"    % circeVersion
     lazy val circeGeneric = "io.circe" %% "circe-generic" % circeVersion
     lazy val circeParser  = "io.circe" %% "circe-parser"  % circeVersion
 
     lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.17.0"
     lazy val gson = "com.google.code.gson" % "gson" % "2.11.0"
+
+    // THis needs to match the version used by tapirHelidon
+    val helidonVersion              = "4.0.0"
+    lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
+    lazy val helidonEncodingGzip     = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
     val hibernateVersion     = "6.5.2.Final"
     lazy val hibernateCore   = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion

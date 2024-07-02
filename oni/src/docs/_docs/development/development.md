@@ -17,3 +17,4 @@ This is a normal [sbt](https://www.scala-sbt.org) project. You can compile code 
 Documentation can be added as markdown files in `docs` and will be included automatically when you run `scaladoc`.
 
 When updating SBT version, make sure to update the devcontainer image in [devcontainer.json](.devcontainer/devcontainer.json). It's versions are `eclipse-temurin-<java.version>_<sbt.version>_<scala.version>`
+

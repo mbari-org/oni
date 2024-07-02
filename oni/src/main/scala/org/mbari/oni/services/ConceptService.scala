@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.services
@@ -470,7 +470,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             val concept = historyEntity.getConceptMetadata.getConcept
 
             val parent = repo.findByName(concept.getParentConcept.getName).toScala match
-                case None => throw ConceptNameNotFound(historyEntity.getOldValue)
+                case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
                 case Some(p) => p
 
             val oldParentConcept = repo.findByName(historyEntity.getOldValue).toScala match

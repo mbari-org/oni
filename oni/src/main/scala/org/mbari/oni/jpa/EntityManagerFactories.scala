@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni.jpa
@@ -53,7 +53,7 @@ object EntityManagerFactories:
                 .mkString("\n")
             log.atInfo.log(s"Requested EntityManager Properties:\n${props}")
 
-        val emf   = Persistence.createEntityManagerFactory("oni", props.asJava)
+        val emf = Persistence.createEntityManagerFactory("oni", props.asJava)
         if log.isLoggable(Level.INFO) then
             val props = emf
                 .getProperties

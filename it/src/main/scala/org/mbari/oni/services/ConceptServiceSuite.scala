@@ -274,7 +274,6 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             yield updatedChild
         )
 
-
         attempt match
             case Left(e)      =>
                 fail("Failed to update")
@@ -292,7 +291,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
     test("update parent") {
 
         val root       = TestEntityFactory.buildRoot(3)
-        val grandChild = root.getChildConcepts
+        val grandChild = root
+            .getChildConcepts
             .iterator()
             .next()
             .getChildConcepts
@@ -330,8 +330,9 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
     }
 
     test("update (parent multiple times)") {
-        val root = TestEntityFactory.buildRoot(5)
-        val grandChild = root.getChildConcepts
+        val root         = TestEntityFactory.buildRoot(5)
+        val grandChild   = root
+            .getChildConcepts
             .iterator()
             .next()
             .getChildConcepts
@@ -344,29 +345,27 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
         val attempt = runWithUserAuth(user =>
             for
-                rootEntity <- conceptService.init(root)
-                grandChildEntity <- Right(grandChild)
-                updatedGrandChild1 <- conceptService.update( grandChildEntity.getName, update1, user.username)
-                updatedGrandChild2 <- conceptService.update( grandChildEntity.getName, update2, user.username)
-
+                rootEntity         <- conceptService.init(root)
+                grandChildEntity   <- Right(grandChild)
+                updatedGrandChild1 <- conceptService.update(grandChildEntity.getName, update1, user.username)
+                updatedGrandChild2 <- conceptService.update(grandChildEntity.getName, update2, user.username)
             yield updatedGrandChild2
         )
 
         attempt match
-            case Left(e) =>
+            case Left(e)           =>
                 fail("Failed to update")
             case Right(grandChild) =>
                 conceptService.findParentByChildName(grandChild.name) match
-                    case Left(e) =>
+                    case Left(e)      =>
                         fail("Failed to find parent")
                     case Right(found) =>
                         assertEquals(found.name, childsParent.getName)
                 historyService.findByConceptName(grandChild.name) match
-                    case Left(e) =>
+                    case Left(e)      =>
                         fail("Failed to find history")
                     case Right(found) =>
                         assertEquals(found.size, 2)
-
 
     }
 

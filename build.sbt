@@ -86,6 +86,8 @@ lazy val oni = project
             circeGeneric,
             circeParser,
             commonsCodec,
+            helidonEncodingDeflate,
+            helidonEncodingGzip,
             hibernateCore,
             hibernateEnvers,
             hibernateHikari,

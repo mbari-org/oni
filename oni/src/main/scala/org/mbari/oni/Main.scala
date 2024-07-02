@@ -2,7 +2,7 @@
  * Copyright (c) Monterey Bay Aquarium Research Institute 2024
  *
  * oni code is non-public software. Unauthorized copying of this file,
- * via any medium is strictly prohibited. Proprietary and confidential. 
+ * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
 package org.mbari.oni
@@ -45,7 +45,7 @@ object Main:
 
         WebServer
             .builder()
-            .writeBufferSize(131072)   // Big buffer to handle full kb tree
+            .writeBufferSize(131072) // Big buffer to handle full kb tree
             .routing(builder => builder.any(handler))
             .port(port)
             .build()

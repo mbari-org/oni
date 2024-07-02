@@ -157,8 +157,7 @@ object TestEntityFactory:
             entity.setRankLevel(Strings.random(6))
             entity.setRankName(Strings.random(12))
 
-        if random.nextBoolean() then
-            entity.setAphiaId(random.nextLong(100000000))
+        if random.nextBoolean() then entity.setAphiaId(random.nextLong(100000000))
 
         // DON'T DO THIS. The ID should be assigned by the database. Otherwise inserts will fail.
 //        entity.setId(nextConceptId.incrementAndGet())
