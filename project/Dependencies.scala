@@ -11,10 +11,11 @@ object Dependencies {
     lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.17.0"
     lazy val gson = "com.google.code.gson" % "gson" % "2.11.0"
 
-    // THis needs to match the version used by tapirHelidon
+    // THis needs to match the version used by tapirHelidon.
+    // Just including these in the build allows Helidon to use them for content encoding.
     val helidonVersion              = "4.0.0"
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
-    lazy val helidonEncodingGzip     = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
+    lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
     val hibernateVersion     = "6.5.2.Final"
     lazy val hibernateCore   = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
@@ -30,7 +31,7 @@ object Dependencies {
     lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.0"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.3"
-    lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
+//    lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
 
     val slf4jVersion = "2.0.13"
     lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
@@ -54,8 +55,8 @@ object Dependencies {
     lazy val testcontainersPostgres  = "org.testcontainers"             % "postgresql"     % testcontainersVersion
 
     lazy val typesafeConfig = "com.typesafe"    % "config"     % "1.4.3"
-    lazy val uuidgen        = "org.mbari.uuid"  % "uuid-gen"   % "0.1.4"
-    lazy val vcr4jCore      = "org.mbari.vcr4j" % "vcr4j-core" % "5.2.0"
-    lazy val zeromq         = "org.zeromq"      % "jeromq"     % "0.6.0"
+//    lazy val uuidgen        = "org.mbari.uuid"  % "uuid-gen"   % "0.1.4"
+//    lazy val vcr4jCore      = "org.mbari.vcr4j" % "vcr4j-core" % "5.2.0"
+//    lazy val zeromq         = "org.zeromq"      % "jeromq"     % "0.6.0"
 
 }

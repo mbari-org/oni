@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import io.circe.parser.decode
-import org.mbari.oni.domain.{Authorization, UserAccount, UserAccountRoles}
+import org.mbari.oni.domain.{AuthorizationSC, UserAccount, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DatabaseFunSuite
@@ -49,10 +49,10 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
                 assert(response.body.isRight)
 
                 // println(body)
-                val d          = decode[Authorization](body)
+                val d          = decode[AuthorizationSC](body)
                 assert(d.isRight)
                 val bearerAuth = d.getOrElse(throw new Exception("No bearer auth"))
-                assert(jwtService.verify(bearerAuth.accessToken))
+                assert(jwtService.verify(bearerAuth.access_token))
 
     test("login"):
         val userService = UserAccountService(entityManagerFactory)
@@ -81,7 +81,7 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
                         assert(response.body.isRight)
 
                         // println(body)
-                        val d          = decode[Authorization](body)
+                        val d          = decode[AuthorizationSC](body)
                         assert(d.isRight)
                         val bearerAuth = d.getOrElse(throw new Exception("No bearer auth"))
-                        assert(jwtService.verify(bearerAuth.accessToken))
+                        assert(jwtService.verify(bearerAuth.access_token))

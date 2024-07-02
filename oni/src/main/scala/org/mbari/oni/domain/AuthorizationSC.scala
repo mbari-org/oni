@@ -7,10 +7,10 @@
 
 package org.mbari.oni.domain
 
-final case class Authorization(tokenType: String, accessToken: String)
+final case class AuthorizationSC(token_type: String, access_token: String)
 
-object Authorization:
+object AuthorizationSC:
     val TokenTypeBearer: String = "Bearer"
     val TokenTypeApiKey: String = "APIKey"
 
-    def bearer(accessToken: String): Authorization = Authorization(TokenTypeBearer, accessToken)
+    def bearer(accessToken: String): AuthorizationSC = AuthorizationSC(TokenTypeBearer, accessToken)

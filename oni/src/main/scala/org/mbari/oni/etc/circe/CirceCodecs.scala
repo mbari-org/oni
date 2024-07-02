@@ -54,8 +54,8 @@ object CirceCodecs:
     given Encoder[Unauthorized] = deriveEncoder
 
     // --- Domain Objects ---
-    given Decoder[Authorization] = deriveDecoder
-    given Encoder[Authorization] = deriveEncoder
+    given Decoder[AuthorizationSC] = deriveDecoder
+    given Encoder[AuthorizationSC] = deriveEncoder
 
     given Decoder[Concept] = deriveDecoder
     given Encoder[Concept] = deriveEncoder

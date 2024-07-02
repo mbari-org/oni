@@ -15,7 +15,7 @@ import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{Authorization, BadRequest, ErrorMsg, NotFound, ServerError, Unauthorized}
+import org.mbari.oni.domain.{AuthorizationSC, BadRequest, ErrorMsg, NotFound, ServerError, Unauthorized}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.services.UserAccountService
 import sttp.tapir.model.UsernamePassword
@@ -29,7 +29,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
     private val base    = "auth"
     private val tag     = "Authorization"
 
-    val authEndpoint: Endpoint[String, Unit, ErrorMsg, Authorization, Any] =
+    val authEndpoint: Endpoint[String, Unit, ErrorMsg, AuthorizationSC, Any] =
         baseEndpoint
             .post
             .in(base)
@@ -38,7 +38,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
                     "Header format is `Authorization: APIKEY <key>`"
                 )
             )
-            .out(jsonBody[Authorization])
+            .out(jsonBody[AuthorizationSC])
             .errorOut(
                 oneOf[ErrorMsg](
                     oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest])),
@@ -65,7 +65,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
                     val apiKey = parts(1)
                     jwtService.authorize(apiKey) match
                         case None      => Left(Unauthorized("Invalid API key"))
-                        case Some(jwt) => Right(Authorization.bearer(jwt))
+                        case Some(jwt) => Right(AuthorizationSC.bearer(jwt))
             )
             .serverLogic(bearerAuth => Unit => Right(bearerAuth))
 
@@ -74,7 +74,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
             .post
             .in(base / "login")
             .securityIn(auth.basic[UsernamePassword](WWWAuthenticateChallenge.basic(AuthenticationScheme.Basic.name)))
-            .out(jsonBody[Authorization])
+            .out(jsonBody[AuthorizationSC])
             .errorOut(
                 oneOf[ErrorMsg](
                     oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest])),
@@ -103,7 +103,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
                     jwt         <- jwtService
                                        .login(usernamePassword.username, usernamePassword.password.getOrElse(""), entity)
                                        .toRight(Unauthorized("Invalid username or password"))
-                yield Authorization.bearer(jwt)
+                yield AuthorizationSC.bearer(jwt)
             }
             .serverLogic(bearerAuth => Unit => Right(bearerAuth))
 
