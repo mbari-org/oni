@@ -58,6 +58,8 @@ object Endpoints:
         healthEndpoints,
         historyEndpoints,
         linkEndpoints,
+        linkRealizationEndpoints,
+        linkTemplateEndpoints,
         phylogenyEndpoints,
         prefNodeEndpoints,
         referenceEndpoints,
