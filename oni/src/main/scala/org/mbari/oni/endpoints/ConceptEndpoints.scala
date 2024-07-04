@@ -152,7 +152,10 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         findChildrenEndpoint,
         findByNameContaining,
         findByName,
-        allEndpoint
+        allEndpoint,
+        createEndpoint,
+        deleteEndpoint,
+        updateEndpoint
     )
 
     override val allImpl: List[ServerEndpoint[Any, Identity]] = List(
@@ -160,5 +163,8 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         findChildrenEndpointImpl,
         findByNameContainingImpl,
         findByNameImpl,
-        allEndpointImpl
+        allEndpointImpl,
+        createEndpointImpl,
+        deleteEndpointImpl,
+        updateEndpointImpl
     )
