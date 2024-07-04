@@ -86,8 +86,8 @@ lazy val oni = project
         circeGeneric,
         circeParser,
         commonsCodec,
-        helidonEncodingDeflate,
-        helidonEncodingGzip,
+        // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to 
+        // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
         hibernateCore,
         hibernateEnvers,
         hibernateHikari,
