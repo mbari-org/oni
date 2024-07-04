@@ -26,6 +26,8 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
 import sttp.shared.Identity
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
+import org.mbari.oni.endpoints.LinkRealizationEndpoints
+import org.mbari.oni.endpoints.LinkTemplateEndpoints
 
 object Endpoints:
 
@@ -43,6 +45,8 @@ object Endpoints:
     val healthEndpoints: HealthEndpoints               = HealthEndpoints()
     val historyEndpoints: HistoryEndpoints             = HistoryEndpoints(entityMangerFactory, phylogenyEndpoints.service)
     val linkEndpoints: LinkEndpoints                   = LinkEndpoints(entityMangerFactory)
+    val linkRealizationEndpoints: LinkRealizationEndpoints = LinkRealizationEndpoints(entityMangerFactory)
+    val linkTemplateEndpoints: LinkTemplateEndpoints       = LinkTemplateEndpoints(entityMangerFactory)
     val prefNodeEndpoints: PrefNodeEndpoints           = PrefNodeEndpoints(entityMangerFactory)
     val referenceEndpoints: ReferenceEndpoints         = ReferenceEndpoints(entityMangerFactory)
     val userAccountEndpoints: UserAccountEndpoints     = UserAccountEndpoints(entityMangerFactory)
