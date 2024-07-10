@@ -20,8 +20,10 @@ import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.shared.Identity
 
+import scala.concurrent.{ExecutionContext, Future}
+
 class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
-    jwtService: JwtService
+    jwtService: JwtService, executionContext: ExecutionContext
 ) extends Endpoints:
 
     private val service              = HistoryService(entityManagerFactory)
@@ -39,13 +41,15 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .description("Get all pending change requests")
         .tag(tag)
 
-    val pendingEndpointImpl: ServerEndpoint[Any, Identity] = pendingEndpoint.serverLogic { paging =>
-        val limit   = paging.limit.getOrElse(defaultLimit)
-        val offset  = paging.offset.getOrElse(0)
-        val attempt =
-            for pending <- service.findAllPending(limit, offset)
-            yield Page(pending, limit, offset)
-        handleErrors(attempt)
+    val pendingEndpointImpl: ServerEndpoint[Any, Future] = pendingEndpoint.serverLogic { paging =>
+        Future {
+            val limit = paging.limit.getOrElse(defaultLimit)
+            val offset = paging.offset.getOrElse(0)
+            val attempt =
+                for pending <- service.findAllPending(limit, offset)
+                    yield Page(pending, limit, offset)
+            handleErrors(attempt)
+        }
     }
 
     val approvedEndpoints: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
@@ -57,13 +61,15 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .description("Get all approved change requests")
         .tag(tag)
 
-    val approvedEndpointsImpl: ServerEndpoint[Any, Identity] = approvedEndpoints.serverLogic { paging =>
-        val limit   = paging.limit.getOrElse(defaultLimit)
-        val offset  = paging.offset.getOrElse(0)
-        val attempt =
-            for approved <- service.findAllApproved()
-            yield Page(approved, limit, offset)
-        handleErrors(attempt)
+    val approvedEndpointsImpl: ServerEndpoint[Any, Future] = approvedEndpoints.serverLogic { paging =>
+        Future {
+            val limit = paging.limit.getOrElse(defaultLimit)
+            val offset = paging.offset.getOrElse(0)
+            val attempt =
+                for approved <- service.findAllApproved()
+                    yield Page(approved, limit, offset)
+            handleErrors(attempt)
+        }
     }
 
     val findByIdEndpoint = openEndpoint
@@ -74,9 +80,9 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .description("Find a history record by its id")
         .tag(tag)
 
-    val findByIdEndpointImpl: ServerEndpoint[Any, Identity] = findByIdEndpoint
+    val findByIdEndpointImpl: ServerEndpoint[Any, Future] = findByIdEndpoint
         .serverLogic { id =>
-            handleErrors(service.findById(id))
+            handleErrorsAsync(service.findById(id))
         }
 
     val findByConceptNameEndpoint = openEndpoint
@@ -87,9 +93,9 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .description("Find a history record by its concept name")
         .tag(tag)
 
-    val findByConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = findByConceptNameEndpoint
+    val findByConceptNameEndpointImpl: ServerEndpoint[Any, Future] = findByConceptNameEndpoint
         .serverLogic { conceptName =>
-            handleErrors(service.findByConceptName(conceptName))
+            handleErrorsAsync(service.findByConceptName(conceptName))
         }
 
     val deleteEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
@@ -100,17 +106,19 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .description("Delete a history record")
         .tag(tag)
 
-    val deleteEndpointImpl: ServerEndpoint[Any, Identity] = deleteEndpoint
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            if userAccount.isAdministrator then
-                service
-                    .deleteById(id)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        _ => Right(())
-                    )
-            else Left(Unauthorized(s"User, ${userAccount.username} is not an administrator"))
+            Future {
+                if userAccount.isAdministrator then
+                    service
+                        .deleteById(id)
+                        .fold(
+                            error => Left(ServerError(error.getMessage)),
+                            _ => Right(())
+                        )
+                else Left(Unauthorized(s"User, ${userAccount.username} is not an administrator"))
+            }
         }
 
     val approveEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
@@ -121,15 +129,17 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .description("Approve a history record")
         .tag(tag)
 
-    val approveEndpointImpl: ServerEndpoint[Any, Identity] = approveEndpoint
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val approveEndpointImpl: ServerEndpoint[Any, Future] = approveEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            historyActionService
-                .approve(id, userAccount.username)
-                .fold(
-                    error => Left(ServerError(error.getMessage)),
-                    history => Right(history)
-                )
+            Future {
+                historyActionService
+                    .approve(id, userAccount.username)
+                    .fold(
+                        error => Left(ServerError(error.getMessage)),
+                        history => Right(history)
+                    )
+            }
         }
 
     val rejectEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
@@ -140,15 +150,17 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .description("Reject a history record")
         .tag(tag)
 
-    val rejectEndpointImpl: ServerEndpoint[Any, Identity] = rejectEndpoint
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val rejectEndpointImpl: ServerEndpoint[Any, Future] = rejectEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            historyActionService
-                .reject(id, userAccount.username)
-                .fold(
-                    error => Left(ServerError(error.getMessage)),
-                    history => Right(history)
-                )
+            Future {
+                historyActionService
+                    .reject(id, userAccount.username)
+                    .fold(
+                        error => Left(ServerError(error.getMessage)),
+                        history => Right(history)
+                    )
+            }
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
@@ -161,7 +173,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         findByIdEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         findByConceptNameEndpointImpl,
         approveEndpointImpl,
         rejectEndpointImpl,

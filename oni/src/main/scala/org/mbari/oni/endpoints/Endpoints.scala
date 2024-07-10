@@ -20,10 +20,9 @@ import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.shared.Identity
-
 import org.mbari.oni.etc.jdk.Loggers.given
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.AppConfig
 
@@ -78,7 +77,7 @@ trait Endpoints:
 
     // --- Abstract methods
     def all: List[Endpoint[?, ?, ?, ?, ?]]
-    def allImpl: List[ServerEndpoint[Any, Identity]]
+    def allImpl: List[ServerEndpoint[Any, Future]]
 
     // hard coded ATM, but could be configurable
     val baseEndpoint: Endpoint[Unit, Unit, Unit, Unit, Any] = endpoint.in(AppConfig.DefaultHttpConfig.contextPath)
@@ -116,11 +115,17 @@ trait Endpoints:
             ,
             Right(_)
         )
+        
+    def handleErrorsAsync[T](f: => Either[Throwable, T])(using ec: ExecutionContext): Future[Either[ErrorMsg, T]] =
+        Future(handleErrors(f))
 
     def handleOption[T](f: => Option[T]): Either[ErrorMsg, T] =
         f match
             case Some(t) => Right(t)
             case None    => Left(NotFound("Not found"))
+
+    def handleOptionAsync[T](f: => Option[T])(using executionContext: ExecutionContext): Future[Either[ErrorMsg, T]] =
+        Future(handleOption(f))
 
     def verify(
         jwtOpt: Option[String]
@@ -131,6 +136,11 @@ trait Endpoints:
                 if jwtService.verify(jwt) then Right(())
                 else Left(Unauthorized("Invalid token"))
 
+    def verifyAsync(
+        jwtOpt: Option[String]
+    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, Unit]] =
+        Future(verify(jwtOpt))
+
     def verifyLogin(
         jwtOpt: Option[String]
     )(using jwtService: JwtService): Identity[Either[Unauthorized, UserAccount]] =
@@ -140,3 +150,8 @@ trait Endpoints:
                 jwtService.decode(jwt) match
                     case None              => Left(Unauthorized("Invalid token"))
                     case Some(userAccount) => Right(userAccount)
+                    
+    def verifyLoginAsync(
+        jwtOpt: Option[String]
+    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, UserAccount]] =
+        Future(verifyLogin(jwtOpt))

@@ -25,6 +25,8 @@ import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
 
+import scala.concurrent.ExecutionContext
+
 trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
     given jwtService: JwtService         = JwtService("mbari", "foo", "bar")

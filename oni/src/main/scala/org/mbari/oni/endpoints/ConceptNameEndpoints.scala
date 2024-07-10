@@ -18,7 +18,9 @@ import org.mbari.oni.services.ConceptNameService
 import sttp.shared.Identity
 import org.mbari.oni.etc.circe.CirceCodecs.given
 
-class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints:
+import scala.concurrent.{ExecutionContext, Future}
+
+class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
 
     private val service = ConceptNameService(entityManagerFactory)
     private val base    = "names"
@@ -33,10 +35,10 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         .description("Get all concept names")
         .tag(tag)
 
-    val allEndpointImpl: ServerEndpoint[Any, Identity] = allEndpoint.serverLogic { paging =>
+    val allEndpointImpl: ServerEndpoint[Any, Future] = allEndpoint.serverLogic { paging =>
         val limit  = paging.limit.getOrElse(10000)
         val offset = paging.offset.getOrElse(0)
-        handleErrors(service.findAllNames(limit, offset).map(s => Page(s, limit, offset)))
+        handleErrorsAsync(service.findAllNames(limit, offset).map(s => Page(s, limit, offset)))
     }
 
     val addConceptNameEndpoint: Endpoint[Option[String], ConceptNameCreate, ErrorMsg, RawConcept, Any] = secureEndpoint
@@ -48,10 +50,10 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         .description("Add a new concept name")
         .tag(tag)
 
-    val addConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = addConceptNameEndpoint
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val addConceptNameEndpointImpl: ServerEndpoint[Any, Future] = addConceptNameEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => dto =>
-            handleErrors(service.addName(dto, userAccount.username))
+            handleErrorsAsync(service.addName(dto, userAccount.username))
         }
 
     val updateConceptNameEndpoint: Endpoint[Option[String], (String, ConceptNameUpdate), ErrorMsg, RawConcept, Any] =
@@ -64,10 +66,10 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Update a concept name")
             .tag(tag)
 
-    val updateConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = updateConceptNameEndpoint
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val updateConceptNameEndpointImpl: ServerEndpoint[Any, Future] = updateConceptNameEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (name, dto) =>
-            handleErrors(service.updateName(name, dto, userAccount.username))
+            handleErrorsAsync(service.updateName(name, dto, userAccount.username))
         }
 
     val deleteConceptNameEndpoint: Endpoint[Option[String], String, ErrorMsg, RawConcept, Any] = secureEndpoint
@@ -78,10 +80,10 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         .description("Delete a concept name")
         .tag(tag)
 
-    val deleteConceptNameEndpointImpl: ServerEndpoint[Any, Identity] = deleteConceptNameEndpoint
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val deleteConceptNameEndpointImpl: ServerEndpoint[Any, Future] = deleteConceptNameEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => name =>
-            handleErrors(service.deleteName(name, userAccount.username))
+            handleErrorsAsync(service.deleteName(name, userAccount.username))
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
@@ -91,7 +93,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         deleteConceptNameEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         allEndpointImpl,
         addConceptNameEndpointImpl,
         updateConceptNameEndpointImpl,

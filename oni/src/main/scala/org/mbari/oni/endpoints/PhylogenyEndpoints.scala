@@ -18,7 +18,9 @@ import CustomTapirJsonCirce.*
 import scala.util.Try
 import jakarta.persistence.EntityManagerFactory
 
-class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
+import scala.concurrent.{ExecutionContext, Future}
+
+class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext) extends Endpoints:
 
     /** This services does caching so we should share it */
     val service: FastPhylogenyService = FastPhylogenyService(entityManagerFactory)
@@ -33,8 +35,8 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         .description("Find the branch from a given concept up to the root")
         .tag(tag)
 
-    val upEndpointImpl: ServerEndpoint[Any, Identity] = upEndpoint.serverLogic { name =>
-        handleOption(service.findUp(name).map(SerdeConcept.from))
+    val upEndpointImpl: ServerEndpoint[Any, Future] = upEndpoint.serverLogic { name =>
+        handleOptionAsync(service.findUp(name).map(SerdeConcept.from))
     }
 
     val downEndpoint: Endpoint[Unit, String, ErrorMsg, SerdeConcept, Any] = openEndpoint
@@ -44,8 +46,8 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         .description("Find the branch from the root down to a given concept")
         .tag(tag)
 
-    val downEndpointImpl: ServerEndpoint[Any, Identity] = downEndpoint.serverLogic { name =>
-        handleOption(service.findDown(name).map(SerdeConcept.from))
+    val downEndpointImpl: ServerEndpoint[Any, Future] = downEndpoint.serverLogic { name =>
+        handleOptionAsync(service.findDown(name).map(SerdeConcept.from))
     }
 
     val siblingsEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[SerdeConcept], Any] = openEndpoint
@@ -54,8 +56,8 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         .out(jsonBody[Seq[SerdeConcept]])
         .tag(tag)
 
-    val siblingsEndpointImpl: ServerEndpoint[Any, Identity] = siblingsEndpoint.serverLogic { name =>
-        handleErrors(
+    val siblingsEndpointImpl: ServerEndpoint[Any, Future] = siblingsEndpoint.serverLogic { name =>
+        handleErrorsAsync(
             Try(service.findSiblings(name))
                 .toEither
                 .map(_.map(SerdeConcept.from).toSeq)
@@ -69,8 +71,8 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
             .out(jsonBody[Seq[SerdeConcept]])
             .tag(tag)
 
-    val basicEndpointImpl: ServerEndpoint[Any, Identity] = basicEndpoint.serverLogic { name =>
-        handleOption(service.findUp(name).map(c => SerdeConcept.from(c).flatten.map(_.copy(children = None))))
+    val basicEndpointImpl: ServerEndpoint[Any, Future] = basicEndpoint.serverLogic { name =>
+        handleOptionAsync(service.findUp(name).map(c => SerdeConcept.from(c).flatten.map(_.copy(children = None))))
     }
 
     val taxaEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[SerdeConcept], Any] =
@@ -80,8 +82,8 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
             .out(jsonBody[Seq[SerdeConcept]])
             .tag(tag)
 
-    val taxaEndpointImpl: ServerEndpoint[Any, Identity] = taxaEndpoint.serverLogic { name =>
-        handleOption(
+    val taxaEndpointImpl: ServerEndpoint[Any, Future] = taxaEndpoint.serverLogic { name =>
+        handleOptionAsync(
             service
                 .findDown(name)
                 .map(c =>
@@ -102,7 +104,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory) extends End
         taxaEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         upEndpointImpl,
         downEndpointImpl,
         siblingsEndpointImpl,

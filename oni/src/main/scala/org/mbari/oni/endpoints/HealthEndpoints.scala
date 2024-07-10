@@ -19,7 +19,7 @@ import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.domain.{ErrorMsg, HealthStatus}
 import sttp.shared.Identity
 
-class HealthEndpoints extends Endpoints:
+class HealthEndpoints(using executionContext: ExecutionContext) extends Endpoints:
 
     val healthEndpoint: Endpoint[Unit, Unit, ErrorMsg, HealthStatus, Any] =
         openEndpoint
@@ -30,10 +30,10 @@ class HealthEndpoints extends Endpoints:
             .description("Health check")
             .tag("Health")
 
-    val healthEndpointImpl: ServerEndpoint[Any, Identity] =
-        healthEndpoint.serverLogic(_ => Right(HealthStatus.Default))
+    val healthEndpointImpl: ServerEndpoint[Any, Future] =
+        healthEndpoint.serverLogic(_ => Future(Right(HealthStatus.Default)))
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] =
         List(healthEndpoint)
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(healthEndpointImpl)
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(healthEndpointImpl)

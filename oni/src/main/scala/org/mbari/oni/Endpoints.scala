@@ -8,18 +8,7 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{
-    AuthorizationEndpoints,
-    ConceptEndpoints,
-    ConceptNameEndpoints,
-    HealthEndpoints,
-    HistoryEndpoints,
-    LinkEndpoints,
-    PhylogenyEndpoints,
-    PrefNodeEndpoints,
-    ReferenceEndpoints,
-    UserAccountEndpoints
-}
+import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
@@ -29,11 +18,15 @@ import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import org.mbari.oni.endpoints.LinkRealizationEndpoints
 import org.mbari.oni.endpoints.LinkTemplateEndpoints
 
+import scala.concurrent.{ExecutionContext, Future}
+
 object Endpoints:
 
     given JwtService =
         val config = AppConfig.DefaultJwtConfig
         JwtService(config.issuer, config.apiKey, config.signingSecret)
+
+    given ExecutionContext = ExecutionContext.global
 
     val entityMangerFactory: EntityManagerFactory = AppConfig.DefaultEntityManagerFactory
 
@@ -51,7 +44,7 @@ object Endpoints:
     val referenceEndpoints: ReferenceEndpoints         = ReferenceEndpoints(entityMangerFactory)
     val userAccountEndpoints: UserAccountEndpoints     = UserAccountEndpoints(entityMangerFactory)
 
-    val endpoints: List[ServerEndpoint[Any, Identity]] = List(
+    val endpoints: List[ServerEndpoint[Any, Future]] = List(
         authorizationEndpoints,
         conceptEndpoints,
         conceptNameEndpoints,
@@ -66,10 +59,10 @@ object Endpoints:
         userAccountEndpoints
     ).flatMap(_.allImpl)
 
-    val docEndpoints: List[ServerEndpoint[Any, Identity]] =
+    val docEndpoints: List[ServerEndpoint[Any, Future]] =
         SwaggerInterpreter().fromServerEndpoints(endpoints, AppConfig.Name, AppConfig.Version)
 
-    val prometheusMetrics: PrometheusMetrics[Identity] = PrometheusMetrics.default[Identity]()
-    val metricsEndpoint: ServerEndpoint[Any, Identity] = prometheusMetrics.metricsEndpoint
+    val prometheusMetrics: PrometheusMetrics[Future] = PrometheusMetrics.default[Future]()
+    val metricsEndpoint: ServerEndpoint[Any, Future] = prometheusMetrics.metricsEndpoint
 
-    val allImpl: List[ServerEndpoint[Any, Identity]] = endpoints ++ docEndpoints ++ List(metricsEndpoint)
+    val allImpl: List[ServerEndpoint[Any, Future]] = endpoints ++ docEndpoints ++ List(metricsEndpoint)

@@ -22,8 +22,9 @@ import sttp.tapir.server.ServerEndpoint
 import org.mbari.oni.etc.jdk.Loggers.given
 
 import java.net.{URLDecoder, URLEncoder}
+import scala.concurrent.{ExecutionContext, Future}
 
-class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints:
+class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
 
     private val service = ReferenceService(entityManagerFactory)
 
@@ -39,11 +40,13 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Find a reference by its ID")
             .tag(tag)
 
-    val findReferenceByIdEndpointImpl: ServerEndpoint[Any, Identity] = findReferenceByIdEndpoint.serverLogic { id =>
-        service.findById(id) match
-            case Right(Some(reference)) => Right(reference)
-            case Right(None)            => Left(NotFound(s"Reference with ID $id not found"))
-            case Left(e)                => Left(ServerError(e.getMessage))
+    val findReferenceByIdEndpointImpl: ServerEndpoint[Any, Future] = findReferenceByIdEndpoint.serverLogic { id =>
+        Future {
+            service.findById(id) match
+                case Right(Some(reference)) => Right(reference)
+                case Right(None) => Left(NotFound(s"Reference with ID $id not found"))
+                case Left(e) => Left(ServerError(e.getMessage))
+        }
     }
 
     val findAllEndpoint: Endpoint[Unit, Paging, ErrorMsg, Seq[Reference], Any] =
@@ -56,8 +59,8 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Find all references")
             .tag(tag)
 
-    val findAllEndpointImpl: ServerEndpoint[Any, Identity] = findAllEndpoint.serverLogic { paging =>
-        handleErrors(service.findAll(paging.limit.getOrElse(DefaultLimit), paging.offset.getOrElse(0)))
+    val findAllEndpointImpl: ServerEndpoint[Any, Future] = findAllEndpoint.serverLogic { paging =>
+        handleErrorsAsync(service.findAll(paging.limit.getOrElse(DefaultLimit), paging.offset.getOrElse(0)))
     }
 
     val findReferencesByCitationGlobEndpoint: Endpoint[Unit, (Paging, ReferenceQuery), ErrorMsg, Seq[Reference], Any] =
@@ -71,12 +74,12 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Find references by citation glob")
             .tag(tag)
 
-    val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Identity] =
+    val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Future] =
         findReferencesByCitationGlobEndpoint.serverLogic { (paging, glob) =>
             glob.citation match
-                case None               => Left(BadRequest("Citation is required"))
+                case None               => Future(Left(BadRequest("Citation is required")))
                 case Some(citationGlob) =>
-                    handleErrors(
+                    handleErrorsAsync(
                         service.findByCitationGlob(
                             citationGlob,
                             paging.limit.getOrElse(DefaultLimit),
@@ -95,14 +98,16 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Find a reference by DOI")
             .tag(tag)
 
-    val findReferenceByDoiEndpointImpl: ServerEndpoint[Any, Identity] = findReferenceByDoiEndpoint.serverLogic { doi =>
-        doi.doi match
-            case None      => Left(BadRequest("DOI is required"))
-            case Some(doi) =>
-                service.findByDoi(doi) match
-                    case Right(Some(reference)) => Right(reference)
-                    case Right(None)            => Left(NotFound(s"Reference with DOI '${doi}' not found"))
-                    case Left(e)                => Left(ServerError(e.getMessage))
+    val findReferenceByDoiEndpointImpl: ServerEndpoint[Any, Future] = findReferenceByDoiEndpoint.serverLogic { doi =>
+        Future {
+            doi.doi match
+                case None => Left(BadRequest("DOI is required"))
+                case Some(doi) =>
+                    service.findByDoi(doi) match
+                        case Right(Some(reference)) => Right(reference)
+                        case Right(None) => Left(NotFound(s"Reference with DOI '${doi}' not found"))
+                        case Left(e) => Left(ServerError(e.getMessage))
+        }
     }
 
     val createReferenceEndpoint: Endpoint[Option[String], Reference, ErrorMsg, Reference, Any] =
@@ -115,10 +120,10 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Create a new reference")
             .tag(tag)
 
-    val createReferenceEndpointImpl: ServerEndpoint[Any, Identity] = createReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val createReferenceEndpointImpl: ServerEndpoint[Any, Future] = createReferenceEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => reference =>
-            handleErrors(service.create(reference))
+            handleErrorsAsync(service.create(reference))
         }
 
     val updateReferenceEndpoint: Endpoint[Option[String], (Long, ReferenceUpdate), ErrorMsg, Reference, Any] =
@@ -131,10 +136,10 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Update a reference")
             .tag(tag)
 
-    val updateReferenceEndpointImpl: ServerEndpoint[Any, Identity] = updateReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val updateReferenceEndpointImpl: ServerEndpoint[Any, Future] = updateReferenceEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => (id, referenceUpdate) =>
-            handleErrors(service.updateById(id, referenceUpdate))
+            handleErrorsAsync(service.updateById(id, referenceUpdate))
         }
 
     val deleteReferenceEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] =
@@ -146,10 +151,10 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Delete a reference")
             .tag(tag)
 
-    val deleteReferenceEndpointImpl: ServerEndpoint[Any, Identity] = deleteReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val deleteReferenceEndpointImpl: ServerEndpoint[Any, Future] = deleteReferenceEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => id =>
-            handleErrors(service.deleteById(id))
+            handleErrorsAsync(service.deleteById(id))
         }
 
     val addConceptEndpoint: Endpoint[Option[String], (Long, String), ErrorMsg, Reference, Any] =
@@ -161,10 +166,10 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Add a reference to a concept")
             .tag(tag)
 
-    val addConceptEndpointImpl: ServerEndpoint[Any, Identity] = addConceptEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val addConceptEndpointImpl: ServerEndpoint[Any, Future] = addConceptEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => (id, concept) =>
-            handleErrors(service.addConcept(id, concept))
+            handleErrorsAsync(service.addConcept(id, concept))
         }
 
     val removeConceptEndpoint: Endpoint[Option[String], (Long, String), ErrorMsg, Reference, Any] =
@@ -176,10 +181,10 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             .description("Remove a reference from a concept")
             .tag(tag)
 
-    val removeConceptEndpointImpl: ServerEndpoint[Any, Identity] = removeConceptEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val removeConceptEndpointImpl: ServerEndpoint[Any, Future] = removeConceptEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => (id, concept) =>
-            handleErrors(service.removeConcept(id, concept))
+            handleErrorsAsync(service.removeConcept(id, concept))
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
@@ -195,7 +200,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
 
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         addConceptEndpointImpl,
         removeConceptEndpointImpl,
         findReferencesByCitationGlobEndpointImpl,

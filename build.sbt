@@ -102,11 +102,12 @@ lazy val oni = project
         postgresql,
         slf4jSystem,
         tapirCirce,
-        tapirHelidon,
+//        tapirHelidon,
         tapirPrometheus,
         tapirServerStub   % Test,
         tapirSttpCirce,
         tapirSwagger,
+        tapirVertex,
         typesafeConfig
     )
   )
