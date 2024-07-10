@@ -23,10 +23,11 @@ import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DatabaseFunSuite
 import org.mbari.oni.services.UserAccountService
 import sttp.client3.*
-
 import sttp.model.StatusCode
+import org.mbari.oni.etc.sdk.Futures.*
 
 import java.util.Base64
+import scala.concurrent.ExecutionContext
 
 trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
 
@@ -41,6 +42,8 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
             .post(uri"http://test.com/v1/auth")
             .header("Authorization", "APIKEY foo")
             .send(backendStub)
+            .join
+
 
         response.body match
             case Left(e)     => fail(e)
@@ -72,6 +75,7 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
                     .post(uri"http://test.com/v1/auth/login")
                     .header("Authorization", s"BASIC $credentials")
                     .send(backendStub)
+                    .join
 
                 response.body match
                     case Left(e)     =>

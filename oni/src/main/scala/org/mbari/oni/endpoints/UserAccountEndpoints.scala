@@ -18,7 +18,9 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.shared.Identity
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
-class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService) extends Endpoints:
+import scala.concurrent.{ExecutionContext, Future}
+
+class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
 
     private val service = UserAccountService(entityManagerFactory)
     private val base    = "users"
@@ -34,8 +36,8 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Get all user accounts")
             .tag(tag)
 
-    val findAllEndpointImpl: ServerEndpoint[Any, Identity] = findAllEndpoint.serverLogic { _ =>
-        handleErrors(service.findAll())
+    val findAllEndpointImpl: ServerEndpoint[Any, Future] = findAllEndpoint.serverLogic { _ =>
+        handleErrorsAsync(service.findAll())
     }
 
     // findByUserName
@@ -48,10 +50,12 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Find a user account by username")
             .tag(tag)
 
-    val findByUserNameEndpointImpl: ServerEndpoint[Any, Identity] = findByUserNameEndpoint.serverLogic { name =>
-        handleErrors(service.findByUserName(name)).flatMap {
-            case None        => Left(NotFound(s"User account not found: $name"))
-            case Some(value) => Right(value)
+    val findByUserNameEndpointImpl: ServerEndpoint[Any, Future] = findByUserNameEndpoint.serverLogic { name =>
+        Future {
+            handleErrors(service.findByUserName(name)).flatMap {
+                case None => Left(NotFound(s"User account not found: $name"))
+                case Some(value) => Right(value)
+            }
         }
     }
 
@@ -65,8 +69,8 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Find all user accounts by role")
             .tag(tag)
 
-    val findAllByRoleEndpointImpl: ServerEndpoint[Any, Identity] = findAllByRoleEndpoint.serverLogic { role =>
-        handleErrors(service.findAllByRole(role))
+    val findAllByRoleEndpointImpl: ServerEndpoint[Any, Future] = findAllByRoleEndpoint.serverLogic { role =>
+        handleErrorsAsync(service.findAllByRole(role))
     }
 
     // deleteByUserName
@@ -79,10 +83,10 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Delete a user account by username")
             .tag(tag)
 
-    val deleteByUserNameEndpointImpl: ServerEndpoint[Any, Identity] = deleteByUserNameEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val deleteByUserNameEndpointImpl: ServerEndpoint[Any, Future] = deleteByUserNameEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => name =>
-            handleErrors(service.deleteByUserName(name))
+            handleErrorsAsync(service.deleteByUserName(name))
         }
 
     // create
@@ -96,10 +100,10 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Create a new user account")
             .tag(tag)
 
-    val createEndpointImpl: ServerEndpoint[Any, Identity] = createEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => userAccount =>
-            handleErrors(service.create(userAccount))
+            handleErrorsAsync(service.create(userAccount))
         }
 
     // update
@@ -113,10 +117,10 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .description("Update a user account")
             .tag(tag)
 
-    val updateEndpointImpl: ServerEndpoint[Any, Identity] = updateEndpoint
-        .serverSecurityLogic(jwtOpt => verify(jwtOpt))
+    val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
+        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => (username, userAccountUpdate) =>
-            handleErrors(service.update(username, userAccountUpdate))
+            handleErrorsAsync(service.update(username, userAccountUpdate))
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
@@ -128,7 +132,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         updateEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         findAllByRoleEndpointImpl,
         findByUserNameEndpointImpl,
         findAllEndpointImpl,

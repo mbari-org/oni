@@ -22,22 +22,25 @@ import sttp.client3.*
 import sttp.client3.testing.SttpBackendStub
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.stub.TapirStubInterpreter
-
 import sttp.shared.Identity
-import sttp.tapir.server.nima.NimaServerOptions
 import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.interceptor.CustomiseInterceptors
 import sttp.model.StatusCode
 import sttp.client3.SttpBackend
 import sttp.tapir.server.model.ValuedEndpointOutput
 import org.mbari.oni.etc.jdk.Loggers.given
+import sttp.tapir.server.vertx.VertxFutureServerOptions
+import org.mbari.oni.etc.sdk.Futures.*
+
+import scala.concurrent.{ExecutionContext, Future}
 
 trait EndpointsSuite extends munit.FunSuite:
 
+    given ExecutionContext = ExecutionContext.global
     private val log: System.Logger = System.getLogger(getClass.getName)
 
     def runDelete(
-        ep: ServerEndpoint[Any, Identity],
+        ep: ServerEndpoint[Any, Future],
         uri: String,
         assertions: Response[Either[String, String]] => Unit,
         jwt: Option[String] = None
@@ -51,11 +54,11 @@ trait EndpointsSuite extends munit.FunSuite:
                     .delete(u)
                     .auth
                     .bearer(bearer)
-        val response    = request.send(backendStub)
+        val response    = request.send(backendStub).join
         assertions(response)
 
     def runPut(
-        ep: ServerEndpoint[Any, Identity],
+        ep: ServerEndpoint[Any, Future],
         uri: String,
         body: String,
         assertions: Response[Either[String, String]] => Unit,
@@ -71,11 +74,11 @@ trait EndpointsSuite extends munit.FunSuite:
                     .body(body)
                     .auth
                     .bearer(bearer)
-        val response    = request.send(backendStub)
+        val response    = request.send(backendStub).join
         assertions(response)
 
     def runPost(
-        ep: ServerEndpoint[Any, Identity],
+        ep: ServerEndpoint[Any, Future],
         uri: String,
         body: String,
         assertions: Response[Either[String, String]] => Unit,
@@ -92,11 +95,11 @@ trait EndpointsSuite extends munit.FunSuite:
                     .auth
                     .bearer(bearer)
 
-        val response = request.send(backendStub)
+        val response = request.send(backendStub).join
         assertions(response)
 
     def runGet(
-        ep: ServerEndpoint[Any, Identity],
+        ep: ServerEndpoint[Any, Future],
         uri: String,
         assertions: Response[Either[String, String]] => Unit,
         jwt: Option[String] = None
@@ -111,7 +114,7 @@ trait EndpointsSuite extends munit.FunSuite:
                     .auth
                     .bearer(bearer)
         log.atDebug.log("--REQUEST: " + request)
-        val response    = request.send(backendStub)
+        val response    = request.send(backendStub).join
         log.atDebug.log("--RESPONSE: " + response)
         assertions(response)
 
@@ -129,9 +132,9 @@ trait EndpointsSuite extends munit.FunSuite:
      * @param serverEndpoint
      * @return
      */
-    def newBackendStub(serverEndpoint: ServerEndpoint[Any, Identity]): SttpBackend[Identity, Any] =
+    def newBackendStub(serverEndpoint: ServerEndpoint[Any, Future]): SttpBackend[Future, Any] =
         // --- START: This block adds exception logging to the stub
-        val exceptionHandler = ExceptionHandler.pure[Identity](ctx =>
+        val exceptionHandler = ExceptionHandler.pure[Future](ctx =>
             Some(
                 ValuedEndpointOutput(
                     sttp.tapir.stringBody.and(sttp.tapir.statusCode),
@@ -140,11 +143,12 @@ trait EndpointsSuite extends munit.FunSuite:
             )
         )
 
-        val customOptions: CustomiseInterceptors[Identity, NimaServerOptions] =
-            NimaServerOptions
+        val customOptions: CustomiseInterceptors[Future, VertxFutureServerOptions] =
+            import scala.concurrent.ExecutionContext.Implicits.global
+            VertxFutureServerOptions
                 .customiseInterceptors
                 .exceptionHandler(exceptionHandler)
         // --- END: This block adds exception logging to the stub
-        TapirStubInterpreter(customOptions, SttpBackendStub.synchronous)
+        TapirStubInterpreter(customOptions, SttpBackendStub.asynchronousFuture)
             .whenServerEndpointRunLogic(serverEndpoint)
             .backend()

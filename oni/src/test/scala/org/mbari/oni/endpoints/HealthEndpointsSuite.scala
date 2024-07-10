@@ -13,16 +13,18 @@ import sttp.client3.*
 import sttp.client3.SttpBackend
 import sttp.client3.testing.SttpBackendStub
 import sttp.model.StatusCode
+
 import scala.concurrent.Future
 import sttp.tapir.server.stub.TapirStubInterpreter
+
 import scala.util.Failure
 import scala.util.Success
 import sttp.tapir.server.interceptor.exception.ExceptionHandler
 import sttp.tapir.server.model.ValuedEndpointOutput
-import sttp.tapir.server.interceptor.CustomiseInterceptors
-import sttp.tapir.server.nima.NimaServerOptions
-import sttp.shared.Identity
 import org.checkerframework.checker.units.qual.m
+import sttp.tapir.server.interceptor.CustomiseInterceptors
+import sttp.tapir.server.vertx.VertxFutureServerOptions
+import org.mbari.oni.etc.sdk.Futures.*
 
 class HealthEndpointsSuite extends munit.FunSuite:
     given ExecutionContext = ExecutionContext.global
@@ -31,7 +33,7 @@ class HealthEndpointsSuite extends munit.FunSuite:
     test("health"):
 
         // --- START: This block adds exception logging to the stub
-        val exceptionHandler = ExceptionHandler.pure[Identity](ctx =>
+        val exceptionHandler = ExceptionHandler.pure[Future](ctx =>
             Some(
                 ValuedEndpointOutput(
                     sttp.tapir.stringBody.and(sttp.tapir.statusCode),
@@ -40,20 +42,20 @@ class HealthEndpointsSuite extends munit.FunSuite:
             )
         )
 
-        val customOptions: CustomiseInterceptors[Identity, NimaServerOptions] =
-            NimaServerOptions
+        val customOptions: CustomiseInterceptors[Future, VertxFutureServerOptions] =
+            VertxFutureServerOptions
                 .customiseInterceptors
                 .exceptionHandler(exceptionHandler)
         // --- END: This block adds exception logging to the stub
         // println(HealthStatus.default)
 
-        val backendStub: SttpBackend[Identity, Any] =
-            TapirStubInterpreter(customOptions, SttpBackendStub.synchronous)
+        val backendStub: SttpBackend[Future, Any] =
+            TapirStubInterpreter(customOptions, SttpBackendStub.asynchronousFuture)
                 .whenServerEndpointRunLogic(healthEndpoints.healthEndpointImpl)
                 .backend()
 
         val request  = basicRequest.get(uri"http://test.com/v1/health")
-        val response = request.send(backendStub)
+        val response = request.send(backendStub).join
         response.body match
             case Left(e) => fail(e)
             case Right(r) => assertEquals(response.code, StatusCode.Ok)

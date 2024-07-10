@@ -18,7 +18,9 @@ import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 
-class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService)
+import scala.concurrent.{ExecutionContext, Future}
+
+class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext)
     extends Endpoints:
 
     private val service = LinkRealizationService(entityManagerFactory)
@@ -33,9 +35,9 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Find a link realizations by its id")
         .tag(tag)
 
-    val findLinkRealizationByIdImpl: ServerEndpoint[Any, Identity] =
+    val findLinkRealizationByIdImpl: ServerEndpoint[Any, Future] =
         findLinkRealizationById.serverLogic { id =>
-            handleErrors(service.findById(id))
+            handleErrorsAsync(service.findById(id))
         }
 
     val findLinkRealizationsByConceptName: Endpoint[Unit, String, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
@@ -46,9 +48,9 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Find all link realizations by concept name")
         .tag(tag)
 
-    val findLinkRealizationsByConceptNameImpl: ServerEndpoint[Any, Identity] =
+    val findLinkRealizationsByConceptNameImpl: ServerEndpoint[Any, Future] =
         findLinkRealizationsByConceptName.serverLogic { conceptName =>
-            handleErrors(service.findByConcept(conceptName))
+            handleErrorsAsync(service.findByConcept(conceptName))
         }
 
     val findLinkRealizationByPrototype: Endpoint[Unit, Link, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
@@ -60,9 +62,9 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Find all link realizations by prototype")
         .tag(tag)
 
-    val findLinkRealizationByPrototypeImpl: ServerEndpoint[Any, Identity] =
+    val findLinkRealizationByPrototypeImpl: ServerEndpoint[Any, Future] =
         findLinkRealizationByPrototype.serverLogic { link =>
-            handleErrors(service.findByPrototype(link))
+            handleErrorsAsync(service.findByPrototype(link))
         }
 
     val create: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -74,10 +76,10 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Create a new link realization")
         .tag(tag)
 
-    val createImpl: ServerEndpoint[Any, Identity] = create
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val createImpl: ServerEndpoint[Any, Future] = create
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => link =>
-            handleErrors(service.create(link, userAccount.username))
+            handleErrorsAsync(service.create(link, userAccount.username))
         }
 
     val update: Endpoint[Option[String], (Long, LinkUpdate), ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -89,10 +91,10 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Update a link realization")
         .tag(tag)
 
-    val updateImpl: ServerEndpoint[Any, Identity] = update
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val updateImpl: ServerEndpoint[Any, Future] = update
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (id, linkUpdate) =>
-            handleErrors(service.updateById(id, linkUpdate, userAccount.username))
+            handleErrorsAsync(service.updateById(id, linkUpdate, userAccount.username))
         }
 
     val delete: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
@@ -103,15 +105,17 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Delete a link realization")
         .tag(tag)
 
-    val deleteImpl: ServerEndpoint[Any, Identity] = delete
-        .serverSecurityLogic(jwtOpt => verifyLogin(jwtOpt))
+    val deleteImpl: ServerEndpoint[Any, Future] = delete
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            service
-                .deleteById(id, userAccount.username)
-                .fold(
-                    error => Left(ServerError(error.getMessage)),
-                    _ => Right(())
-                )
+            Future {
+                service
+                    .deleteById(id, userAccount.username)
+                    .fold(
+                        error => Left(ServerError(error.getMessage)),
+                        _ => Right(())
+                    )
+            }
         }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
@@ -123,7 +127,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkRealizationById
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         findLinkRealizationsByConceptNameImpl,
         findLinkRealizationByPrototypeImpl,
         createImpl,

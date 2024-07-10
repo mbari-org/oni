@@ -8,6 +8,7 @@
 package org.mbari.oni.etc.sdk
 
 import java.util.Optional
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * Brain-dead implementation of an IO monad. This is just a simple way to represent a function that can fail. It's not a
@@ -16,6 +17,7 @@ import java.util.Optional
  * This doesn't model asyncrhonous operations, we're going to use sync operations with virual threads instead.
  */
 type IO[A, B] = A => Either[Throwable, B]
+type AsyncIO[A, B] = A => Future[Either[Throwable, B]]
 
 object IO:
     extension [A, B](io: IO[A, B])
@@ -29,3 +31,6 @@ object IO:
         def foreach(f: B => Unit): IO[A, Unit] = a =>
             for b <- io(a)
             yield f(b)
+
+        def async(using executionContext: ExecutionContext): AsyncIO[A, B] =
+            a => Future(io(a))

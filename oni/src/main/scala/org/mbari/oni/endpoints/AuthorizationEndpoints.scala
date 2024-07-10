@@ -22,7 +22,9 @@ import sttp.tapir.model.UsernamePassword
 import sttp.shared.Identity
 import sttp.model.headers.{AuthenticationScheme, WWWAuthenticateChallenge}
 
-class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService)
+import scala.concurrent.{ExecutionContext, Future}
+
+class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext)
     extends Endpoints:
 
     private val service = UserAccountService(entityManagerFactory)
@@ -55,7 +57,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
             )
             .tag(tag)
 
-    val authEndpointImpl: ServerEndpoint[Any, Identity] =
+    val authEndpointImpl: ServerEndpoint[Any, Future] =
         authEndpoint
             .serverSecurityLogicPure(authHeader =>
                 val parts = authHeader.split(" ")
@@ -67,7 +69,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
                         case None      => Left(Unauthorized("Invalid API key"))
                         case Some(jwt) => Right(AuthorizationSC.bearer(jwt))
             )
-            .serverLogic(bearerAuth => Unit => Right(bearerAuth))
+            .serverLogic(bearerAuth => Unit => Future(Right(bearerAuth)))
 
     val loginEndpoint =
         baseEndpoint
@@ -89,7 +91,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
             .description("Login with username and password")
             .tag(tag)
 
-    val loginEndpointImpl: ServerEndpoint[Any, Identity] =
+    val loginEndpointImpl: ServerEndpoint[Any, Future] =
         loginEndpoint
             .serverSecurityLogicPure { usernamePassword =>
                 for
@@ -105,8 +107,8 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
                                        .toRight(Unauthorized("Invalid username or password"))
                 yield AuthorizationSC.bearer(jwt)
             }
-            .serverLogic(bearerAuth => Unit => Right(bearerAuth))
+            .serverLogic(bearerAuth => Unit => Future(Right(bearerAuth)))
 
     override val all: List[Endpoint[?, ?, ?, ?, ?]]           = List(loginEndpoint, authEndpoint)
-    override val allImpl: List[ServerEndpoint[Any, Identity]] =
+    override val allImpl: List[ServerEndpoint[Any, Future]] =
         List(loginEndpointImpl, authEndpointImpl)

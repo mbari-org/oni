@@ -7,10 +7,17 @@
 
 package org.mbari.oni
 
-import io.helidon.webserver.WebServer
 import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
-import sttp.tapir.server.nima.{NimaServerInterpreter, NimaServerOptions}
+import sttp.tapir.server.vertx.VertxFutureServerOptions
+import io.vertx.core.Vertx
+import io.vertx.ext.web.Router
+import sttp.tapir.server.vertx.{VertxFutureServerInterpreter, VertxFutureServerOptions}
+import sttp.tapir.server.vertx.VertxFutureServerInterpreter.VertxFutureToScalaFuture
+import io.vertx.core.VertxOptions
+
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 object Main:
 
@@ -35,18 +42,56 @@ object Main:
         val port = sys.env.get("HTTP_PORT").flatMap(_.toIntOption).getOrElse(8080)
         log.atInfo.log(s"Starting ${AppConfig.Name} v${AppConfig.Version} on port $port")
 
-        val serverOptions = NimaServerOptions
+        val serverOptions = VertxFutureServerOptions
             .customiseInterceptors
-            .serverLog(None)
             .metricsInterceptor(Endpoints.prometheusMetrics.metricsInterceptor())
             .options
 
-        val handler = NimaServerInterpreter(serverOptions).toHandler(Endpoints.allImpl)
+        val vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfVertxWorkers))
+        // val vertx  = Vertx.vertx()
+        val server = vertx.createHttpServer()
+        val router = Router.router(vertx)
+        val interpreter = VertxFutureServerInterpreter(serverOptions)
 
-        WebServer
-            .builder()
-            .writeBufferSize(131072) // Big buffer to handle full kb tree
-            .routing(builder => builder.any(handler))
-            .port(port)
-            .build()
-            .start()
+        Endpoints.endpoints
+            .foreach(endpoint =>
+                interpreter
+                    .blockingRoute(endpoint)
+                    .apply(router)
+            )
+
+        // Add our documentation endpoints
+        Endpoints.docEndpoints
+            .foreach(endpoint =>
+                interpreter
+                    .route(endpoint)
+                    .apply(router)
+            )
+
+        interpreter.route(Endpoints.metricsEndpoint).apply(router)
+
+        router
+            .getRoutes
+            .forEach(r => log.atInfo.log(f"Adding route: ${r.methods()}%8s ${r.getPath}%s"))
+
+        val program = server.requestHandler(router).listen(port).asScala
+
+        Await.result(program, Duration.Inf)
+
+
+// --- Helidon WeServer
+//        val serverOptions = NimaServerOptions
+//            .customiseInterceptors
+//            .serverLog(None)
+//            .metricsInterceptor(Endpoints.prometheusMetrics.metricsInterceptor())
+//            .options
+//
+//        val handler = NimaServerInterpreter(serverOptions).toHandler(Endpoints.allImpl)
+//
+//        WebServer
+//            .builder()
+//            .writeBufferSize(131072) // Big buffer to handle full kb tree
+//            .routing(builder => builder.any(handler))
+//            .port(port)
+//            .build()
+//            .start()

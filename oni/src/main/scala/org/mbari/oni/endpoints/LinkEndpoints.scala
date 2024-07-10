@@ -17,7 +17,9 @@ import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 
-class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoints:
+import scala.concurrent.{ExecutionContext, Future}
+
+class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext) extends Endpoints:
 
     private val service = LinkService(entityManagerFactory)
     private val base    = "links"
@@ -32,8 +34,8 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all link templates")
         .tag(tag)
 
-    val allLinksEndpointImpl: ServerEndpoint[Any, Identity] = allLinksEndpoint.serverLogic { _ =>
-        handleErrors(service.findAllLinkTemplates())
+    val allLinksEndpointImpl: ServerEndpoint[Any, Future] = allLinksEndpoint.serverLogic { _ =>
+        handleErrorsAsync(service.findAllLinkTemplates())
     }
 
     // get links for a concept
@@ -45,8 +47,8 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all link templates applicable to a concept")
         .tag(tag)
 
-    val linksForConceptEndpointImpl: ServerEndpoint[Any, Identity] = linksForConceptEndpoint.serverLogic { name =>
-        handleErrors(service.findAllLinkTemplatesForConcept(name))
+    val linksForConceptEndpointImpl: ServerEndpoint[Any, Future] = linksForConceptEndpoint.serverLogic { name =>
+        handleErrorsAsync(service.findAllLinkTemplatesForConcept(name))
     }
 
     // get links for a concept and linkname
@@ -58,9 +60,9 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all link templates applicable to a concept and link name")
         .tag(tag)
 
-    val linksForConceptAndLinkNameEndpointImpl: ServerEndpoint[Any, Identity] =
+    val linksForConceptAndLinkNameEndpointImpl: ServerEndpoint[Any, Future] =
         linksForConceptAndLinkNameEndpoint.serverLogic { (name, linkName) =>
-            handleErrors(service.findLinkTemplatesByNameForConcept(name, linkName))
+            handleErrorsAsync(service.findLinkTemplatesByNameForConcept(name, linkName))
         }
 
     // get link realizations for a concept
@@ -72,8 +74,8 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         .description("Get all link realizations for a link name")
         .tag(tag)
 
-    val linkRealizationsEndpointImpl: ServerEndpoint[Any, Identity] = linkRealizationsEndpoint.serverLogic { linkName =>
-        handleErrors(service.findLinkRealizationsByLinkName(linkName))
+    val linkRealizationsEndpointImpl: ServerEndpoint[Any, Future] = linkRealizationsEndpoint.serverLogic { linkName =>
+        handleErrorsAsync(service.findLinkRealizationsByLinkName(linkName))
     }
 
     override def all: List[Endpoint[_, _, _, _, _]] = List(
@@ -83,7 +85,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory) extends Endpoint
         allLinksEndpoint
     )
 
-    override def allImpl: List[ServerEndpoint[Any, Identity]] = List(
+    override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         linkRealizationsEndpointImpl,
         linksForConceptAndLinkNameEndpointImpl,
         linksForConceptEndpointImpl,
