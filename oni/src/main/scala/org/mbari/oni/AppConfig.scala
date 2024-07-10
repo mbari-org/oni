@@ -25,7 +25,7 @@ object AppConfig:
 
     val Description: String = "Organism Naming Infrastructure: Knowledge-base and User Accounts"
 
-    val NumberOfVertxWorkers: Int = 20
+    val NumberOfVertxWorkers: Int = 16
 
     lazy val DefaultJwtConfig: JwtConfig = JwtConfig(
         issuer = Config.getString("basicjwt.issuer"),
