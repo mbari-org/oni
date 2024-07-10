@@ -47,7 +47,7 @@ object Main:
             .metricsInterceptor(Endpoints.prometheusMetrics.metricsInterceptor())
             .options
 
-        val vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfVertxWorkers))
+        val vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfThreads))
         // val vertx  = Vertx.vertx()
         val server = vertx.createHttpServer()
         val router = Router.router(vertx)

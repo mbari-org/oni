@@ -39,7 +39,7 @@ object EntityManagerFactories:
         "hibernate.hbm2ddl.auto"              -> "validate",
         "hibernate.hikari.idleTimeout"        -> "30000",
         "hibernate.jdbc.batch_size"           -> "100",
-        "hibernate.hikari.maximumPoolSize"    -> "16", // Same as vertx worker pool threads
+        "hibernate.hikari.maximumPoolSize"    -> s"${AppConfig.NumberOfThreads}", // Same as vertx worker pool threads
         "hibernate.hikari.minimumIdle"        -> "2"
     )
 

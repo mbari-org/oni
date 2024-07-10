@@ -18,6 +18,7 @@ import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import org.mbari.oni.endpoints.LinkRealizationEndpoints
 import org.mbari.oni.endpoints.LinkTemplateEndpoints
 
+import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
 
 object Endpoints:
@@ -26,7 +27,7 @@ object Endpoints:
         val config = AppConfig.DefaultJwtConfig
         JwtService(config.issuer, config.apiKey, config.signingSecret)
 
-    given ExecutionContext = ExecutionContext.global
+    given ExecutionContext = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(AppConfig.NumberOfThreads))
 
     val entityMangerFactory: EntityManagerFactory = AppConfig.DefaultEntityManagerFactory
 
