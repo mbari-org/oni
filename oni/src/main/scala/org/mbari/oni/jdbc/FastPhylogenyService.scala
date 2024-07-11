@@ -10,6 +10,7 @@ package org.mbari.oni.jdbc
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{Concept, SimpleConcept}
 import org.mbari.oni.etc.jdk.Loggers
+import org.mbari.oni.jpa.EntityManagerFactories.*
 
 import java.sql.{ResultSet, Timestamp}
 import java.time.Instant
@@ -20,6 +21,7 @@ import scala.util.control.NonFatal
 import org.mbari.oni.etc.jdk.Loggers.{*, given}
 
 import java.util.concurrent.locks.ReentrantLock
+import scala.collection.immutable.ArraySeq
 
 /**
  * @author
@@ -88,11 +90,9 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
                 lock.unlock()
 
     def findLastUpdate(): Instant =
-        val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
-            val transaction = entityManager.getTransaction
-            transaction.begin()
-            val query       = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
-            val lastUpdate  = query.getSingleResult.asInstanceOf[Timestamp]
+        val attempt = entityManagerFactory.transaction(entityManager =>
+            val query = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
+            val lastUpdate = query.getSingleResult.asInstanceOf[Timestamp]
             if lastUpdate == null then
                 log.atWarn
                     .log(
@@ -100,36 +100,35 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
                     )
                 Instant.now()
             else lastUpdate.toInstant
-        }
+        )
         attempt match
-            case Success(result)    => result
-            case Failure(exception) =>
+            case Right(result)    => result
+            case Left(exception) =>
                 log.atError.withCause(exception).log("Failed to execute last update query")
                 Instant.now()
 
     private def executeQuery(): Seq[ConceptRow] =
-        val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
-            val transaction = entityManager.getTransaction
-            transaction.begin()
-            val query       = entityManager.createNativeQuery(FastPhylogenyDAO.SQL)
-            val results     = query.getResultList
-            transaction.commit()
-            for result <- results.toArray
-            yield
-                val row                  = result.asInstanceOf[Array[Object]]
-                val id                   = row(0).asLong.getOrElse(-1L)
-                val parentId             = row(1).asLong
-                val name                 = row(2).asString.orNull
-                val rankLevel            = row(3).asString
-                val rankName             = row(4).asString
-                val nameType             = row(5).asString.orNull
-                val conceptTimestamp     = row(6).asInstant.getOrElse(Instant.now())
-                val conceptNameTimestamp = row(7).asInstant.getOrElse(Instant.now())
-                ConceptRow(id, parentId, name, rankLevel, rankName, nameType, conceptTimestamp, conceptNameTimestamp)
-        }
+        val attempt = entityManagerFactory.transaction(entityManager =>
+            val query = entityManager.createNativeQuery(FastPhylogenyDAO.SQL)
+            query.getResultList
+        )
         attempt match
-            case Success(result)    => result.toSeq
-            case Failure(exception) =>
+            case Right(results) =>
+                for
+                    result <- ArraySeq.unsafeWrapArray(results.toArray)
+                yield
+                    val row                  = result.asInstanceOf[Array[Object]]
+                    val id                   = row(0).asLong.getOrElse(-1L)
+                    val parentId             = row(1).asLong
+                    val name                 = row(2).asString.orNull
+                    val rankLevel            = row(3).asString
+                    val rankName             = row(4).asString
+                    val nameType             = row(5).asString.orNull
+                    val conceptTimestamp     = row(6).asInstant.getOrElse(Instant.now())
+                    val conceptNameTimestamp = row(7).asInstant.getOrElse(Instant.now())
+                    ConceptRow(id, parentId, name, rankLevel, rankName, nameType, conceptTimestamp, conceptNameTimestamp)
+
+            case Left(exception) =>
                 log.atError.withCause(exception).log("Failed to execute query")
                 Nil
 

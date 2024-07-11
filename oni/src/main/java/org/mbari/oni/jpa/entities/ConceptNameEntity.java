@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.mbari.oni.domain.ConceptNameTypes;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -41,6 +42,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "ConceptName.findAll", query = "SELECT c FROM ConceptName c") ,
     @NamedQuery(name = "ConceptName.findByNameLike", query = "SELECT c FROM ConceptName c WHERE lower(c.name) LIKE :name ORDER BY c.name")
 })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class ConceptNameEntity implements Serializable, IPersistentObject {
 
 

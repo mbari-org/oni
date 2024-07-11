@@ -11,6 +11,7 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.mbari.oni.domain.ILink;
 import org.mbari.oni.domain.LinkUtilities;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -44,6 +45,8 @@ import org.mbari.oni.jpa.IPersistentObject;
                 query = "SELECT l FROM LinkTemplate l WHERE l.linkName = :linkName AND l.toConcept = :toConcept AND l.linkValue = :linkValue")
 
 })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class LinkTemplateEntity implements Serializable, ILink, IPersistentObject {
 
 

@@ -2,7 +2,10 @@ import sbt.*
 object Dependencies {
 
     lazy val auth0 = "com.auth0" % "java-jwt" % "4.4.0"
-    lazy val caffeine = "com.github.ben-manes.caffeine" % "caffeine" % "3.1.8"
+
+    val caffeineVersion     = "3.1.8"
+    lazy val caffeine       = "com.github.ben-manes.caffeine" % "caffeine" % caffeineVersion
+    lazy val caffeineJCache = "com.github.ben-manes.caffeine" % "jcache" % caffeineVersion
 
     val circeVersion      = "0.14.9"
     lazy val circeCore    = "io.circe" %% "circe-core"    % circeVersion
@@ -18,10 +21,11 @@ object Dependencies {
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
-    val hibernateVersion     = "6.5.2.Final"
-    lazy val hibernateCore   = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
-    lazy val hibernateEnvers = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
-    lazy val hibernateHikari = "org.hibernate.orm" % "hibernate-hikaricp" % hibernateVersion
+    val hibernateVersion      = "6.5.2.Final"
+    lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
+    lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
+    lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
+    lazy val hibernateHikari  = "org.hibernate.orm" % "hibernate-hikaricp" % hibernateVersion
 
     lazy val hikariCp    = "com.zaxxer"              % "HikariCP"                   % "5.1.0"
     lazy val jansi       = "org.fusesource.jansi"    % "jansi"                      % "2.4.1"

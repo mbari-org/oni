@@ -9,17 +9,9 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Table;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.Version;
+
+import jakarta.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 import org.mbari.oni.domain.UserAccountRoles;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -51,6 +43,8 @@ import org.mbari.oni.jpa.IPersistentObject;
     @NamedQuery(name = "UserAccount.findAll", query = "SELECT c FROM UserAccount c")
 
 })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class UserAccountEntity implements Serializable, IPersistentObject {
 
     @Column(name = "Affiliation", length = 512)

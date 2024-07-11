@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 import jakarta.persistence.*;
 
 
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.mbari.oni.jpa.KeyNullifier;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.TransactionLogger;
@@ -40,6 +41,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "Media.findByConceptName",
                 query = "SELECT m FROM Media m JOIN m.conceptMetadata cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name") ,
 })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class MediaEntity implements Serializable, IPersistentObject {
 
     @Column(name = "Caption", length = 1000)

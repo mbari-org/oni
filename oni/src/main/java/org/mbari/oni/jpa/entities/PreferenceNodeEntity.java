@@ -7,21 +7,11 @@
 
 package org.mbari.oni.jpa.entities;
 
+import jakarta.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.mbari.oni.jpa.TransactionLogger;
 
 import java.io.Serializable;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.NamedQueries;
-import jakarta.persistence.NamedQuery;
-import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-import jakarta.persistence.UniqueConstraint;
 
 /**
  *
@@ -39,6 +29,8 @@ import jakarta.persistence.UniqueConstraint;
                             query = "SELECT p FROM PreferenceNode p WHERE p.nodeName = :nodeName AND p.prefKey = :prefKey") ,
                 @NamedQuery(name = "PreferenceNode.findAllByNodeName",
                             query = "SELECT p FROM PreferenceNode p WHERE p.nodeName = :nodeName") })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class PreferenceNodeEntity implements Serializable {
 
     // This composite key will generate a unique constraint on these 2 columns.

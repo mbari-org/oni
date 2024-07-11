@@ -83,6 +83,7 @@ lazy val oni = project
     libraryDependencies ++= Seq(
         auth0,
         caffeine,
+        caffeineJCache,
         circeCore,
         circeGeneric,
         circeParser,
@@ -90,7 +91,8 @@ lazy val oni = project
         // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to 
         // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
         hibernateCore,
-        hibernateEnvers,
+        hibernateJCache,
+//        hibernateEnvers,
         hibernateHikari,
         hikariCp,
         jansi             % Runtime,

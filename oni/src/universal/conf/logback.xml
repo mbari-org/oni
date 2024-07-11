@@ -18,12 +18,18 @@
   <logger name="java" level="WARN" />
   <logger name="jdk" level="WARN" />
   <logger name="org.apache.http" level="WARN" />
-  <logger name="org.eclipse.jetty" level="WARN" />
   <!-- Hibernate after 6 DEBUG -->
-  <logger name="org.hibernate.SQL" level="INFO" />
+  <logger name="org.hibernate.SQL" level="DEBUG" />
+  <logger name="org.hibernate.orm.results" level="INFO" />
   <!-- <logger name="org.hibernate.orm.jdbc.bind" level="trace" /> -->
-  <!-- <logger name="org.hibernate.stat" level="debug" /> -->
-  <logger name="org.hibernate.SQL_SLOW" level="INFO" />
+<!--   <logger name="org.hibernate.stat" level="debug" />-->
+<!--  <logger name="org.hibernate.SQL_SLOW" level="DEBUG" />-->
+<!--  <logger name="org.hibernate.type.descriptor.sql" level="TRACE" />-->
+
+  <!-- Tracing group. Must also set hibernate.generate_statistics=true in the persistence.xml -->
+<!--  <logger name="org.hibernate.engine.transaction.internal.TransactionImpl" level="DEBUG" />-->
+<!--  <logger name="org.hibernate.stat.internal.StatisticsImpl" level="DEBUG" />-->
+
   <!-- <logger name="org.hibernate.cache" level="debug" /> -->
   <logger name="sun" level="WARN" />
 

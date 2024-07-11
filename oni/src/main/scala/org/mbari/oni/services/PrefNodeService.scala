@@ -60,22 +60,24 @@ class PrefNodeService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByNodeName(name: String): Either[Throwable, Seq[PrefNode]] =
-        entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
-            repo.findByNodeName(name).asScala.map(PrefNode.from).toSeq
+            repo.findByNodeName(name)
         )
+        attempt.map(_.asScala.map(PrefNode.from).toSeq)
 
     def findByNodeNameLike(name: String): Either[Throwable, Seq[PrefNode]] =
-        entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
-            repo.findByNodeNameLike(name).asScala.map(PrefNode.from).toSeq
+            repo.findByNodeNameLike(name)
         )
+        attempt.map(_.asScala.map(PrefNode.from).toSeq)
 
     def findAll(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[PrefNode]] =
-        entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.transaction(entityManager =>
             val repo = new PrefNodeRepository(entityManager)
             repo.findAll(limit, offset)
-                .asScala
-                .map(PrefNode.from)
-                .toSeq
         )
+        attempt.map(_.asScala
+                .map(PrefNode.from)
+                .toSeq)

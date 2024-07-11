@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.mbari.oni.domain.ILink;
 import org.mbari.oni.domain.LinkUtilities;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -52,6 +53,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "LinkRealization.findByLinkValue",
                 query = "SELECT l FROM LinkRealization l WHERE l.linkValue = :linkValue")
 })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class LinkRealizationEntity implements Serializable, ILink, IPersistentObject {
 
     @Transient

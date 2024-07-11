@@ -23,30 +23,29 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
     private val log = System.getLogger(getClass.getName)
 
     def findAll(): Either[Throwable, Seq[UserAccount]] =
-        entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.transaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
             repo.findAll()
-                .asScala
-                .toSeq
-                .map(UserAccount.from)
         )
+        attempt.map(_.asScala
+            .toSeq
+            .map(UserAccount.from))
 
     def findByUserName(name: String): Either[Throwable, Option[UserAccount]] =
-        entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.transaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
             repo.findByUserName(name)
-                .map(UserAccount.from)
-                .toScala
         )
+        attempt.map(_.map(UserAccount.from).toScala)
 
     def findAllByRole(role: String): Either[Throwable, Seq[UserAccount]] =
-        entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.transaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
             repo.findAllByRole(role)
-                .asScala
-                .toSeq
-                .map(UserAccount.from)
         )
+        attempt.map(_.asScala
+            .toSeq
+            .map(UserAccount.from))
 
     def deleteByUserName(name: String): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>

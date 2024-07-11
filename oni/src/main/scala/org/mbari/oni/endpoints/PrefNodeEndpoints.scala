@@ -113,6 +113,9 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
         secureEndpoint
             .put
             .in(base)
+//            .in(query[Option[String]]("name").description("Name of the prefNode"))
+//            .in(query[Option[String]]("key").description("Key of the prefNode"))
+//            .in(query[Option[String]]("value").description("Value of the prefNode"))
             .in(oneOfBody(jsonBody[PrefNode], formBody[PrefNode]))
             .out(jsonBody[PrefNode])
             .name("updatePrefNode")

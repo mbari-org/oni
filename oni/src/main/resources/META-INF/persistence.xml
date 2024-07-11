@@ -16,7 +16,9 @@
         <class>org.mbari.oni.jpa.entities.UserAccountEntity</class>
 
         <properties>
-            <property name="hibernate.batch_versioned_data" value="true" />
+            <!-- generate_statsitcs prop must be used to gater hibernate statistics. It affects performance though -->
+<!--            <property name="hibernate.generate_statistics" value="true" />-->
+<!--            <property name="hibernate.batch_versioned_data" value="true" />-->
             <property name="jakarta.persistence.provider" value="org.hibernate.jpa.HibernatePersistenceProvider" />
         </properties>
     </persistence-unit>
