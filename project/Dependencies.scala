@@ -2,6 +2,7 @@ import sbt.*
 object Dependencies {
 
     lazy val auth0 = "com.auth0" % "java-jwt" % "4.4.0"
+    lazy val caffeine = "com.github.ben-manes.caffeine" % "caffeine" % "3.1.8"
 
     val circeVersion      = "0.14.9"
     lazy val circeCore    = "io.circe" %% "circe-core"    % circeVersion

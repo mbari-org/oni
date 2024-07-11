@@ -15,7 +15,7 @@ import sttp.tapir.server.ServerEndpoint
 import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, ErrorMsg, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.{ConceptNameService, ConceptService}
+import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService}
 import sttp.shared.Identity
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -24,6 +24,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
 
     private val service            = ConceptService(entityManagerFactory)
     private val conceptNameService = ConceptNameService(entityManagerFactory)
+    private val conceptCache       = ConceptCache(service, conceptNameService)
     private val base               = "concept"
     private val tag                = "Concept"
 
@@ -38,7 +39,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
     val allEndpointImpl: ServerEndpoint[Any, Future] = allEndpoint.serverLogic { _ =>
         val limit  = 10000
         val offset = 0
-        handleErrorsAsync(conceptNameService.findAllNames(limit, offset))
+        handleErrorsAsync(conceptCache.findAllNames(limit, offset))
     }
 
     val createEndpoint: Endpoint[Option[String], ConceptCreate, ErrorMsg, ConceptMetadata, Any] = secureEndpoint
@@ -109,7 +110,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .tag(tag)
 
     val findByNameImpl: ServerEndpoint[Any, Future] = findByName.serverLogic { name =>
-        handleErrorsAsync(service.findByName(name))
+        handleErrorsAsync(conceptCache.findByName(name))
     }
 
     val findByNameContaining: Endpoint[Unit, String, ErrorMsg, Seq[ConceptMetadata], Any] = openEndpoint

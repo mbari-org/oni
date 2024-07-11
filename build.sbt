@@ -82,6 +82,7 @@ lazy val oni = project
     ),
     libraryDependencies ++= Seq(
         auth0,
+        caffeine,
         circeCore,
         circeGeneric,
         circeParser,

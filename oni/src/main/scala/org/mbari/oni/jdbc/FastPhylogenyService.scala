@@ -75,15 +75,17 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
 
             lock.lock()
             log.atDebug.log("Loading cache ...")
-            val cache = executeQuery()
-            if cache.nonEmpty then
-                val lu = cache.maxBy(_.lastUpdate.toEpochMilli)
-                lastUpdate = lu.lastUpdate
+            try
+                val cache = executeQuery()
+                if cache.nonEmpty then
+                    val lu = cache.maxBy(_.lastUpdate.toEpochMilli)
+                    lastUpdate = lu.lastUpdate
 
-            val r = MutableConcept.toTree(cache)
-            rootNode = r._1
-            allNodes = r._2
-            lock.unlock()
+                val r = MutableConcept.toTree(cache)
+                rootNode = r._1
+                allNodes = r._2
+            finally
+                lock.unlock()
 
     def findLastUpdate(): Instant =
         val attempt = Using(entityManagerFactory.createEntityManager) { entityManager =>
