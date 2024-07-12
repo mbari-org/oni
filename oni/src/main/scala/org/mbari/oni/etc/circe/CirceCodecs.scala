@@ -111,6 +111,9 @@ object CirceCodecs:
     given Decoder[PrefNode] = deriveDecoder
     given Encoder[PrefNode] = deriveEncoder
 
+    given Decoder[PrefNodeUpdate] = deriveDecoder
+    given Encoder[PrefNodeUpdate] = deriveEncoder
+
     given Decoder[RawConcept] = deriveDecoder
     given Encoder[RawConcept] = deriveEncoder
 

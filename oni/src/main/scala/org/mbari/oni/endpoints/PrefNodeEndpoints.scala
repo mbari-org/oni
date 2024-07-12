@@ -9,7 +9,7 @@ package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.AccessDenied
-import org.mbari.oni.domain.{ErrorMsg, PrefNode, Unauthorized}
+import org.mbari.oni.domain.{BadRequest, ErrorMsg, PrefNode, PrefNodeUpdate, Unauthorized}
 import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
@@ -109,23 +109,31 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
             .serverLogic { _ => prefNode => handleErrorsAsync(service.create(prefNode)) }
 
-    val updateEndpoint: Endpoint[Option[String], PrefNode, ErrorMsg, PrefNode, Any] =
+    val updateEndpoint: Endpoint[Option[String], (Option[String], Option[String], PrefNodeUpdate), ErrorMsg, PrefNode, Any] =
         secureEndpoint
             .put
             .in(base)
-//            .in(query[Option[String]]("name").description("Name of the prefNode"))
-//            .in(query[Option[String]]("key").description("Key of the prefNode"))
-//            .in(query[Option[String]]("value").description("Value of the prefNode"))
-            .in(oneOfBody(jsonBody[PrefNode], formBody[PrefNode]))
+            .in(query[Option[String]]("name").description("Name of the prefNode. If not already in the request body"))
+            .in(query[Option[String]]("key").description("Key of the prefNode. If not already in the request body"))
+            .in(oneOfBody(jsonBody[PrefNodeUpdate], formBody[PrefNodeUpdate]))
             .out(jsonBody[PrefNode])
             .name("updatePrefNode")
-            .description("Update a prefNode")
+            .description("Update a prefNode. Can be called using form body or json body. If name and key are not in the request body, they must be in the query parameters.")
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] =
         updateEndpoint
             .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
-            .serverLogic { _ => prefNode => handleErrorsAsync(service.update(prefNode)) }
+            .serverLogic { _ => (nameOpt, keyOpt, prefNodeUpdate) => {
+                val name = prefNodeUpdate.name.orElse(nameOpt)
+                val key  = prefNodeUpdate.key.orElse(keyOpt)
+                val value = prefNodeUpdate.value
+                if (name.isEmpty || key.isEmpty) then
+                    Future(Left(BadRequest("A name and key must be provided in order to update a preference.")))
+                else
+                    val prefNode = PrefNode(name.get, key.get, value)
+                    handleErrorsAsync(service.update(prefNode))
+            } }
 
     val deleteEndpoint: Endpoint[Option[String], (String, String), ErrorMsg, Unit, Any] =
         secureEndpoint

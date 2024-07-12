@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.PrefNode
+import org.mbari.oni.domain.{PrefNode, PrefNodeUpdate}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.{PrefNodeService, UserAuthMixin}
@@ -186,6 +186,54 @@ trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with Us
                     endpoints.updateEndpointImpl,
                     s"http://test.com/v1/prefs",
                     Reflect.toFormBody(updatedNode),
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[PrefNode](response.body)
+                        assertEquals(obtained.name, node.name)
+                        assertEquals(obtained.key, node.key)
+                        assertEquals(obtained.value, newValue)
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
+    }
+
+    test("updateEndpoint (query params with form body)") {
+        val nodes = createNodes(1)
+        val node = nodes.head
+        val newValue = "new_value_" + Strings.random(5)
+        val updatedNode = PrefNodeUpdate(None, None, newValue)
+        testWithUserAuth(
+            user =>
+                runPost(
+                    endpoints.updateEndpointImpl,
+                    s"http://test.com/v1/prefs?name=${node.name}&key=${node.key}",
+                    Reflect.toFormBody(updatedNode),
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[PrefNode](response.body)
+                        assertEquals(obtained.name, node.name)
+                        assertEquals(obtained.key, node.key)
+                        assertEquals(obtained.value, newValue)
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
+    }
+
+    test("updateEndpoint (query params with json body)") {
+        val nodes = createNodes(1)
+        val node = nodes.head
+        val newValue = "new_value_" + Strings.random(5)
+        val updatedNode = PrefNodeUpdate(None, None, newValue)
+        testWithUserAuth(
+            user =>
+                runPost(
+                    endpoints.updateEndpointImpl,
+                    s"http://test.com/v1/prefs?name=${node.name}&key=${node.key}",
+                    updatedNode.stringify,
                     response =>
                         assertEquals(response.code, StatusCode.Ok)
                         val obtained = checkResponse[PrefNode](response.body)

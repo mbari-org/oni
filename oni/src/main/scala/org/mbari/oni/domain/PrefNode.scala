@@ -23,3 +23,6 @@ object PrefNode:
         entity.getPrefKey,
         entity.getPrefValue
     )
+
+case class PrefNodeUpdate(name: Option[String], key: Option[String], value: String)
+
