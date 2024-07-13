@@ -50,7 +50,7 @@ import org.mbari.oni.jpa.IPersistentObject;
 public class LinkTemplateEntity implements Serializable, ILink, IPersistentObject {
 
 
-    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, fetch = FetchType.EAGER, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(
             name = "ConceptDelegateID_FK",
             foreignKey = @ForeignKey(name = "fk_LinkTempate__ConceptDelegate_id")

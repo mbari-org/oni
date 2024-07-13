@@ -54,7 +54,7 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
         optional = false,
         targetEntity = ConceptEntity.class,
         fetch = FetchType.LAZY,
-        cascade = {CascadeType.MERGE, CascadeType.REFRESH}
+        cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}
     )
     @JoinColumn(
             name = "ConceptID_FK",

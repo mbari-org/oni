@@ -48,7 +48,7 @@ public class MediaEntity implements Serializable, IPersistentObject {
     @Column(name = "Caption", length = 1000)
     String caption;
 
-    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(
             name = "ConceptDelegateID_FK",
             foreignKey = @ForeignKey(name = "fk_Media__ConceptDelegate_id")

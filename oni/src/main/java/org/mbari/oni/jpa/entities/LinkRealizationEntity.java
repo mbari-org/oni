@@ -83,7 +83,7 @@ public class LinkRealizationEntity implements Serializable, ILink, IPersistentOb
     @Column(name = "LinkValue", length = 2048)
     String linkValue;
 
-    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(
             name = "ConceptDelegateID_FK",
             foreignKey = @ForeignKey(name = "fk_LinkRealization__ConceptDelegate_id")

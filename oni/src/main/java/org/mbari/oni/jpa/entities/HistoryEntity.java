@@ -152,7 +152,7 @@ public class HistoryEntity implements Serializable, IPersistentObject {
     @Column(name = "Approved")
     private Short approved = 0;
 
-    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne(optional = false, targetEntity = ConceptMetadataEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinColumn(
             name = "ConceptDelegateID_FK",
             foreignKey = @ForeignKey(name = "fk_History__ConceptDelegate_id")
