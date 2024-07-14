@@ -8,9 +8,9 @@ Compile / doc / scalacOptions ++= Seq(
     "-project-footer",
     "Monterey Bay Aquarium Research Institute",
     "-siteroot",
-    "oni/src/docs",
+    "src/docs",
     "-doc-root-content",
-    "./oni/src/docs/index.md"
+    "src/docs/index.md"
 )
 
 ThisBuild / javacOptions ++= Seq("-target", "21", "-source", "21")
@@ -114,6 +114,8 @@ lazy val oni = project
         typesafeConfig
     )
   )
+
+
 
 
 lazy val integrationTests = (project in file("it"))
