@@ -12,6 +12,7 @@ import java.nio.file.Path
 import scala.util.Using
 
 import java.nio.file.Files as JFiles
+import java.io.BufferedInputStream
 
 object Files:
 
@@ -25,7 +26,7 @@ object Files:
     def concatenate(files: Seq[Path], output: Path): Unit =
         Using(BufferedOutputStream(JFiles.newOutputStream(output))) { out =>
             files.foreach { file =>
-                Using(JFiles.newInputStream(file)) { in =>
+                Using(BufferedInputStream(JFiles.newInputStream(file))) { in =>
                     val buffer    = new Array[Byte](1024)
                     var bytesRead = in.read(buffer)
                     while bytesRead != -1 do

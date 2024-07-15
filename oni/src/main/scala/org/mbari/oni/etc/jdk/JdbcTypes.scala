@@ -20,11 +20,11 @@ object JdbcTypes:
      * the JdbcRepository and associatited SQL classes.
      */
     extension (obj: Object)
-        def asDouble: Option[Double]   = doubleConverter(obj)
-        def asFloat: Option[Float]     = floatConverter(obj)
+        def asDouble: Option[Double]   = Numbers.doubleConverter(obj)
+        def asFloat: Option[Float]     = Numbers.floatConverter(obj)
         def asInstant: Option[Instant] = instantConverter(obj)
-        def asInt: Option[Int]         = intConverter(obj)
-        def asLong: Option[Long]       = longConverter(obj)
+        def asInt: Option[Int]         = Numbers.intConverter(obj)
+        def asLong: Option[Long]       = Numbers.longConverter(obj)
         def asString: Option[String]   = stringConverter(obj)
         def asUrl: Option[URL]         = urlConverter(obj)
         def asUUID: Option[UUID]       = uuidConverter(obj)
@@ -42,40 +42,13 @@ object JdbcTypes:
             case null      => None
             case u: UUID   => Some(u)
             case s: String => Try(UUID.fromString(s)).toOption // TODO this could swallow errors
+            case _         => None
 
     def stringConverter(obj: Object): Option[String] =
         obj match
             case null      => None
             case s: String => Some(s)
             case _         => Some(obj.toString)
-
-    def doubleConverter(obj: Object): Option[Double] =
-        obj match
-            case null      => None
-            case n: Number => Some(n.doubleValue())
-            case s: String => Try(s.toDouble).toOption
-            case _         => None
-
-    def floatConverter(obj: Object): Option[Float] =
-        obj match
-            case null      => None
-            case n: Number => Some(n.floatValue())
-            case s: String => Try(s.toFloat).toOption
-            case _         => None
-
-    def longConverter(obj: Object): Option[Long] =
-        obj match
-            case null      => None
-            case n: Number => Some(n.longValue())
-            case s: String => Try(s.toLong).toOption
-            case _         => None
-
-    def intConverter(obj: Object): Option[Int] =
-        obj match
-            case null      => None
-            case n: Number => Some(n.intValue())
-            case s: String => Try(s.toInt).toOption
-            case _         => None
 
     def urlConverter(obj: Object): Option[URL] =
         obj match

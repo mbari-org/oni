@@ -12,6 +12,7 @@ import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.etc.jdk.Numbers.*
 
 /**
+ * Detailed information about a concept
  * @author
  *   Brian Schlining
  * @since 2016-11-17T15:54:00

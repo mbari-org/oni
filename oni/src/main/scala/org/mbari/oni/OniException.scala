@@ -7,6 +7,9 @@
 
 package org.mbari.oni
 
+/**
+  * Defines custom exceptions used by Oni
+  */
 sealed trait OniException extends Throwable
 
 trait NotFoundException extends OniException

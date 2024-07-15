@@ -8,7 +8,18 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
+import org.mbari.oni.endpoints.{
+    AuthorizationEndpoints,
+    ConceptEndpoints,
+    ConceptNameEndpoints,
+    HealthEndpoints,
+    HistoryEndpoints,
+    LinkEndpoints,
+    PhylogenyEndpoints,
+    PrefNodeEndpoints,
+    ReferenceEndpoints,
+    UserAccountEndpoints
+}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
@@ -27,23 +38,24 @@ object Endpoints:
         val config = AppConfig.DefaultJwtConfig
         JwtService(config.issuer, config.apiKey, config.signingSecret)
 
-    given ExecutionContext = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(AppConfig.NumberOfThreads))
+    given ExecutionContext =
+        ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(AppConfig.NumberOfThreads))
 
     val entityMangerFactory: EntityManagerFactory = AppConfig.DefaultEntityManagerFactory
 
     val phylogenyEndpoints: PhylogenyEndpoints = PhylogenyEndpoints(entityMangerFactory)
 
-    val authorizationEndpoints: AuthorizationEndpoints = AuthorizationEndpoints(entityMangerFactory)
-    val conceptEndpoints: ConceptEndpoints             = ConceptEndpoints(entityMangerFactory)
-    val conceptNameEndpoints: ConceptNameEndpoints     = ConceptNameEndpoints(entityMangerFactory)
-    val healthEndpoints: HealthEndpoints               = HealthEndpoints()
-    val historyEndpoints: HistoryEndpoints             = HistoryEndpoints(entityMangerFactory, phylogenyEndpoints.service)
-    val linkEndpoints: LinkEndpoints                   = LinkEndpoints(entityMangerFactory)
+    val authorizationEndpoints: AuthorizationEndpoints     = AuthorizationEndpoints(entityMangerFactory)
+    val conceptEndpoints: ConceptEndpoints                 = ConceptEndpoints(entityMangerFactory)
+    val conceptNameEndpoints: ConceptNameEndpoints         = ConceptNameEndpoints(entityMangerFactory)
+    val healthEndpoints: HealthEndpoints                   = HealthEndpoints()
+    val historyEndpoints: HistoryEndpoints                 = HistoryEndpoints(entityMangerFactory, phylogenyEndpoints.service)
+    val linkEndpoints: LinkEndpoints                       = LinkEndpoints(entityMangerFactory)
     val linkRealizationEndpoints: LinkRealizationEndpoints = LinkRealizationEndpoints(entityMangerFactory)
     val linkTemplateEndpoints: LinkTemplateEndpoints       = LinkTemplateEndpoints(entityMangerFactory)
-    val prefNodeEndpoints: PrefNodeEndpoints           = PrefNodeEndpoints(entityMangerFactory)
-    val referenceEndpoints: ReferenceEndpoints         = ReferenceEndpoints(entityMangerFactory)
-    val userAccountEndpoints: UserAccountEndpoints     = UserAccountEndpoints(entityMangerFactory)
+    val prefNodeEndpoints: PrefNodeEndpoints               = PrefNodeEndpoints(entityMangerFactory)
+    val referenceEndpoints: ReferenceEndpoints             = ReferenceEndpoints(entityMangerFactory)
+    val userAccountEndpoints: UserAccountEndpoints         = UserAccountEndpoints(entityMangerFactory)
 
     val endpoints: List[ServerEndpoint[Any, Future]] = List(
         authorizationEndpoints,

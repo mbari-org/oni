@@ -11,6 +11,13 @@ import java.awt.Color
 
 class Colors:
 
+    /**
+     * Converts any string to a hex color. The color is generated from the hash code of the string.
+     * @param s
+     *   The string to convert
+     * @return
+     *   The hex color
+     */
     def stringToHexColor(s: String): String =
         val c = intToRGBA(s.hashCode)
         f"#${c.getRed}%02X${c.getGreen}%02X${c.getBlue}%02X" // ignore alpha. Sharktopoda won't parse colors with alpha

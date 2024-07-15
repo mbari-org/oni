@@ -22,6 +22,16 @@ object Instants:
     val CompactTimeFormatterNs: DateTimeFormatter =
         DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss.SSSSSSX").withZone(utcZone)
 
+    /**
+     * Parse a string into an Instant. The string can be in any of the following formats:
+     *   - yyyyMMdd'T'HHmmssX
+     *   - yyyyMMdd'T'HHmmss.SSSX
+     *   - yyyyMMdd'T'HHmmss.SSSSSSX
+     *   - yyyy-MM-dd'T'HH:mm:ssX
+     *
+     * @param s
+     * @return
+     */
     def parseIso8601(s: String): Either[Throwable, Instant] =
         val tried = Try(Instant.from(CompactTimeFormatter.parse(s))) orElse
             Try(Instant.from(TimeFormatter.parse(s))) orElse

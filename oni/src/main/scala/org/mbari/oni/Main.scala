@@ -19,6 +19,9 @@ import io.vertx.core.VertxOptions
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
+/**
+  * Launches Oni
+  */
 object Main:
 
     def main(args: Array[String]): Unit =

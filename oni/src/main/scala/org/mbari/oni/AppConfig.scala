@@ -12,6 +12,9 @@ import scala.util.Try
 import org.mbari.oni.jpa.EntityManagerFactories
 import jakarta.persistence.EntityManagerFactory
 
+/**
+  * Parse configuration info from reference.conf and application.conf
+  */
 object AppConfig:
 
     val Config = ConfigFactory.load()

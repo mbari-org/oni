@@ -13,15 +13,16 @@ import java.util.function.Supplier
 
 /**
  * Add fluent logging to System.Logger. Usage:
- * {{{
- * import org.fathomnet.support.etc.jdk.Logging.{given, *}
- * given log: Logger = Sytem.getLogger("my.logger")
+ * 
+ * ```scala
+ * import org.fathomnet.support.etc.jdk.Loggers.{given, *}
+ * given log: Logger = System.getLogger("my.logger")
  *
  * log.atInfo.log("Hello World")
  * log.atInfo.withCause(new RuntimeException("Oops")).log("Hello World")
  *
  * 3.tapLog.atInfo.log(i => s"Hello World $i")
- * }}}
+ * ```
  * * @author Brian Schlining
  */
 object Loggers:
