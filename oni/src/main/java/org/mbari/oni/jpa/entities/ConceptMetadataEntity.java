@@ -48,9 +48,9 @@ import org.mbari.oni.jpa.IPersistentObject;
 public class ConceptMetadataEntity implements Serializable, IPersistentObject {
 
     @OneToOne(
-        // optional = false, 
-        // targetEntity = ConceptEntity.class, 
-        // cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, 
+        optional = false, 
+        targetEntity = ConceptEntity.class, 
+        cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, 
         fetch = FetchType.LAZY
     )   
     @JoinColumn(
