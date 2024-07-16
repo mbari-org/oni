@@ -35,7 +35,8 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionC
         .tag(tag)
 
     val allLinksEndpointImpl: ServerEndpoint[Any, Future] = allLinksEndpoint.serverLogic { _ =>
-        handleErrorsAsync(service.findAllLinkTemplates())
+        // HACK: 20000 is a hack to get all links. Need to fix this
+        handleErrorsAsync(service.findAllLinkTemplates(20000))
     }
 
     // get links for a concept
