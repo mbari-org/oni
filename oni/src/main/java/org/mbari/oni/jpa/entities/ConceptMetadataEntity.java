@@ -47,7 +47,12 @@ import org.mbari.oni.jpa.IPersistentObject;
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class ConceptMetadataEntity implements Serializable, IPersistentObject {
 
-    @OneToOne(optional = false, targetEntity = ConceptEntity.class, cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, fetch = FetchType.LAZY)
+    @OneToOne(
+        // optional = false, 
+        // targetEntity = ConceptEntity.class, 
+        // cascade = {CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, 
+        fetch = FetchType.LAZY
+    )   
     @JoinColumn(
             name = "ConceptID_FK",
             nullable = false,

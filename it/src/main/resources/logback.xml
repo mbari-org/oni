@@ -29,6 +29,7 @@
   <!-- <logger name="org.hibernate.stat" level="debug" /> -->
   <logger name="org.hibernate.SQL_SLOW" level="INFO" />
   <!-- <logger name="org.hibernate.cache" level="debug" /> -->
+   <!-- <logger name="org.mbari.oni.jpa.repositories" level="DEBUG" /> -->
 
   <root level="${LOGBACK_LEVEL}">
     <appender-ref ref="CONSOLE" />

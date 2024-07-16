@@ -25,7 +25,7 @@ import org.mbari.oni.jpa.entities.ConceptEntity;
 
 public class ConceptRepository extends Repository {
 
-    private static final Logging log = new Logging(ConceptRepository.class);
+    // private static final Logging log = new Logging(ConceptRepository.class);
 
     public ConceptRepository(EntityManager entityManager) {
         super(entityManager);

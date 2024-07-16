@@ -15,6 +15,7 @@ import org.mbari.oni.jpa.IPersistentObject;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.lang.System.Logger.Level;
 
 public abstract class Repository {
 
@@ -25,11 +26,11 @@ public abstract class Repository {
         this.entityManager = entityManager;
     }
 
-
     protected static final Logging log = new Logging(Repository.class);
 
     public <T> List<T> findByNamedQuery(String name,
                                         Map<String, Object> namedParams) {
+        debugLog(name, namedParams);
         Query query = entityManager.createNamedQuery(name);
         namedParams.forEach(query::setParameter);
         return (List<T>) query.getResultList();
@@ -39,6 +40,7 @@ public abstract class Repository {
                                         Map<String, Object> namedParams,
                                         int limit,
                                         int offset) {
+        debugLog(name, namedParams);
         Query query = entityManager.createNamedQuery(name);
         namedParams.forEach(query::setParameter);
         query.setMaxResults(limit);
@@ -59,11 +61,13 @@ public abstract class Repository {
     }
 
     public <T> List<T> findByNamedQuery(String name) {
+        debugLog(name, Map.of());
         Query query = entityManager.createNamedQuery(name);
         return (List<T>) query.getResultList();
     }
 
     public <T> List<T> findByNamedQuery(String name, int limit, int offset) {
+        debugLog(name, Map.of());
         Query query = entityManager.createNamedQuery(name);
         query.setMaxResults(limit);
         query.setFirstResult(offset);
@@ -81,7 +85,24 @@ public abstract class Repository {
         return Optional.ofNullable(t);
     }
 
+    private void debugLog(String name, Map<String, Object> params) {
 
+        if (log.logger().isLoggable(Level.DEBUG)) {
+            StringBuilder sb = new StringBuilder("Executing FIND using named query '");
+            sb.append(name).append("'");
+
+            if (params.size() > 0) {
+                sb.append(" with parameters:\n");
+
+                for (String string : params.keySet()) {
+                    sb.append("\t").append(string).append(" = ").append(params.get(string));
+                }
+            }
+
+            log.atDebug().log(sb.toString());
+
+        }
+    }
 
 
 }

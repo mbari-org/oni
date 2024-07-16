@@ -32,6 +32,9 @@ import org.mbari.oni.endpoints.LinkTemplateEndpoints
 import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
 
+/**
+  * Configures all endpoint/api definitions
+  */
 object Endpoints:
 
     given JwtService =

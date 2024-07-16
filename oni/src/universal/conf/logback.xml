@@ -18,6 +18,7 @@
   <logger name="java" level="WARN" />
   <logger name="jdk" level="WARN" />
   <logger name="org.apache.http" level="WARN" />
+  <!-- <logger name="org.mbari.oni.jpa.repositories" level="DEBUG" /> -->
   <!-- Hibernate after 6 DEBUG -->
 <!--  <logger name="org.hibernate.SQL" level="DEBUG" />-->
 <!--  <logger name="org.hibernate.orm.results" level="INFO" />-->
