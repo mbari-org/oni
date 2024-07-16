@@ -50,7 +50,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     @OneToOne(
         optional = false, 
         targetEntity = ConceptEntity.class, 
-        cascade = {CascadeType.DETACH},
+        cascade = {CascadeType.ALL},
         fetch = FetchType.LAZY
     )   
     @JoinColumn(
