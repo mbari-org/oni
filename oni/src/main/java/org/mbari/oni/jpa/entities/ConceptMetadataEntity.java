@@ -38,8 +38,17 @@ import org.mbari.oni.jpa.IPersistentObject;
  */
 @Entity(name = "ConceptMetadata")
 @Table(name = "ConceptDelegate",
-        indexes = {@Index(name = "idx_ConceptDelegate_FK1", columnList = "ConceptID_FK"),
-                @Index(name = "idx_ConceptDelegate_LUT", columnList = "LAST_UPDATED_TIME")})
+        indexes = {
+            @Index(name = "idx_ConceptDelegate_FK1", columnList = "ConceptID_FK"),
+            @Index(name = "idx_ConceptDelegate_LUT", columnList = "LAST_UPDATED_TIME")
+        },
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_ConceptDelegate__ConceptID_FK",
+                        columnNames = {"ConceptID_FK"}
+                )
+        }
+)
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
 @NamedQueries({@NamedQuery(name = "ConceptMetadata.findById",
         query = "SELECT v FROM ConceptMetadata v WHERE v.id = :id")})
@@ -50,7 +59,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     @OneToOne(
         optional = false, 
         targetEntity = ConceptEntity.class, 
-        cascade = {CascadeType.ALL},
+        cascade = {CascadeType.DETACH, CascadeType.REFRESH, CascadeType.MERGE},
         fetch = FetchType.LAZY
     )   
     @JoinColumn(

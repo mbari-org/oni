@@ -71,6 +71,7 @@ create unique nonclustered index uc_Reference_doi on Reference (doi) where doi i
 alter table UserAccount add constraint uc_UserAccount__UserName unique (UserName);
 alter table Concept add constraint fk_Concept__Concept_id foreign key (ParentConceptID_FK) references Concept;
 alter table ConceptDelegate add constraint fk_ConceptDelegage__Concept_id foreign key (ConceptID_FK) references Concept;
+alter table ConceptDelegate add constraint uc_ConceptDelegage__Concept_id unique (ConceptID_FK);
 alter table ConceptName add constraint fk_ConceptName__Concept_id foreign key (ConceptID_FK) references Concept;
 alter table History add constraint fk_History__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
 alter table LinkRealization add constraint fk_LinkRealization__ConceptDelegate_id foreign key (ConceptDelegateID_FK) references ConceptDelegate;
