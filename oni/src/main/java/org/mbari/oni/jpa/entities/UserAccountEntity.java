@@ -43,8 +43,8 @@ import org.mbari.oni.jpa.IPersistentObject;
     @NamedQuery(name = "UserAccount.findAll", query = "SELECT c FROM UserAccount c")
 
 })
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cacheable
+//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class UserAccountEntity implements Serializable, IPersistentObject {
 
     @Column(name = "Affiliation", length = 512)

@@ -29,8 +29,8 @@ import java.io.Serializable;
                             query = "SELECT p FROM PreferenceNode p WHERE p.nodeName = :nodeName AND p.prefKey = :prefKey") ,
                 @NamedQuery(name = "PreferenceNode.findAllByNodeName",
                             query = "SELECT p FROM PreferenceNode p WHERE p.nodeName = :nodeName") })
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cacheable
+//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class PreferenceNodeEntity implements Serializable {
 
     // This composite key will generate a unique constraint on these 2 columns.

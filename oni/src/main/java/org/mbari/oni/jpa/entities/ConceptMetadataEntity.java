@@ -43,8 +43,8 @@ import org.mbari.oni.jpa.IPersistentObject;
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
 @NamedQueries({@NamedQuery(name = "ConceptMetadata.findById",
         query = "SELECT v FROM ConceptMetadata v WHERE v.id = :id")})
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cacheable
+//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class ConceptMetadataEntity implements Serializable, IPersistentObject {
 
     @OneToOne(

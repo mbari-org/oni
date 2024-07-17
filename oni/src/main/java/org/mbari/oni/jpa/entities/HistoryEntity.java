@@ -64,8 +64,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "History.findApproved", query = "SELECT h FROM History h WHERE h.processedDate IS NOT NULL"),
     @NamedQuery(name = "History.findByConceptName", query = "SELECT h FROM History h WHERE h.conceptMetadata.id IN (SELECT cn.concept.conceptMetadata.id FROM ConceptName cn WHERE cn.name = :name)"),
 })
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+//@Cacheable
+//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class HistoryEntity implements Serializable, IPersistentObject {
 
     /**
