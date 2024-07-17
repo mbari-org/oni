@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.mbari.oni.jpa.KeyNullifier;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.TransactionLogger;
@@ -63,6 +64,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "History.findApproved", query = "SELECT h FROM History h WHERE h.processedDate IS NOT NULL"),
     @NamedQuery(name = "History.findByConceptName", query = "SELECT h FROM History h WHERE h.conceptMetadata.id IN (SELECT cn.concept.conceptMetadata.id FROM ConceptName cn WHERE cn.name = :name)"),
 })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class HistoryEntity implements Serializable, IPersistentObject {
 
     /**

@@ -42,8 +42,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "ConceptName.findAll", query = "SELECT c FROM ConceptName c") ,
     @NamedQuery(name = "ConceptName.findByNameLike", query = "SELECT c FROM ConceptName c WHERE lower(c.name) LIKE :name ORDER BY c.name")
 })
-//@Cacheable
-//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class ConceptNameEntity implements Serializable, IPersistentObject {
 
 

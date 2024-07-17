@@ -8,6 +8,7 @@
 package org.mbari.oni.jpa.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.mbari.oni.jpa.IPersistentObject;
 import org.mbari.oni.jpa.KeyNullifier;
@@ -35,6 +36,8 @@ import java.util.Set;
     @NamedQuery(name = "Reference.findByConceptName",
                 query = "SELECT r FROM Reference r JOIN r.conceptMetadatas cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name") ,
 })
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class ReferenceEntity implements Serializable, IPersistentObject {
 
     @Id

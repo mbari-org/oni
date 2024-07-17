@@ -53,8 +53,8 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "LinkRealization.findByLinkValue",
                 query = "SELECT l FROM LinkRealization l WHERE l.linkValue = :linkValue")
 })
-//@Cacheable
-//@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class LinkRealizationEntity implements Serializable, ILink, IPersistentObject {
 
     @Transient
