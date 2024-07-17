@@ -51,7 +51,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
         optional = false, 
         targetEntity = ConceptEntity.class, 
         cascade = {CascadeType.ALL},
-        fetch = FetchType.LAZY
+        fetch = FetchType.EAGER
     )   
     @JoinColumn(
             name = "ConceptID_FK",
