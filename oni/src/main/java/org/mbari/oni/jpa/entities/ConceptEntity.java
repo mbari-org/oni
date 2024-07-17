@@ -58,7 +58,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
 //    @SerializedName("metadata")
     @OneToOne(
         mappedBy = "concept",
-        fetch = FetchType.LAZY,
+        fetch = FetchType.EAGER,
         cascade = { CascadeType.ALL },
         targetEntity = ConceptMetadataEntity.class,
         orphanRemoval = true
