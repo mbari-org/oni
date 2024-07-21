@@ -12,7 +12,7 @@ object Dependencies {
     lazy val circeGeneric = "io.circe" %% "circe-generic" % circeVersion
     lazy val circeParser  = "io.circe" %% "circe-parser"  % circeVersion
 
-    lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.17.0"
+    lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.17.1"
     lazy val gson = "com.google.code.gson" % "gson" % "2.11.0"
 
     // THis needs to match the version used by tapirHelidon.
@@ -42,7 +42,7 @@ object Dependencies {
     lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem    = "org.slf4j" % "slf4j-jdk-platform-logging" % slf4jVersion
 
-    private val tapirVersion = "1.10.13"
+    private val tapirVersion = "1.10.14"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion
     lazy val tapirHelidon    = "com.softwaremill.sttp.tapir" %% "tapir-nima-server"        % tapirVersion
     lazy val tapirPrometheus = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % tapirVersion
@@ -52,7 +52,7 @@ object Dependencies {
 
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.7"
 
-    val testcontainersVersion        = "1.19.8"
+    val testcontainersVersion        = "1.20.0"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "mssqlserver"    % testcontainersVersion

@@ -465,24 +465,37 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         userEntity: UserAccountEntity,
         entityManager: EntityManager
     ): Either[Throwable, Boolean] =
-        try
+        try {
             val repo    = ConceptRepository(entityManager)
             val concept = historyEntity.getConceptMetadata.getConcept
+            // val parent = concept.getParentConcept
 
-            val parent = repo.findByName(concept.getParentConcept.getName).toScala match
-                case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
-                case Some(p) => p
+
+            val parent = repo.findByName(historyEntity.getNewValue).toScala match
+               case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
+               case Some(p) => p
 
             val oldParentConcept = repo.findByName(historyEntity.getOldValue).toScala match
                 case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
                 case Some(p) => p
 
+            // println("CONCEPT: " + concept + " " + concept.getName)
+            // println("HISTORY ENTITY: " + historyEntity)
+            // println("PARENT: " + parent + " " + parent.getName())
+            // println("Parent Children:  " + parent.getChildConcepts.asScala)
+            // println("OLD PARENT: " + oldParentConcept + " " + oldParentConcept.getName)
+            // println("Old Parent Children:  " + oldParentConcept.getChildConcepts.asScala)
+
             parent.removeChildConcept(concept)
             oldParentConcept.addChildConcept(concept)
+
+            println("Old Parent Children:  " + oldParentConcept.getChildConcepts.asScala)
             log.atInfo
                 .log(
                     s"Rejected replace parent. Moving ${concept.getName} from ${parent.getName} back to ${oldParentConcept.getName} "
                 )
             Right(true)
-
-        catch case e: Throwable => Left(e)
+        }
+        catch {
+            case e: Throwable => Left(e)
+        }

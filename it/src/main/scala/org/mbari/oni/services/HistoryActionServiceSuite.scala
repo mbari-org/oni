@@ -363,11 +363,11 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
             approvedHistory <- runWithUserAuth(user => historyActionService.reject(history.id.get, user.username))
         yield
             assert(!approvedHistory.approved)
-            println(approvedHistory.stringify)
-            service.findRawByName(root.getName, true).map(xs => println(xs.stringify))
+//            println(approvedHistory.stringify)
+//            service.findRawByName(root.getName, true).map(xs => println(xs.stringify))
             service.findChildrenByParentName(a.getName) match
                 case Right(concepts) =>
-                    println(concepts.stringify)
+                //    println(concepts.stringify)
                     val xs = concepts.filter(_.name == b.getName)
                     assert(xs.isEmpty)
                 case Left(_)         => fail("Concept should exist after approval")
