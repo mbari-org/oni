@@ -17,7 +17,7 @@ import scala.concurrent.{ExecutionContext, Future}
  * This doesn't model asyncrhonous operations, we're going to use sync operations with virual threads instead.
  */
 type IO[A, B] = A => Either[Throwable, B]
-type AsyncIO[A, B] = A => Future[Either[Throwable, B]]
+type AsyncIO[A, B] = A => Future[B]
 
 object IO:
     extension [A, B](io: IO[A, B])
@@ -32,5 +32,8 @@ object IO:
             for b <- io(a)
             yield f(b)
 
-        def async(using executionContext: ExecutionContext): AsyncIO[A, B] =
-            a => Future(io(a))
+        def async(using executionContext: ExecutionContext): AsyncIO[A, B] = a =>
+            Future(io(a)).map {
+                case Right(b) => b
+                case Left(e)  => throw e
+            }

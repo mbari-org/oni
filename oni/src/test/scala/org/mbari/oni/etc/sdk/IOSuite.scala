@@ -10,26 +10,26 @@ package org.mbari.oni.etc.sdk
 import org.mbari.oni.etc.sdk.IO.*
 import Futures.*
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Await
 
-class IOSuite extends munit.FunSuite {
+class IOSuite extends munit.FunSuite:
 
     val io: IO[Int, String] = i => Right(i.toString())
-  
+
+    test("unit") {
+        val a = io.unit
+        val result = a(1)
+        assertEquals(result, Right(()))
+    }
 
     test("map") {
         val a = io.map(i => i + 1)
-        a(1) match {
-            case Right(value) => assertEquals(value, "11")
-            case Left(_) => fail("Expected Right")
-        }
+        assertEquals(a(1), Right("11"))
     }
 
     test("flatMap") {
         val a = io.flatMap(i => Right(i + 1))
-        a(1) match {
-            case Right(value) => assertEquals(value, "11")
-            case Left(_) => fail("Expected Right")
-        }
+        assertEquals(a(1), Right("11"))
     }
 
     test("foreach") {
@@ -38,13 +38,18 @@ class IOSuite extends munit.FunSuite {
         assertEquals(result, "1")
     }
 
-    test("async") {
-        given ExecutionContext = ExecutionContext.global
+    test("async (Success)") {
+        import scala.concurrent.ExecutionContext.Implicits.global
         val a = io.async
-        a(1).join match {
-            case Right(value) => assertEquals(value, "1")
-            case Left(_) => fail("Expected Right")
+        val result = Await.result(a(1), scala.concurrent.duration.Duration("1s"))
+        assertEquals(result, "1")
+    }
+
+    test("async (Failure)") {
+        import scala.concurrent.ExecutionContext.Implicits.global
+        def testFun(a: Int): Either[Throwable, String] = Left(new RuntimeException("Boom!"))
+        val io = testFun.async
+        interceptMessage[RuntimeException]("Boom!") {
+            Await.result(io(1), scala.concurrent.duration.Duration("1s"))
         }
     }
-    
-}
