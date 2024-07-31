@@ -96,7 +96,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory)(using execu
         )
     }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         upEndpoint,
         downEndpoint,
         siblingsEndpoint,

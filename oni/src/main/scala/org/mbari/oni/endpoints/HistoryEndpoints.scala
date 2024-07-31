@@ -163,7 +163,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
             }
         }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findByConceptNameEndpoint,
         approveEndpoint,
         rejectEndpoint,

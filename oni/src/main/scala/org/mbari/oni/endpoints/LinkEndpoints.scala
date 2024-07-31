@@ -79,7 +79,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionC
         handleErrorsAsync(service.findLinkRealizationsByLinkName(linkName))
     }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         linkRealizationsEndpoint,
         linksForConceptAndLinkNameEndpoint,
         linksForConceptEndpoint, // TODO verify this order works

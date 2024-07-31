@@ -187,7 +187,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
             handleErrorsAsync(service.removeConcept(id, concept))
         }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         addConceptEndpoint,                   // PUT    add/:id/to/:concept
         removeConceptEndpoint,                // PUT    remove/:id/from/:concept
         findReferencesByCitationGlobEndpoint, // GET    query/citation/:glob

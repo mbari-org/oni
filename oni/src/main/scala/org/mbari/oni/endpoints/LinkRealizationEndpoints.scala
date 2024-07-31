@@ -118,7 +118,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
             }
         }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findLinkRealizationsByConceptName,
         findLinkRealizationByPrototype,
         create,

@@ -117,7 +117,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
             }
         }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findLinkTemplateByConceptName,
         findLinKTemplateByPrototype,
         createLinkTemplate,

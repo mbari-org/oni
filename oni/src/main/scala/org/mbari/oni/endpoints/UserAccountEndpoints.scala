@@ -123,7 +123,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             handleErrorsAsync(service.update(username, userAccountUpdate))
         }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findAllByRoleEndpoint,
         findByUserNameEndpoint,
         findAllEndpoint,

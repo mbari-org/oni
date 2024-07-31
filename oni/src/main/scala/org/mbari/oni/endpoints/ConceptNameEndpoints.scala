@@ -86,7 +86,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             handleErrorsAsync(service.deleteName(name, userAccount.username))
         }
 
-    override def all: List[Endpoint[_, _, _, _, _]] = List(
+    override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         allEndpoint,
         addConceptNameEndpoint,
         updateConceptNameEndpoint,
