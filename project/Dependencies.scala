@@ -32,7 +32,7 @@ object Dependencies {
     lazy val jaspyt      = "org.jasypt"              % "jasypt"                     % "1.9.3"
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
     lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.6"
-    lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.6.3.jre11"
+    lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.8.0.jre11"
     lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.0"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.3"
@@ -52,7 +52,7 @@ object Dependencies {
 
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.7"
 
-    val testcontainersVersion        = "1.20.0"
+    val testcontainersVersion        = "1.20.1"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "mssqlserver"    % testcontainersVersion
