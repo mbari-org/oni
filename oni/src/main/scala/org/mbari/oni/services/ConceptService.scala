@@ -231,6 +231,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             conceptCreate.rankName.foreach(v => concept.setRankName(v))
             val conceptName = new ConceptNameEntity(conceptCreate.name)
             concept.addConceptName(conceptName)
+            conceptCreate.author.foreach(conceptName.setAuthor)
             if parent != null then
                 parent.addChildConcept(concept)
 

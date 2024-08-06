@@ -94,6 +94,7 @@ object TestEntityFactory:
     def createConceptName(isPrimary: Boolean = true): ConceptNameEntity =
         val entity   = new ConceptNameEntity()
         entity.setName(Strings.random(20))
+        entity.setAuthor(Strings.random(20))
         val nameType =
             if isPrimary then ConceptNameTypes.PRIMARY
             else
