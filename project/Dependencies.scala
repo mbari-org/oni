@@ -21,7 +21,7 @@ object Dependencies {
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
-    val hibernateVersion      = "6.5.2.Final"
+    val hibernateVersion      = "6.6.0.Final"
     lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
@@ -38,11 +38,11 @@ object Dependencies {
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.3"
 //    lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
 
-    val slf4jVersion = "2.0.14"
+    val slf4jVersion = "2.0.16"
     lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem    = "org.slf4j" % "slf4j-jdk-platform-logging" % slf4jVersion
 
-    private val tapirVersion = "1.11.0"
+    private val tapirVersion = "1.11.1"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion
     lazy val tapirHelidon    = "com.softwaremill.sttp.tapir" %% "tapir-nima-server"        % tapirVersion
     lazy val tapirPrometheus = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % tapirVersion
@@ -50,7 +50,7 @@ object Dependencies {
     lazy val tapirSwagger    = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle"  % tapirVersion
     lazy val tapirVertex     = "com.softwaremill.sttp.tapir" %% "tapir-vertx-server"       % tapirVersion
 
-    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.7"
+    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.8"
 
     val testcontainersVersion        = "1.20.1"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
