@@ -8,7 +8,7 @@ If you have an existing database, you can start Oni using Docker.  Note these ex
 
 ### PostgreSQL
 
-Here's an example connecting to a PostgreSQL database. You can find the schema to use in [02_m3_kb.sql](https://github.com/mbari-org/oni/it-postgres/src/test/resources/sql/02_m3_kb.sql).
+Here's an example connecting to a PostgreSQL database. You can find the schema to use in [02_m3_kb.sql](https://github.com/mbari-org/oni/blob/main/it-postgres/src/test/resources/sql/02_m3_kb.sql).
 
 ```sh
 docker run -d \
@@ -26,7 +26,7 @@ docker run -d \
 
 ### SQL Server
 
-The schema for SQL Server is in [init_min.sql](https://github.com/mbari-org/oni/it-sqlserver/src/test/resources/sql/init_min.sql).
+The schema for SQL Server is in [init_min.sql](https://github.com/mbari-org/oni/blob/main/it-postgres/src/test/resources/sql/02_m3_kb.sql).
 
 ```sh
 docker run -d \
