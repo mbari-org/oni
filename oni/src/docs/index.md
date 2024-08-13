@@ -10,3 +10,5 @@ Oni includes APIs for fast search and retrieval of terms, fetching branches of t
 
 [Scala API](api/index.html)
 
+[Documentation](docs/index.html)
+
