@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  generate_docs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -34,10 +34,10 @@ jobs:
       - name: Upload site
         uses: actions/upload-pages-artifact@v1.0.1
         with:
-          path: ./oni/target/scala-3.3.3/api
+          path: ./oni/target/scala-3.4.2/api
 
-  deploy:
-    needs: build
+  publish_docs:
+    needs: generate_docs
     permissions:
       pages: write
       id-token: write

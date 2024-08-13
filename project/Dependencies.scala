@@ -33,7 +33,7 @@ object Dependencies {
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
     lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.6"
     lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.8.0.jre11"
-    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.0"
+    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.1"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.3"
 //    lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
