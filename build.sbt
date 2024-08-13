@@ -1,17 +1,6 @@
 import Dependencies._
 
-
-
 Global / onChangedBuildSource := ReloadOnSourceChanges
-Compile / doc / scalacOptions ++= Seq(
-    "-groups",
-    "-project-footer",
-    "Monterey Bay Aquarium Research Institute",
-    "-siteroot",
-    "src/docs",
-    "-doc-root-content",
-    "src/docs/index.md"
-)
 
 ThisBuild / javacOptions ++= Seq("-target", "21", "-source", "21")
 ThisBuild / licenses         := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
@@ -30,6 +19,7 @@ ThisBuild / scalacOptions ++= Seq(
     "-language:higherKinds",
     "-language:implicitConversions",
     "-unchecked"
+    
 )
 ThisBuild / startYear        := Some(2024)
 //ThisBuild / updateOptions    := updateOptions.value.withCachedResolution(true)
@@ -112,6 +102,15 @@ lazy val oni = project
         tapirSwagger,
         tapirVertex,
         typesafeConfig
+    ),
+    scalacOptions ++= Seq(
+        "-groups",
+        "-project-footer",
+        "Monterey Bay Aquarium Research Institute",
+        "-siteroot",
+        "oni/src/docs",
+        "-doc-root-content",
+        "oni/src/docs/index.md"
     )
   )
 

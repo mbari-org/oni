@@ -1,6 +1,6 @@
 # nima
 
-Oni uses Helidon's Webserver (aka Nima) to serve the web application.
+Oni was originally written using Helidon's Webserver (aka Nima) to serve the web application. Currently, Oni uses Vert.X. The notes below are in case we switch back to Nima.
 
 ## Supporting gzip
 
