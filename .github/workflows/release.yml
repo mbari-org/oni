@@ -21,11 +21,6 @@ jobs:
           java-version: "21"
           distribution: "temurin"
           cache: "sbt"
-      - name: 'Get Previous tag'
-        id: latest_tag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
-        with:
-          fallback: 0.0.1
       - name: Package and publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,4 +29,4 @@ jobs:
           cd oni/target/docker/stage
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
           docker buildx create --name dockerbuilder --platform linux/amd64,linux/arm64 --use
-          docker buildx build --platform linux/amd64,linux/arm64 -t mbari/oni:${{ steps.latest_tag.outputs.tag }} -t mbari/oni:latest --push .
+          docker buildx build --platform linux/amd64,linux/arm64 -t mbari/oni:${{ github.ref_name }} -t mbari/oni:latest --push .
