@@ -105,16 +105,11 @@ lazy val oni = project
     ),
     scalacOptions ++= Seq(
         "-groups",
-        "-project-footer",
-        "Monterey Bay Aquarium Research Institute",
-        "-siteroot",
-        "oni/src/docs",
-        "-doc-root-content",
-        "oni/src/docs/index.md"
+        "-project-footer", "Monterey Bay Aquarium Research Institute",
+        "-siteroot", "oni/src/docs",
+        "-doc-root-content", "oni/src/docs/index.md"
     )
   )
-
-
 
 
 lazy val integrationTests = (project in file("it"))
