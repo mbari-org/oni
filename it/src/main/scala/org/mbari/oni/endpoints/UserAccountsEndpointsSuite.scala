@@ -24,6 +24,7 @@ import org.mbari.oni.services.{UserAccountService, UserAuthMixin}
 import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.etc.jdk.Strings
 
 trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
 
@@ -105,9 +106,10 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
             case Left(error)         => fail(error.getMessage)
     }
 
-    test("createEndpoint") {
+    test("createEndpoint (JSON)") {
         val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
-        val userAccount = UserAccount.from(entity)
+        val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
+
 
         runPost(
             endpoints.createEndpointImpl,
@@ -116,9 +118,47 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None), userAccount)
+                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
+        )
+    }
+
+    test("createEndpoint (form camelCase)") {
+        val entity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
+        val formBody = userAccount.toFormBody
+
+        runPost(
+            endpoints.createEndpointImpl,
+            "http://test.com/v1/users",
+            formBody,
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[UserAccount](response.body)
+                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
+            ,
+            jwt = jwtService.authorize(jwtService.apiKey),
+            contentType = "application/x-www-form-urlencoded"
+        )
+    }
+
+    test("createEndpoint (form snake_case)") {
+        val entity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
+        val formBody = userAccount.toFormBody.replace("firstName", "first_name").replace("lastName", "last_name")
+
+        runPost(
+            endpoints.createEndpointImpl,
+            "http://test.com/v1/users",
+            formBody,
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[UserAccount](response.body)
+                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
+            ,
+            jwt = jwtService.authorize(jwtService.apiKey),
+            contentType = "application/x-www-form-urlencoded"
         )
     }
 

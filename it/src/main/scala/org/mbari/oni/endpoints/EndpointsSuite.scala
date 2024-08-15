@@ -82,18 +82,21 @@ trait EndpointsSuite extends munit.FunSuite:
         uri: String,
         body: String,
         assertions: Response[Either[String, String]] => Unit,
-        jwt: Option[String] = None
+        jwt: Option[String] = None,
+        contentType: String = "application/json"
     ): Unit =
         val backendStub = newBackendStub(ep)
         val u           = uri"$uri"
         val request     = jwt match
-            case None         => basicRequest.post(u).body(body)
+            case None         => basicRequest.post(u).body(body).header("Content-Type", contentType)
             case Some(bearer) =>
                 basicRequest
                     .post(u)
+                    .header("Content-Type", contentType)
                     .body(body)
                     .auth
                     .bearer(bearer)
+
 
         val response = request.send(backendStub).join
         assertions(response)

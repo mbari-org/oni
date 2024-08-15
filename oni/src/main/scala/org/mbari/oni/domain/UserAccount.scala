@@ -59,6 +59,19 @@ case class UserAccount(
 
     lazy val isAdministrator: Boolean = role == UserAccountRoles.ADMINISTRATOR.getRoleName
 
+    def toFormBody: String =
+        // Example: username=lchrobak&password=changeme&role=User&first_name=Laura&last_name=Chrobak&affiliation=MBARI&email=lchrobak%40mbari.org
+        val fields = Seq(
+            Some(s"username=$username"),
+            Some(s"password=$password"),
+            Some(s"role=$role"),
+            firstName.map(v => s"firstName=$v"),
+            lastName.map(v => s"lastName=$v"),
+            affiliation.map(v => s"affiliation=$v"),
+            email.map(v => s"email=$v")
+        ).flatten
+        fields.mkString("&")
+
 object UserAccount:
 
     def from(userAccount: UserAccountEntity): UserAccount = UserAccount(

@@ -144,6 +144,9 @@ object CirceCodecs:
     given Decoder[UserAccount] = deriveDecoder
     given Encoder[UserAccount] = deriveEncoder
 
+    given Decoder[UserAccountCreate] = deriveDecoder
+    given Encoder[UserAccountCreate] = deriveEncoder
+
     given Decoder[UserAccountUpdate] = deriveDecoder
     given Encoder[UserAccountUpdate] = deriveEncoder
 

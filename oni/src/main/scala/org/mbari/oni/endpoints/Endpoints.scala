@@ -68,7 +68,8 @@ trait Endpoints:
         Schema.derived[Page[Seq[ExtendedHistory]]]
     implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]                   = Schema.derived[Page[Seq[String]]]
     implicit lazy val sUserAccount: Schema[UserAccount]                           = Schema.derived[UserAccount]
-    implicit lazy val sUserAccountUdpate: Schema[UserAccountUpdate]               = Schema.derived[UserAccountUpdate]
+    implicit lazy val sUserAccountCreate: Schema[UserAccountCreate]               = Schema.derived[UserAccountCreate]
+    implicit lazy val sUserAccountUpdate: Schema[UserAccountUpdate]               = Schema.derived[UserAccountUpdate]
 
     // Make Tapir recursive types happy by using `implicit def`, not lazy val
     // https://tapir.softwaremill.com/en/latest/endpoint/schemas.html#derivation-for-recursive-types-in-scala3

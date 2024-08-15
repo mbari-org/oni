@@ -8,7 +8,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, NotFound, UserAccount, UserAccountUpdate}
+import org.mbari.oni.domain.{ErrorMsg, NotFound, UserAccount, UserAccountCreate, UserAccountUpdate}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAccountService
 import sttp.tapir.*
@@ -90,11 +90,11 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         }
 
     // create
-    val createEndpoint: Endpoint[Option[String], UserAccount, ErrorMsg, UserAccount, Any] =
+    val createEndpoint: Endpoint[Option[String], UserAccountCreate, ErrorMsg, UserAccount, Any] =
         secureEndpoint
             .post
             .in(base)
-            .in(jsonBody[UserAccount])
+            .in(oneOfBody(jsonBody[UserAccountCreate], formBody[UserAccountCreate]))
             .out(jsonBody[UserAccount])
             .name("createUserAccount")
             .description("Create a new user account")
@@ -103,7 +103,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
         .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
         .serverLogic { _ => userAccount =>
-            handleErrorsAsync(service.create(userAccount))
+            handleErrorsAsync(service.create(userAccount.toUserAccount))
         }
 
     // update

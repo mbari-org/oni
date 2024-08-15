@@ -166,12 +166,12 @@ object TestEntityFactory:
 
     def createUserAccount(
         role: String = UserAccountRoles.ADMINISTRATOR.getRoleName,
-        password: String = Strings.random(20)
+        password: String = Strings.random(10)
     ): UserAccountEntity =
         val entity = new UserAccountEntity()
         entity.setUserName(Strings.random(20))
         entity.setPassword(password)
-        entity.setEmail(s"{Strings.random(10)}@mbari.org")
+        entity.setEmail(s"${Strings.random(10)}@mbari.org")
         entity.setFirstName(Strings.random(10))
         entity.setLastName(Strings.random(10))
         entity.setAffiliation(Strings.random(20))

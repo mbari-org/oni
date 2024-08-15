@@ -31,7 +31,7 @@ object Dependencies {
     lazy val jansi       = "org.fusesource.jansi"    % "jansi"                      % "2.4.1"
     lazy val jaspyt      = "org.jasypt"              % "jasypt"                     % "1.9.3"
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
-    lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.6"
+    lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.7"
     lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.8.0.jre11"
     lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.1"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
