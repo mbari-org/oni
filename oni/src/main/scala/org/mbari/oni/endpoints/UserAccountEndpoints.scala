@@ -94,7 +94,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         secureEndpoint
             .post
             .in(base)
-            .in(oneOfBody(jsonBody[UserAccountCreate], formBody[UserAccountCreate]))
+            .in(oneOfBody(jsonBody[UserAccountCreate].description("The user account to create. Accepts camelCase or snake_case."), formBody[UserAccountCreate].description("The user account to create. Accepts camelCase or snake_case.")))
             .out(jsonBody[UserAccount])
             .name("createUserAccount")
             .description("Create a new user account")

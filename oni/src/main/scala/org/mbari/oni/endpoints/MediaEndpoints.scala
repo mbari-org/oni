@@ -26,10 +26,10 @@ import scala.concurrent.Future
 import org.mbari.oni.etc.jwt.JwtService
 
 class MediaEndpoints(entityManagerFactory: EntityManagerFactory,
-     fastPhylogenyService: FastPhylogenyService,
-     conceptService: ConceptService)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+     fastPhylogenyService: FastPhylogenyService)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
 
     private val service = MediaService(entityManagerFactory, fastPhylogenyService)
+    private val conceptService = ConceptService(entityManagerFactory)
     private val base    = "media"
     private val tag     = "Media"
 

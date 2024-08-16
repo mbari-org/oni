@@ -8,26 +8,13 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{
-    AuthorizationEndpoints,
-    ConceptEndpoints,
-    ConceptNameEndpoints,
-    HealthEndpoints,
-    HistoryEndpoints,
-    LinkEndpoints,
-    PhylogenyEndpoints,
-    PrefNodeEndpoints,
-    ReferenceEndpoints,
-    UserAccountEndpoints
-}
+import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, LinkRealizationEndpoints, LinkTemplateEndpoints, MediaEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
 import sttp.shared.Identity
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
-import org.mbari.oni.endpoints.LinkRealizationEndpoints
-import org.mbari.oni.endpoints.LinkTemplateEndpoints
 
 import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
@@ -56,6 +43,7 @@ object Endpoints:
     val linkEndpoints: LinkEndpoints                       = LinkEndpoints(entityMangerFactory)
     val linkRealizationEndpoints: LinkRealizationEndpoints = LinkRealizationEndpoints(entityMangerFactory)
     val linkTemplateEndpoints: LinkTemplateEndpoints       = LinkTemplateEndpoints(entityMangerFactory)
+    val mediaEndpoints: MediaEndpoints                     = MediaEndpoints(entityMangerFactory, phylogenyEndpoints.service)
     val prefNodeEndpoints: PrefNodeEndpoints               = PrefNodeEndpoints(entityMangerFactory)
     val referenceEndpoints: ReferenceEndpoints             = ReferenceEndpoints(entityMangerFactory)
     val userAccountEndpoints: UserAccountEndpoints         = UserAccountEndpoints(entityMangerFactory)
@@ -69,6 +57,7 @@ object Endpoints:
         linkEndpoints,
         linkRealizationEndpoints,
         linkTemplateEndpoints,
+        mediaEndpoints,
         phylogenyEndpoints,
         prefNodeEndpoints,
         referenceEndpoints,

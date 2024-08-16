@@ -32,7 +32,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
     lazy val fastPhylogenyService = FastPhylogenyService(entityManagerFactory)
-    lazy val endpoints: MediaEndpoints = MediaEndpoints(entityManagerFactory, fastPhylogenyService, conceptService)
+    lazy val endpoints: MediaEndpoints = MediaEndpoints(entityManagerFactory, fastPhylogenyService)
     private val password = Strings.random(10)
 
     def createMedia(): Seq[Media] = {
