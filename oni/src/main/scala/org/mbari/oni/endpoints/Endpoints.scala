@@ -52,6 +52,8 @@ trait Endpoints:
     implicit lazy val sLinkCreate: Schema[LinkCreate]                             = Schema.derived[LinkCreate]
     implicit lazy val sLinkUpdate: Schema[LinkUpdate]                             = Schema.derived[LinkUpdate]
     implicit lazy val sMedia: Schema[Media]                                       = Schema.derived[Media]
+    implicit lazy val sMediaCreate: Schema[MediaCreate]                           = Schema.derived[MediaCreate]
+    implicit lazy val sMediaUpdate: Schema[MediaUpdate]                           = Schema.derived[MediaUpdate]
     implicit lazy val sPaging: Schema[Paging]                                     = Schema.derived[Paging]
     implicit lazy val sPrefNode: Schema[PrefNode]                                 = Schema.derived[PrefNode]
     implicit lazy val sPrefNodeUpdate: Schema[PrefNodeUpdate]                     = Schema.derived[PrefNodeUpdate]

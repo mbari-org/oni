@@ -7,6 +7,8 @@
 
 package org.mbari.oni.domain
 
+import org.mbari.oni.etc.jdk.Strings
+
 import java.net.{URI, URL}
 import java.util.regex.Pattern
 import org.mbari.oni.jpa.entities.MediaEntity
@@ -59,8 +61,9 @@ object Media:
         )
 
     def resolveMimeType(t: String, url: String): String =
-        val ext = url.split(Pattern.quote(".")).last
-        Try(MediaType.valueOf(t)) match
+        val ext = url.split(Pattern.quote(".")).last.toLowerCase
+        val mediaType = Strings.initCap(t)
+        Try(MediaType.valueOf(mediaType)) match
             case Success(MediaType.Image) => s"image/$ext"
             case Success(MediaType.Video) =>
                 ext match

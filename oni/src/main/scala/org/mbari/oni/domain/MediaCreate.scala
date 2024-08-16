@@ -16,7 +16,7 @@ case class MediaCreate(
     url: URL,
     caption: Option[String] = None,
     credit: Option[String] = None,
-    mimeType: Option[String] = None,
+    mediaType: Option[String] = Some(MediaTypes.IMAGE.name),
     isPrimary: Option[Boolean] = None
 ):
 
@@ -25,6 +25,6 @@ case class MediaCreate(
         entity.setUrl(url.toExternalForm)
         entity.setCaption(caption.orNull)
         entity.setCredit(credit.orNull)
-        entity.setType(mimeType.orNull)
+        entity.setType(mediaType.getOrElse(MediaTypes.IMAGE.name))
         entity.setPrimary(isPrimary.getOrElse(false))
         entity

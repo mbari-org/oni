@@ -9,7 +9,7 @@ package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
 import org.mbari.oni.{ConceptNameNotFound, ItemNotFound}
-import org.mbari.oni.domain.{Media, MediaCreate}
+import org.mbari.oni.domain.{Media, MediaCreate, MediaUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jdbc.FastPhylogenyService
@@ -65,6 +65,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
 
                         val entity  = mediaCreate.toEntity
                         concept.getConceptMetadata.addMedia(entity)
+                        repo.create(entity)
                         // Add history
                         val history = HistoryEntityFactory.add(userEntity, entity)
                         concept.getConceptMetadata.addHistory(history)
@@ -94,6 +95,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                             val conceptMetadata = media.getConceptMetadata
                             conceptMetadata.removeMedia(media)
                             repo.delete(media)
+                        
             )
 
         for
@@ -101,7 +103,25 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             media <- txn(user.toEntity)
         yield ()
 
-    def update() = ???
+    def update(id: Long, mediaUpdate: MediaUpdate, userName: String) = 
+        def txn(userEntity: UserAccountEntity): Either[Throwable, Media] =
+            entityManagerFactory.transaction(entityManager =>
+                val repo = MediaRepository(entityManager, fastPhylogenyService)
+                repo.findByPrimaryKey(classOf[MediaEntity], id).toScala match
+                    case None        => throw ItemNotFound(s"Media with id '${id}' not found")
+                    case Some(media) =>
+                        mediaUpdate.caption.foreach(media.setCaption)
+                        mediaUpdate.credit.foreach(media.setCredit)
+                        mediaUpdate.isPrimary.foreach(b => media.setPrimary(b.booleanValue()))
+                        mediaUpdate.url.foreach(url => media.setUrl(url.toExternalForm))
+                        mediaUpdate.mediaType.foreach(media.setType)
+                        Media.from(media)
+            )
+
+        for 
+            user  <- userAccountService.verifyWriteAccess(Option(userName))
+            media <- txn(user.toEntity)
+        yield media
 
     def inTxnRejectAdd(
         history: HistoryEntity,

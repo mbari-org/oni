@@ -16,9 +16,11 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.MediaCreate
+import org.mbari.oni.domain.{Media, MediaCreate, MediaTypes, MediaUpdate}
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.jdk.Strings
 
 import java.net.URI
 
@@ -30,16 +32,118 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
     test("create") {
         val root = init(2, 0)
         assert(root != null)
-        val a = conceptService.findByName(root.getName)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
-            url = URI.create("http://www.mbari.org").toURL
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
         )
-//        mediaService.create(mediaCreate) match
-//            case Left(e) => fail(e.getMessage)
-//            case Right(media) =>
-//                assertEquals(mediaCreate.conceptName, media.conceptName)
-//                assertEquals(mediaCreate.url, media.url)
-//                assertEquals(mediaCreate.user, media.user)
-//                assertEquals(mediaCreate.timestamp, media.timestamp)
+        val attempt = runWithUserAuth(user =>  mediaService.create(mediaCreate, user.username))
+
+        attempt match
+            case Left(e) => fail(e.getMessage)
+            case Right(media) =>
+                assert(media.id.isDefined)
+                assertEquals(mediaCreate.conceptName, media.conceptName.getOrElse(""))
+                assertEquals(mediaCreate.url, media.url)
+                assertEquals(mediaCreate.caption, media.caption)
+                assertEquals(mediaCreate.credit, media.credit)
+                val t = Media.resolveMimeType(mediaCreate.mediaType.getOrElse(""), media.url.toExternalForm)
+                assertEquals(t, media.mimeType)
+                assertEquals(mediaCreate.isPrimary.getOrElse(false), media.isPrimary)
+
+    }
+
+    test("update") {
+        val root = init(2, 0)
+        assert(root != null)
+        val mediaCreate = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+        val mediaUpdate = MediaUpdate(
+            url = Some(URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL),
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+
+        val attempt = runWithUserAuth(user =>
+            for
+                m0 <- mediaService.create(mediaCreate, user.username)
+                m1 <- mediaService.update(m0.id.getOrElse(0L), mediaUpdate, user.username)
+            yield m1
+        )
+
+        attempt match
+            case Left(e) => fail(e.getMessage)
+            case Right(media) =>
+                assertEquals(mediaUpdate.url.orNull, media.url)
+                assertEquals(mediaUpdate.caption, media.caption)
+                assertEquals(mediaUpdate.credit, media.credit)
+                val t = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), media.url.toExternalForm)
+                assertEquals(t, media.mimeType)
+                assertEquals(mediaUpdate.isPrimary.getOrElse(false), media.isPrimary)
+    }
+
+    test("delete") {
+        val root = init(2, 0)
+        assert(root != null)
+        val mediaCreate = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+        val attempt = runWithUserAuth(user =>  mediaService.create(mediaCreate, user.username))
+
+        attempt match
+            case Left(e) => fail(e.getMessage)
+            case Right(media) =>
+                val attempt = runWithUserAuth(user => mediaService.deleteById(media.id.getOrElse(0L), user.username))
+                attempt match
+                    case Left(e) => fail(e.getMessage)
+                    case Right(_) =>
+                        mediaService.findById(media.id.getOrElse(0L)) match
+                            case Left(e) => fail(e.getMessage)
+                            case Right(opt) => assert(opt.isEmpty)
+    }
+
+    test("findById") {
+        val root = init(2, 0)
+        assert(root != null)
+        val mediaCreate = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+        val attempt0 = runWithUserAuth(user =>  mediaService.create(mediaCreate, user.username))
+
+        attempt0 match
+            case Left(e) => fail(e.getMessage)
+            case Right(media) =>
+                val attempt1 = runWithUserAuth(user => mediaService.findById(media.id.getOrElse(0L)))
+                attempt1 match
+                    case Left(e) => fail(e.getMessage)
+                    case Right(opt) =>
+                        assert(opt.isDefined)
+                        val m = opt.get
+                        assertEquals(media.id, m.id)
+                        assertEquals(media.url, m.url)
+                        assertEquals(media.caption, m.caption)
+                        assertEquals(media.credit, m.credit)
+                        assertEquals(media.mimeType, m.mimeType)
+                        assertEquals(media.isPrimary, m.isPrimary)
     }

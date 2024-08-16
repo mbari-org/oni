@@ -102,6 +102,12 @@ object CirceCodecs:
     given Decoder[Media] = deriveDecoder
     given Encoder[Media] = deriveEncoder
 
+    given Decoder[MediaCreate] = deriveDecoder
+    given Encoder[MediaCreate] = deriveEncoder
+
+    given Decoder[MediaUpdate] = deriveDecoder
+    given Encoder[MediaUpdate] = deriveEncoder
+
     given Decoder[ConceptMetadata] = deriveDecoder
     given Encoder[ConceptMetadata] = deriveEncoder
 
