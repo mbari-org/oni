@@ -8,6 +8,7 @@ ThisBuild / organization     := "org.mbari"
 ThisBuild / organizationName := "Monterey Bay Aquarium Research Institute"
 ThisBuild / resolvers ++= Seq(Resolver.githubPackages("mbari-org", "maven"))
 ThisBuild / scalaVersion     := "3.5.0"
+ThisBuild / usePipelining    := true
 // ThisBuild / scalaVersion     := "3.4.2"
 // ThisBuild / scalaVersion     := "3.3.1" // Fails. See https://github.com/lampepfl/dotty/issues/17069#issuecomment-1763053572
 ThisBuild / scalacOptions ++= Seq(
