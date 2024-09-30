@@ -8,24 +8,9 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{
-    AccessDenied,
-    AccessDeniedMissingCredentials,
-    ChildConceptNotFound,
-    ConceptNameAlreadyExists,
-    ConceptNameNotFound,
-    MissingRootConcept,
-    OniException,
-    RootAlreadyExists
-}
+import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, ChildConceptNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, MissingRootConcept, OniException, ParentConceptNotFound, RootAlreadyExists}
 import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, SimpleConcept}
-import org.mbari.oni.jpa.entities.{
-    ConceptEntity,
-    ConceptNameEntity,
-    HistoryEntity,
-    HistoryEntityFactory,
-    UserAccountEntity
-}
+import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.ConceptRepository
 import org.mbari.oni.etc.jdk.Loggers.given
@@ -101,7 +86,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         handleByConceptNameQuery(name, ConceptMetadata.from)
 
     def findParentByChildName(name: String): Either[Throwable, ConceptMetadata] =
-        handleByConceptNameQuery(name, c => ConceptMetadata.from(c.getParentConcept))
+        handleByConceptNameQuery(name, c => if (c.getParentConcept == null) throw ParentConceptNotFound(name) else
+            ConceptMetadata.from(c.getParentConcept))
 
     def findChildrenByParentName(name: String): Either[Throwable, Set[ConceptMetadata]] =
         handleByConceptNameQuery(name, c => c.getChildConcepts.asScala.map(ConceptMetadata.from).toSet)

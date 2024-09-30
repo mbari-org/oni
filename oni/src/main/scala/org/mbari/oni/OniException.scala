@@ -14,20 +14,24 @@ sealed trait OniException extends Throwable
 
 trait NotFoundException extends OniException
 trait AccessException   extends OniException
+trait ConceptNotFoundException extends NotFoundException
 
 case class AccessDenied(user: String)
     extends Exception(s"I'm sorry `$user`, I can not let you do that.")
     with AccessException
 case class AphiaIdNotFound(aphiaId: Long)                  extends Exception(s"AphiaId `$aphiaId` was not found") with NotFoundException
+
+
+
 case class ChildConceptNotFound(parentName: String, childName: String)
     extends Exception(s"Child concept `$childName` not found under `$parentName`")
-    with NotFoundException
+    with ConceptNotFoundException
 case class ConceptNameAlreadyExists(name: String)
     extends Exception(s"Concept name `$name` already exists")
     with OniException
 case class ConceptNameNotFound(name: String)
     extends Exception(s"Concept name `$name` was not found")
-    with NotFoundException
+    with ConceptNotFoundException
 case class HistoryHasBeenPreviouslyProcessed(id: Long)
     extends Exception(s"History with id `$id` has already been processed")
     with OniException
@@ -38,6 +42,9 @@ case class LinkRealizationIdNotFound(id: Long)
 case class LinkTemplateIdNotFound(id: Long)
     extends Exception(s"LinkTemplate with `$id` was not found")
     with NotFoundException
+case class ParentConceptNotFound(name: String)
+    extends Exception(s"Parent concept for `$name` was not found")
+    with ConceptNotFoundException
 case class ReferenceIdNotFound(id: Long)                   extends Exception(s"Reference with `$id` was not found") with NotFoundException
 case class WrappedException(msg: String, cause: Throwable) extends Exception(msg, cause) with OniException
 

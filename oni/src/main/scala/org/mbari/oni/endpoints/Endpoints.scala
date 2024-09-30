@@ -24,7 +24,7 @@ import org.mbari.oni.etc.jdk.Loggers.given
 
 import scala.concurrent.{ExecutionContext, Future}
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.AppConfig
+import org.mbari.oni.{AppConfig, ConceptNameNotFound, ConceptNotFoundException}
 
 import java.net.URI
 import java.time.Instant
@@ -112,13 +112,20 @@ trait Endpoints:
     )
 
     def handleErrors[T](f: => Either[Throwable, T]): Either[ErrorMsg, T] =
-        f.fold(
-            e =>
+        f match
+            case Right(concept) => Right(concept)
+            case Left(c: ConceptNotFoundException) => Left(NotFound(c.getMessage))
+            case Left(e) =>
                 log.atError.withCause(e).log("Error")
                 Left(ServerError(e.getMessage))
-            ,
-            Right(_)
-        )
+
+//        f.fold(
+//            e =>
+//                log.atError.withCause(e).log("Error")
+//                Left(ServerError(e.getMessage))
+//            ,
+//            Right(_)
+//        )
         
     def handleErrorsAsync[T](f: => Either[Throwable, T])(using ec: ExecutionContext): Future[Either[ErrorMsg, T]] =
         Future(handleErrors(f))

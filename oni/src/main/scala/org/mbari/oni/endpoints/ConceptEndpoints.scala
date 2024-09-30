@@ -8,11 +8,12 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.ConceptNameNotFound
 import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, ErrorMsg, ServerError}
+import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, ErrorMsg, NotFound, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService}
@@ -125,6 +126,18 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         handleErrorsAsync(service.findByGlob(name).map(_.toSeq.sortBy(_.name)))
     }
 
+    val findRoot: Endpoint[Unit, Unit, ErrorMsg, ConceptMetadata, Any] = openEndpoint
+        .get
+        .in(base / "query" / "root")
+        .out(jsonBody[ConceptMetadata])
+        .name("findRoot")
+        .description("Find the root concept")
+        .tag(tag)
+
+    val findRootImpl: ServerEndpoint[Any, Future] = findRoot.serverLogic { _ =>
+        handleErrorsAsync(service.findRoot())
+    }
+
     val updateEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
         secureEndpoint
             .put
@@ -148,6 +161,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         }
 
     override val all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        findRoot,
         findParentEndpoint,
         findChildrenEndpoint,
         findByNameContaining,
@@ -159,6 +173,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
     )
 
     override val allImpl: List[ServerEndpoint[Any, Future]] = List(
+        findRootImpl,
         findParentEndpointImpl,
         findChildrenEndpointImpl,
         findByNameContainingImpl,

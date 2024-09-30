@@ -21,6 +21,7 @@ import org.mbari.oni.jpa.DataInitializer
 
 import scala.jdk.CollectionConverters.*
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
@@ -69,6 +70,20 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
+    test("findParent (on root)") {
+        val root = init(2, 0)
+        val name = root.getPrimaryConceptName.getName
+
+        runGet(
+            endpoints.findParentEndpointImpl,
+            s"http://test.com/v1/concept/parent/${name}",
+            response =>
+                assertEquals(response.code, StatusCode.NotFound)
+//                val obtained = checkResponse[ConceptMetadata](response.body)
+//                assertEquals(obtained.name, root.getPrimaryConceptName.getName)
+        )
+    }
+
     test("findChildren") {
         val root = init(2, 2)
         val name = root.getPrimaryConceptName.getName
@@ -100,6 +115,19 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
+    test("findByName (no match)") {
+        val root = init(2, 0)
+        val name = Strings.random(10)
+
+        runGet(
+            endpoints.findByNameImpl,
+            s"http://test.com/v1/concept/${name}",
+            response =>
+                assertEquals(response.code, StatusCode.NotFound)
+        )
+    }
+
+
     test("findByNameContaining") {
         val root  = init(2, 0)
         val child = root.getChildConcepts.iterator().next()
@@ -115,6 +143,20 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 val obtained = concepts.map(_.name)
                 val expected = Seq(name)
                 assertEquals(concepts.map(_.name), Seq(name))
+        )
+    }
+
+    test("findRoot") {
+        val root = init(2, 0)
+        val name = root.getPrimaryConceptName.getName
+
+        runGet(
+            endpoints.findRootImpl,
+            s"http://test.com/v1/concept/query/root",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val concept = checkResponse[ConceptMetadata](response.body)
+                assertEquals(concept.name, name)
         )
     }
 
