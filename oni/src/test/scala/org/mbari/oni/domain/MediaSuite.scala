@@ -7,6 +7,8 @@
 
 package org.mbari.oni.domain
 
+import org.mbari.oni.jpa.entities.MediaEntity
+
 class MediaSuite extends munit.FunSuite {
 
     test("resolveMimeType (image)") {
@@ -23,6 +25,14 @@ class MediaSuite extends munit.FunSuite {
 
         val b = Media.resolveMimeType("VIDEO", "http://foo.com/bax/bar.mp4")
         assertEquals(b, "video/mp4")
+    }
+
+    test("media URL with space") {
+        val mediaEntity = new MediaEntity()
+        mediaEntity.setUrl("http://foo.com/bar bax.jpg")
+        mediaEntity.setType("image/jpg")
+        val media = Media.from(mediaEntity)
+        assertEquals(media.url.toString, "http://foo.com/bar%20bax.jpg")
     }
 
 

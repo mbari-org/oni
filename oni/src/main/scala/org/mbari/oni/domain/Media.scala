@@ -40,8 +40,9 @@ object Media:
 
     def from(media: MediaEntity): Media =
         val conceptName = Try(media.getConceptMetadata.getConcept.getName).toOption
+        val escapedUrl  = media.getUrl.replace(" ", "%20")
         Media(
-            URI.create(media.getUrl).toURL,
+            URI.create(escapedUrl).toURL,
             Option(media.getCaption),
             Option(media.getCredit),
             resolveMimeType(media.getType, media.getUrl),

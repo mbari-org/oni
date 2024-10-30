@@ -20,12 +20,12 @@ class MutableConcept:
 
     def primaryName: Option[String] =
         names
-            .find(n => n.nameType.equals("primary"))
+            .find(n => n.isPrimary)
             .map(_.name)
 
     def alternativeNames: Seq[String] =
         names
-            .filter(n => !n.nameType.equals("primary"))
+            .filter(n => !n.isPrimary)
             .map(_.name)
 
     def copyUp(): MutableConcept = copyUp(Nil)
@@ -42,7 +42,7 @@ class MutableConcept:
     def toImmutable: Concept =
         // println(s"${this.id} - ${this.names}")
         val primaryName      = names
-            .find(_.nameType.equalsIgnoreCase("primary"))
+            .find(_.isPrimary)
             .getOrElse(names.head)
         val alternativeNames = names.filter(!_.eq(primaryName))
         Concept(

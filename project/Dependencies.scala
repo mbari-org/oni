@@ -7,7 +7,7 @@ object Dependencies {
     lazy val caffeine       = "com.github.ben-manes.caffeine" % "caffeine" % caffeineVersion
     lazy val caffeineJCache = "com.github.ben-manes.caffeine" % "jcache" % caffeineVersion
 
-    val circeVersion      = "0.14.9"
+    val circeVersion      = "0.14.10"
     lazy val circeCore    = "io.circe" %% "circe-core"    % circeVersion
     lazy val circeGeneric = "io.circe" %% "circe-generic" % circeVersion
     lazy val circeParser  = "io.circe" %% "circe-parser"  % circeVersion
@@ -21,19 +21,19 @@ object Dependencies {
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
-    val hibernateVersion      = "6.6.0.Final"
+    val hibernateVersion      = "6.6.1.Final"
     lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
     lazy val hibernateHikari  = "org.hibernate.orm" % "hibernate-hikaricp" % hibernateVersion
 
-    lazy val hikariCp    = "com.zaxxer"              % "HikariCP"                   % "5.1.0"
+    lazy val hikariCp    = "com.zaxxer"              % "HikariCP"                   % "6.0.0"
     lazy val jansi       = "org.fusesource.jansi"    % "jansi"                      % "2.4.1"
     lazy val jaspyt      = "org.jasypt"              % "jasypt"                     % "1.9.3"
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
-    lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.7"
+    lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.12"
     lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.8.1.jre11"
-    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.1"
+    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.2"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.4"
 //    lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
@@ -42,7 +42,7 @@ object Dependencies {
     lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem    = "org.slf4j" % "slf4j-jdk-platform-logging" % slf4jVersion
 
-    private val tapirVersion = "1.11.1"
+    private val tapirVersion = "1.11.7"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion
     lazy val tapirHelidon    = "com.softwaremill.sttp.tapir" %% "tapir-nima-server"        % tapirVersion
     lazy val tapirPrometheus = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % tapirVersion
@@ -50,9 +50,9 @@ object Dependencies {
     lazy val tapirSwagger    = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle"  % tapirVersion
     lazy val tapirVertex     = "com.softwaremill.sttp.tapir" %% "tapir-vertx-server"       % tapirVersion
 
-    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.9.8"
+    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.10.1"
 
-    val testcontainersVersion        = "1.20.1"
+    val testcontainersVersion        = "1.20.3"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "mssqlserver"    % testcontainersVersion

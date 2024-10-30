@@ -49,4 +49,6 @@ case class ConceptRow(
     lazy val lastUpdate: Instant = Seq(conceptTimestamp, conceptNameTimestamp)
         .maxBy(i => i.toEpochMilli)
 
-case class CName(name: String, nameType: String)
+
+case class CName(name: String, nameType: String):
+    val isPrimary: Boolean = nameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType)
