@@ -21,13 +21,13 @@ object Dependencies {
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
-    val hibernateVersion      = "6.6.1.Final"
+    val hibernateVersion      = "6.6.2.Final"
     lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
     lazy val hibernateHikari  = "org.hibernate.orm" % "hibernate-hikaricp" % hibernateVersion
 
-    lazy val hikariCp    = "com.zaxxer"              % "HikariCP"                   % "6.0.0"
+    lazy val hikariCp    = "com.zaxxer"              % "HikariCP"                   % "6.1.0"
     lazy val jansi       = "org.fusesource.jansi"    % "jansi"                      % "2.4.1"
     lazy val jaspyt      = "org.jasypt"              % "jasypt"                     % "1.9.3"
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
@@ -42,7 +42,7 @@ object Dependencies {
     lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem    = "org.slf4j" % "slf4j-jdk-platform-logging" % slf4jVersion
 
-    private val tapirVersion = "1.11.7"
+    private val tapirVersion = "1.11.8"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion
     lazy val tapirHelidon    = "com.softwaremill.sttp.tapir" %% "tapir-nima-server"        % tapirVersion
     lazy val tapirPrometheus = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % tapirVersion
