@@ -106,6 +106,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         do
             assert(rootEntity.getId != null)
             assertEquals(found, ConceptMetadata.from(greatGrandChild))
+            assertEquals(found.rankLevel, Option(greatGrandChild.getRankLevel))
+            assertEquals(found.rankName, Option(greatGrandChild.getRankName))
 
     }
 
