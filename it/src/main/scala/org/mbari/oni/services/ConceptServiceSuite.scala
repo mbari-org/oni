@@ -371,6 +371,32 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
     }
 
+    test("update to remove rank name and rank level") {
+        val root       = TestEntityFactory.buildRoot(2)
+        root.setRankName("genus")
+        root.setRankLevel("sub")
+        val attempt = runWithUserAuth(user =>
+            for
+                rootEntity <- conceptService.init(root)
+                updated    <- conceptService.update(
+                                root.getPrimaryConceptName.getName,
+                                ConceptUpdate(rankName = Some(""), rankLevel = Some("")),
+                                user.username
+                              )
+            yield updated
+        )
+
+        attempt match
+            case Left(e)  =>
+                fail("Failed to update")
+            case Right(_) =>
+                conceptService.findByName(root.getPrimaryConceptName.getName) match
+                    case Left(_)    =>
+                    case Right(conceptMetadata) =>
+                        assertEquals(conceptMetadata.rankName, None)
+                        assertEquals(conceptMetadata.rankLevel, None)
+    }
+
     test("delete") {
 
         val root        = TestEntityFactory.buildRoot(3, 0)

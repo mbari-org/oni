@@ -56,6 +56,10 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => conceptCreate =>
             handleErrorsAsync(service.create(conceptCreate, userAccount.username))
+                .andThen(v =>
+                    conceptCache.clear()
+                    v
+                )
         }
 
     val deleteEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] = secureEndpoint
@@ -75,6 +79,9 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
                     error => Left(ServerError(error.getMessage)),
                     _ => Right(())
                 )
+            ).andThen(v =>
+                conceptCache.clear()
+                v
             )
         }
 
@@ -145,7 +152,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
             .in(jsonBody[ConceptUpdate])
             .out(jsonBody[ConceptMetadata])
             .name("updateConcept")
-            .description("Update a concept")
+            .description("Update a concept. To remove a rank name or level, set it to an empty string. Only administrators can remove rank names and levels.")
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
@@ -157,6 +164,10 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
                     error => Left(ServerError(error.getMessage)),
                     concept => Right(concept)
                 )
+            )
+            .andThen(v =>
+                conceptCache.clear()
+                v
             )
         }
 

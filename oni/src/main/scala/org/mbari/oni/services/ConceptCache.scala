@@ -5,6 +5,13 @@
  * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
+/*
+ * Copyright (c) Monterey Bay Aquarium Research Institute 2024
+ *
+ * oni code is non-public software. Unauthorized copying of this file,
+ * via any medium is strictly prohibited. Proprietary and confidential.
+ */
+
 package org.mbari.oni.services
 
 import com.github.benmanes.caffeine.cache.{Cache, Caffeine}
@@ -55,6 +62,11 @@ class ConceptCache(conceptService: ConceptService, conceptNameService: ConceptNa
                     allNamesCache.put(ConceptCache.AllNamesCacheKey, names)
                     Right(names.slice(offset, offset + limit))
         }
+    }
+
+    def clear(): Unit = {
+        nameCache.invalidateAll()
+        allNamesCache.invalidateAll()
     }
 
 }

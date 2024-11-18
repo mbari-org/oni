@@ -121,6 +121,12 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                             )
                     case None           => ()
 
+                dto.author
+                    .foreach(author =>
+                        if (author.isBlank) existingConceptName.setAuthor(null)
+                        else existingConceptName.setAuthor(author)
+                )
+
                 dto.updateEntity(existingConceptName)
 
                 RawConcept.from(existingConceptName.getConcept, false)

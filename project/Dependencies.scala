@@ -27,7 +27,7 @@ object Dependencies {
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
     lazy val hibernateHikari  = "org.hibernate.orm" % "hibernate-hikaricp" % hibernateVersion
 
-    lazy val hikariCp    = "com.zaxxer"              % "HikariCP"                   % "6.1.0"
+    lazy val hikariCp    = "com.zaxxer"              % "HikariCP"                   % "6.2.1"
     lazy val jansi       = "org.fusesource.jansi"    % "jansi"                      % "2.4.1"
     lazy val jaspyt      = "org.jasypt"              % "jasypt"                     % "1.9.3"
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"

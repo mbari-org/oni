@@ -63,7 +63,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             .in(jsonBody[ConceptNameUpdate])
             .out(jsonBody[RawConcept])
             .name("updateConceptName")
-            .description("Update a concept name")
+            .description("Update a concept name. To remove the author, set it to an empty string")
             .tag(tag)
 
     val updateConceptNameEndpointImpl: ServerEndpoint[Any, Future] = updateConceptNameEndpoint

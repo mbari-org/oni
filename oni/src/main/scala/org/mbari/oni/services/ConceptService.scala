@@ -313,10 +313,16 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         ): Unit =
             rankLevel.foreach(v =>
                 if v != conceptEntity.getRankLevel then
-                    val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
-                    conceptEntity.getConceptMetadata.addHistory(history)
-                    if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
-                    conceptEntity.setRankLevel(v)
+                    if v.isBlank then
+                        if userEntity.isAdministrator then
+                            conceptEntity.setRankLevel(null)
+                        else
+                            throw new IllegalArgumentException("Rank level can only be removed by an administrator")
+                    else
+                        val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
+                        conceptEntity.getConceptMetadata.addHistory(history)
+                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
+                        conceptEntity.setRankLevel(v)
             )
 
         // -- Helper function to update the rank name
@@ -327,10 +333,16 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         ): Unit =
             rankLevel.foreach(v =>
                 if v != conceptEntity.getRankName then
-                    val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
-                    conceptEntity.getConceptMetadata.addHistory(history)
-                    if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
-                    conceptEntity.setRankName(v)
+                    if v.isBlank then
+                        if userEntity.isAdministrator then
+                            conceptEntity.setRankName(null)
+                        else
+                            throw new IllegalArgumentException("Rank name can only be removed by an administrator")
+                    else
+                        val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
+                        conceptEntity.getConceptMetadata.addHistory(history)
+                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
+                        conceptEntity.setRankName(v)
             )
 
         // -- Helper function to update the aphia id
