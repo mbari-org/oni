@@ -21,7 +21,7 @@ object Dependencies {
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
-    val hibernateVersion      = "6.6.2.Final"
+    val hibernateVersion      = "6.6.3.Final"
     lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
@@ -33,7 +33,7 @@ object Dependencies {
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
     lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.12"
     lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.8.1.jre11"
-    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.2"
+    lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.3"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.4"
 //    lazy val scilube     = "org.mbari.scilube"      %% "scilube"                    % "3.0.1"
@@ -52,7 +52,7 @@ object Dependencies {
 
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.10.1"
 
-    val testcontainersVersion        = "1.20.3"
+    val testcontainersVersion        = "1.20.4"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "mssqlserver"    % testcontainersVersion
