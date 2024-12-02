@@ -28,6 +28,12 @@ public abstract class Repository {
 
     protected static final Logging log = new Logging(Repository.class);
 
+    public Long countByNamedQuery(String name) {
+        debugLog(name, Map.of());
+        Query query = entityManager.createNamedQuery(name);
+        return ((Number) query.getSingleResult()).longValue();
+    }
+
     public <T> List<T> findByNamedQuery(String name,
                                         Map<String, Object> namedParams) {
         debugLog(name, namedParams);

@@ -26,6 +26,36 @@ trait HistoryServiceSuite extends DataInitializer:
 
     lazy val historyService = new HistoryService(entityManagerFactory)
 
+    test("countPending") {
+        val root     = init(3, 6)
+        assert(root != null)
+        val expected = root
+            .getDescendants
+            .asScala
+            .flatMap(ExtendedHistory.from)
+            .count(_.processedTimestamp.isEmpty)
+        historyService.countPending() match
+            case Left(e)         => fail(e.getMessage)
+            case Right(obtained) =>
+//                println(s"Expected: $expected, Obtained: $obtained")
+                assertEquals(obtained, expected.longValue())
+    }
+
+    test("countApproved") {
+        val root     = init(3, 6)
+        assert(root != null)
+        val expected = root
+            .getDescendants
+            .asScala
+            .flatMap(ExtendedHistory.from)
+            .count(_.approved)
+        historyService.countApproved() match
+            case Left(e)         => fail(e.getMessage)
+            case Right(obtained) =>
+//                println(s"Expected: $expected, Obtained: $obtained")
+                assertEquals(obtained, expected.longValue())
+    }
+
     test("findAllPending") {
         val root     = init(3, 6)
         assert(root != null)

@@ -9,7 +9,7 @@ package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.AccessDenied
-import org.mbari.oni.domain.{ErrorMsg, ExtendedHistory, Page, ServerError, Unauthorized}
+import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedHistory, Page, ServerError, Unauthorized}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
@@ -32,6 +32,22 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
     private val tag                  = "History"
     private val defaultLimit         = 100
 
+    val pendingCountEndpoint: Endpoint[Unit, Unit, ErrorMsg, Count, Any] =
+        openEndpoint
+            .get
+            .in(base / "pending" / "count")
+            .out(jsonBody[Count])
+            .name("pendingCount")
+            .description("Get the count of all pending change requests")
+            .tag(tag)
+
+    val pendingCountEndpointImpl: ServerEndpoint[Any, Future] = pendingCountEndpoint.serverLogic { _ =>
+        Future {
+            val attempt = service.countPending().map(Count.apply)
+            handleErrors(attempt)
+        }
+    }
+
     val pendingEndpoint: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
         .get
         .in(base / "pending")
@@ -48,6 +64,22 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
             val attempt =
                 for pending <- service.findAllPending(limit, offset)
                     yield Page(pending, limit, offset)
+            handleErrors(attempt)
+        }
+    }
+
+    val approvedCountEndpoint: Endpoint[Unit, Unit, ErrorMsg, Count, Any] =
+        openEndpoint
+            .get
+            .in(base / "approved" / "count")
+            .out(jsonBody[Count])
+            .name("approvedCount")
+            .description("Get the count of all approved change requests")
+            .tag(tag)
+
+    val approvedCountEndpointImpl: ServerEndpoint[Any, Future] = approvedCountEndpoint.serverLogic { _ =>
+        Future {
+            val attempt = service.countApproved().map(Count.apply)
             handleErrors(attempt)
         }
     }
@@ -167,7 +199,9 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         findByConceptNameEndpoint,
         approveEndpoint,
         rejectEndpoint,
+        approvedCountEndpoint,
         approvedEndpoints,
+        pendingCountEndpoint,
         pendingEndpoint,
         deleteEndpoint,
         findByIdEndpoint
@@ -177,7 +211,9 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         findByConceptNameEndpointImpl,
         approveEndpointImpl,
         rejectEndpointImpl,
+        approvedCountEndpointImpl,
         approvedEndpointsImpl,
+        pendingCountEndpointImpl,
         pendingEndpointImpl,
         deleteEndpointImpl,
         findByIdEndpointImpl

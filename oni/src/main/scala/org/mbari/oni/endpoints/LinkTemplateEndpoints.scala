@@ -8,7 +8,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link, LinkCreate, LinkUpdate, ServerError}
+import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.LinkTemplateService
@@ -17,6 +17,7 @@ import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
+import org.mbari.oni.etc.jdk.Loggers.given
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -64,6 +65,22 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
     val findLinkTemplateByPrototypeImpl: ServerEndpoint[Any, Future] =
         findLinKTemplateByPrototype.serverLogic { link =>
             handleErrorsAsync(service.findByPrototype(link))
+        }
+
+    val renameToConcept: Endpoint[Option[String], LinkRenameToConceptRequest, ErrorMsg, LinkRenameToConceptResponse, Any] =
+        secureEndpoint
+            .put
+            .in(base / "toconcept" / "rename")
+            .in(jsonBody[LinkRenameToConceptRequest])
+            .out(jsonBody[LinkRenameToConceptResponse])
+            .name("renameToConcept")
+            .description("Bulk rename all linkTemplate toConcepts")
+            .tag(tag)
+
+    val renameToConceptImpl: ServerEndpoint[Any, Future] = renameToConcept
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => request => 
+            handleErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
         }
 
     val createLinkTemplate: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -118,6 +135,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        renameToConcept,
         findLinkTemplateByConceptName,
         findLinKTemplateByPrototype,
         createLinkTemplate,
@@ -127,6 +145,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
+        renameToConceptImpl,
         findLinkTemplateByConceptNameImpl,
         findLinkTemplateByPrototypeImpl,
         createLinkTemplateImpl,

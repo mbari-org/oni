@@ -75,6 +75,9 @@ object CirceCodecs:
     given Decoder[ConceptUpdate] = deriveDecoder
     given Encoder[ConceptUpdate] = deriveEncoder
 
+    given Decoder[Count] = deriveDecoder
+    given Encoder[Count] = deriveEncoder
+
     given Decoder[Page[Seq[String]]] = deriveDecoder
     given Encoder[Page[Seq[String]]] = deriveEncoder
 
@@ -95,6 +98,12 @@ object CirceCodecs:
 
     given Decoder[LinkCreate] = deriveDecoder
     given Encoder[LinkCreate] = deriveEncoder
+
+    given Decoder[LinkRenameToConceptRequest] = deriveDecoder
+    given Encoder[LinkRenameToConceptRequest] = deriveEncoder
+
+    given Decoder[LinkRenameToConceptResponse] = deriveDecoder
+    given Encoder[LinkRenameToConceptResponse] = deriveEncoder
 
     given Decoder[LinkUpdate] = deriveDecoder
     given Encoder[LinkUpdate] = deriveEncoder

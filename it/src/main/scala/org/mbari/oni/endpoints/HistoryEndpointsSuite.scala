@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ConceptUpdate, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
+import org.mbari.oni.domain.{ConceptUpdate, Count, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
 import org.mbari.oni.jpa.DataInitializer
 import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
@@ -63,6 +63,18 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
+    test("pendingCount") {
+        init(3, 5)
+        runGet(
+            endpoints.pendingCountEndpointImpl,
+            "http://test.com/v1/history/pending/count",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val count = checkResponse[Count](response.body)
+                assert(count.count > 0)
+        )
+    }
+
     test("approved") {
         init(3, 5)
         runGet(
@@ -72,6 +84,18 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
+        )
+    }
+
+    test("approvedCount") {
+        init(3, 5)
+        runGet(
+            endpoints.approvedCountEndpointImpl,
+            "http://test.com/v1/history/approved/count",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val count = checkResponse[Count](response.body)
+                println(count.stringify)
         )
     }
 

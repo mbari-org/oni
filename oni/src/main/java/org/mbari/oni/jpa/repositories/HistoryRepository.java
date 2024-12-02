@@ -28,6 +28,14 @@ public class HistoryRepository extends Repository {
         super(entityManager);
     }
 
+    public Long countPendingHistories() {
+        return countByNamedQuery("History.countPending");
+    }
+
+    public Long countApprovedHistories() {
+        return countByNamedQuery("History.countApproved");
+    }
+
     public Set<HistoryEntity> findAll() {
         return new HashSet<>(findByNamedQuery("History.findAll"));
     }

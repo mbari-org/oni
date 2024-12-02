@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ExtendedLink, ILink, LinkCreate, LinkUpdate}
+import org.mbari.oni.domain.{ExtendedLink, ILink, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.UserAuthMixin
@@ -24,6 +24,7 @@ import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jpa.entities.TestEntityFactory
+import org.mbari.oni.etc.jdk.Loggers.given
 
 import scala.jdk.CollectionConverters.*
 
@@ -71,6 +72,32 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
                 assertEquals(obtained, Seq(link))
+        )
+    }
+
+    test("renameToConcept") {
+        val root = init(3, 10)
+        val descendants = root.getDescendants.asScala
+        val allLinkTemplates = descendants.flatMap(_.getConceptMetadata.getLinkTemplates.asScala).toSeq
+        val link = allLinkTemplates.head
+        val request = LinkRenameToConceptRequest(link.getToConcept, Strings.random(10))
+//        log.atError.log(request.stringify)
+        val attempt = testWithUserAuth(
+            user =>
+                runPut(
+                    endpoints.renameToConceptImpl,
+                    "http://test.com/v1/linktemplates/toconcept/rename",
+                    request.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        assert(response.body.isRight)
+                        val obtained = checkResponse[LinkRenameToConceptResponse](response.body)
+                        assertEquals(obtained.count, 1)
+                        assertEquals(obtained.oldConcept, request.old)
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
         )
     }
 

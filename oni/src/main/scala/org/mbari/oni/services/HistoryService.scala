@@ -19,6 +19,18 @@ import scala.jdk.OptionConverters.*
 
 class HistoryService(entityManagerFactory: EntityManagerFactory):
 
+    def countApproved(): Either[Throwable, Long] =
+        entityManagerFactory.transaction(entityManager =>
+            val repo = HistoryRepository(entityManager)
+            repo.countApprovedHistories()
+        )
+
+    def countPending(): Either[Throwable, Long] =
+        entityManagerFactory.transaction(entityManager =>
+            val repo = HistoryRepository(entityManager)
+            repo.countPendingHistories()
+        )
+
     def findAllPending(limit: Int, offset: Int): Either[Throwable, Seq[ExtendedHistory]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = HistoryRepository(entityManager)

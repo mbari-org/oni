@@ -48,6 +48,8 @@ import org.mbari.oni.jpa.TransactionLogger;
                    @Index(name = "idx_History_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
 @NamedQueries( {
+    @NamedQuery(name = "History.countApproved",  query = "SELECT COUNT(h) FROM History h WHERE h.approved = 1"),
+    @NamedQuery(name = "History.countPending",  query = "SELECT COUNT(h) FROM History h WHERE h.processedDate IS NULL"),
     @NamedQuery(name = "History.findAll",  query = "SELECT h FROM History h"),
     @NamedQuery(name = "History.findById", query = "SELECT v FROM History v WHERE v.id = :id"),
     @NamedQuery(name = "History.findByProcessedDate", query = "SELECT h FROM History h WHERE h.processedDate = :processedDate"),
