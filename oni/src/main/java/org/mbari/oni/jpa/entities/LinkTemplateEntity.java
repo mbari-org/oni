@@ -31,7 +31,7 @@ import org.mbari.oni.jpa.IPersistentObject;
                 @Index(name = "idx_LinkTemplate_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({ TransactionLogger.class, KeyNullifier.class })
 @NamedQueries( {
-
+    @NamedQuery(name = "LinkTemplate.countByToConcept", query = "SELECT COUNT(v) FROM LinkTemplate v WHERE v.toConcept = :toConcept"),
     @NamedQuery(name = "LinkTemplate.findById", query = "SELECT v FROM LinkTemplate v WHERE v.id = :id") ,
     @NamedQuery(name = "LinkTemplate.findAll",
                 query = "SELECT l FROM LinkTemplate l") ,

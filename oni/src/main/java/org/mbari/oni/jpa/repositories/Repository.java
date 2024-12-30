@@ -34,6 +34,13 @@ public abstract class Repository {
         return ((Number) query.getSingleResult()).longValue();
     }
 
+    public Long countByNamedQuery(String name, Map<String, Object> namedParams) {
+        debugLog(name, Map.of());
+        Query query = entityManager.createNamedQuery(name);
+        namedParams.forEach(query::setParameter);
+        return ((Number) query.getSingleResult()).longValue();
+    }
+
     public <T> List<T> findByNamedQuery(String name,
                                         Map<String, Object> namedParams) {
         debugLog(name, namedParams);

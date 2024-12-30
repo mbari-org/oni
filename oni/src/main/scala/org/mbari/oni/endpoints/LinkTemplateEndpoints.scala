@@ -53,7 +53,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
             handleErrorsAsync(service.findByConcept(conceptName))
         }
 
-    val findLinKTemplateByPrototype: Endpoint[Unit, Link, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
+    val findLinkTemplateByPrototype: Endpoint[Unit, Link, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
         .post
         .in(base / "prototype")
         .in(jsonBody[Link])
@@ -63,8 +63,34 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
         .tag(tag)
 
     val findLinkTemplateByPrototypeImpl: ServerEndpoint[Any, Future] =
-        findLinKTemplateByPrototype.serverLogic { link =>
+        findLinkTemplateByPrototype.serverLogic { link =>
             handleErrorsAsync(service.findByPrototype(link))
+        }
+
+    val countByToConcept: Endpoint[Unit, String, ErrorMsg, Long, Any] = openEndpoint
+        .get
+        .in(base / "toconcept" / "count" / path[String]("toConcept"))
+        .out(jsonBody[Long])
+        .name("countLinkTemplatesByToConcept")
+        .description("Count all link templates by toConcept")
+        .tag(tag)
+
+    val countByToConceptImpl: ServerEndpoint[Any, Future] = countByToConcept
+        .serverLogic { toConcept =>
+            handleErrorsAsync(service.countByToConcept(toConcept))
+        }
+
+    val findByToConcept: Endpoint[Unit, String, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
+        .get
+        .in(base / "toconcept" / path[String]("toConcept"))
+        .out(jsonBody[Seq[ExtendedLink]])
+        .name("findLinkTemplatesByToConcept")
+        .description("Find all link templates by toConcept")
+        .tag(tag)
+
+    val findByToConceptImpl: ServerEndpoint[Any, Future] = findByToConcept
+        .serverLogic { toConcept =>
+            handleErrorsAsync(service.findByToConcept(toConcept))
         }
 
     val renameToConcept: Endpoint[Option[String], LinkRenameToConceptRequest, ErrorMsg, LinkRenameToConceptResponse, Any] =
@@ -82,6 +108,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
         .serverLogic { userAccount => request => 
             handleErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
         }
+        
 
     val createLinkTemplate: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
         .post
@@ -137,7 +164,9 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         renameToConcept,
         findLinkTemplateByConceptName,
-        findLinKTemplateByPrototype,
+        findLinkTemplateByPrototype,
+        countByToConcept,
+        findByToConcept,
         createLinkTemplate,
         updateLinkTemplate,
         deleteLinkTemplate,
@@ -148,6 +177,8 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
         renameToConceptImpl,
         findLinkTemplateByConceptNameImpl,
         findLinkTemplateByPrototypeImpl,
+        countByToConceptImpl,
+        findByToConceptImpl,
         createLinkTemplateImpl,
         updateLinkTemplateImpl,
         deleteLinkTemplateImpl,

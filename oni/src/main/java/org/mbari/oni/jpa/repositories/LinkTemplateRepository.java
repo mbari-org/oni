@@ -102,6 +102,18 @@ public class LinkTemplateRepository extends Repository {
         return findByNamedQuery("LinkTemplate.findAll", limit, offset);
     }
 
+    public Long countByToConcept(String toConcept) {
+        return countByNamedQuery("LinkTemplate.countByToConcept", Map.of("toConcept", toConcept));
+    }
+
+    public Collection<LinkTemplateEntity> findByToConcept(String toConcept) {
+        return findByNamedQuery("LinkTemplate.findByToConcept", Map.of("toConcept", toConcept));
+    }
+
+    public Collection<LinkTemplateEntity> findByToConcept(String toConcept, int limit, int offset) {
+        return findByNamedQuery("LinkTemplate.findByToConcept", Map.of("toConcept", toConcept), limit, offset);
+    }
+
 
     public void validateToConcept(LinkTemplateEntity object) {
         var conceptDAO = new ConceptRepository(entityManager);

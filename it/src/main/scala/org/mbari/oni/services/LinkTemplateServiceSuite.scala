@@ -80,6 +80,36 @@ trait LinkTemplateServiceSuite extends DataInitializer with UserAuthMixin:
                 case Left(error)     => fail(error.toString)
     }
 
+    test("countByToConcept") {
+        val root             = init(3, 10)
+        assert(root != null)
+        val descendants      = root.getDescendants.asScala
+        val allLinkTemplates = descendants.flatMap(_.getConceptMetadata.getLinkTemplates.asScala).toSeq
+        for linkTemplate <- allLinkTemplates
+        do
+            val toConcept = linkTemplate.getToConcept
+            linkTemplateService.countByToConcept(toConcept) match
+                case Right(obtained) =>
+                    val expected = allLinkTemplates.count(t => t.getToConcept == toConcept)
+                    assertEquals(obtained, expected.toLong)
+                case Left(error)     => fail(error.toString)
+    }
+
+    test("findByToConcept") {
+        val root             = init(3, 10)
+        assert(root != null)
+        val descendants      = root.getDescendants.asScala
+        val allLinkTemplates = descendants.flatMap(_.getConceptMetadata.getLinkTemplates.asScala).toSeq
+        for linkTemplate <- allLinkTemplates
+        do
+            val toConcept = linkTemplate.getToConcept
+            linkTemplateService.findByToConcept(toConcept) match
+                case Right(obtained) =>
+                    val expected = allLinkTemplates.filter(t => t.getToConcept == toConcept).map(ExtendedLink.from)
+                    assertEquals(obtained.sortBy(_.linkName), expected.sortBy(_.linkName))
+                case Left(error)     => fail(error.toString)
+    }
+
     test("renameToConcept") {
         val root             = init(3, 10)
         assert(root != null)
