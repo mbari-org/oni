@@ -21,7 +21,7 @@ object Dependencies {
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
-    val hibernateVersion      = "6.6.3.Final"
+    val hibernateVersion      = "6.6.4.Final"
     lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
@@ -31,7 +31,7 @@ object Dependencies {
     lazy val jansi       = "org.fusesource.jansi"    % "jansi"                      % "2.4.1"
     lazy val jaspyt      = "org.jasypt"              % "jasypt"                     % "1.9.3"
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
-    lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.12"
+    lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.15"
     lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.8.1.jre11"
     lazy val munit       = "org.scalameta"          %% "munit"                      % "1.0.3"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
@@ -42,7 +42,7 @@ object Dependencies {
     lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem    = "org.slf4j" % "slf4j-jdk-platform-logging" % slf4jVersion
 
-    private val tapirVersion = "1.11.9"
+    private val tapirVersion = "1.11.11"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion
     lazy val tapirHelidon    = "com.softwaremill.sttp.tapir" %% "tapir-nima-server"        % tapirVersion
     lazy val tapirPrometheus = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % tapirVersion
