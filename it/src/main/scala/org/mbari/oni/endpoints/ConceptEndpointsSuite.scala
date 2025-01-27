@@ -29,6 +29,8 @@ import sttp.model.StatusCode
 import scala.concurrent.ExecutionContext
 import org.mbari.oni.jpa.entities.TestEntityFactory
 import org.mbari.oni.jpa.entities.TestEntityFactory.randomRankLevelAndName
+import org.mbari.oni.domain.Rank
+import org.mbari.oni.services.RankValidator
 
 trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
@@ -258,4 +260,16 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         attempt match
             case Right(_)    => println("Success")
             case Left(error) => fail(error.toString)
+    }
+
+    test("listValidRanks") {
+        runGet(
+            endpoints.listValidRanksImpl,
+            "http://test.com/v1/concept/ranks",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val ranks = checkResponse[Seq[Rank]](response.body)
+                assert(ranks.nonEmpty)
+                assertEquals(ranks.size, RankValidator.ValidRanks.size)
+        )
     }

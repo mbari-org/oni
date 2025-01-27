@@ -20,6 +20,8 @@ import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService}
 import sttp.shared.Identity
 
 import scala.concurrent.{ExecutionContext, Future}
+import org.mbari.oni.domain.Rank
+import org.mbari.oni.services.RankValidator
 
 class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
 
@@ -145,6 +147,20 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         handleErrorsAsync(service.findRoot())
     }
 
+    val listValidRanks = openEndpoint
+        .get
+        .in(base / "ranks")
+        .out(jsonBody[Seq[Rank]])
+        .name("listValidRanks")
+        .description("List valid ranks")
+        .tag(tag)
+
+    val listValidRanksImpl: ServerEndpoint[Any, Future] = listValidRanks.serverLogic { _ =>
+        Future(Right(RankValidator.ValidRankLevelsAndNames.map {
+            (rankLevel, rankName) => Rank(rankLevel, rankName)
+        }))
+    }
+
     val updateEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
         secureEndpoint
             .put
@@ -176,6 +192,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         findParentEndpoint,
         findChildrenEndpoint,
         findByNameContaining,
+        listValidRanks,
         findByName,
         allEndpoint,
         createEndpoint,
@@ -188,6 +205,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         findParentEndpointImpl,
         findChildrenEndpointImpl,
         findByNameContainingImpl,
+        listValidRanksImpl,
         findByNameImpl,
         allEndpointImpl,
         createEndpointImpl,

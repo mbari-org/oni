@@ -81,6 +81,9 @@ object CirceCodecs:
     given Decoder[Page[Seq[String]]] = deriveDecoder
     given Encoder[Page[Seq[String]]] = deriveEncoder
 
+    given Decoder[Rank] = deriveDecoder
+    given Encoder[Rank] = deriveEncoder
+
     given Decoder[ReferenceQuery] = deriveDecoder
     given Encoder[ReferenceQuery] = deriveEncoder
 
