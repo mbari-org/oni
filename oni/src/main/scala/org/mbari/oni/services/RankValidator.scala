@@ -54,9 +54,13 @@ object RankValidator:
         (rankLevel, rankName) => s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
     }
 
+    def validate(rank: String): Boolean = {
+        ValidRanks.contains(rank)
+    }
+
     def validate(rankLevel: Option[String] = None, rankName: Option[String] = None): Boolean = {
         val rank = s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
-        ValidRanks.contains(rank)
+        validate(rank)
     }
 
     def validate(conceptCreate: ConceptCreate): Boolean = {
