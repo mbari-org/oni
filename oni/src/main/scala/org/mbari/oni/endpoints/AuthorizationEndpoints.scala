@@ -104,7 +104,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
                     entity      <- Right(userAccount.toEntity)
                     jwt         <- jwtService
                                        .login(usernamePassword.username, usernamePassword.password.getOrElse(""), entity)
-                                       .toRight(Unauthorized("Invalid username or password"))
+                                       .toRight(Unauthorized("Unable to login. Check your username and password and verify that you are an administrator or maintainer"))
                 yield AuthorizationSC.bearer(jwt)
             }
             .serverLogic(bearerAuth => Unit => Future(Right(bearerAuth)))

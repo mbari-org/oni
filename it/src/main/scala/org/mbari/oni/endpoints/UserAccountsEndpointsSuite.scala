@@ -124,6 +124,25 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
         )
     }
 
+    test("createEndpoint (ReadOnly from JSON)") {
+        val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.READONLY.getRoleName)
+        val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
+
+
+        runPost(
+            endpoints.createEndpointImpl,
+            "http://test.com/v1/users",
+            userAccount.stringify,
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[UserAccount](response.body)
+                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
+            ,
+            jwt = jwtService.authorize(jwtService.apiKey)
+        )
+
+    }
+
     test("createEndpoint (form camelCase)") {
         val entity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))

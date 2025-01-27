@@ -27,6 +27,8 @@ import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
 
 import scala.concurrent.ExecutionContext
+import org.mbari.oni.jpa.entities.TestEntityFactory
+import org.mbari.oni.jpa.entities.TestEntityFactory.randomRankLevelAndName
 
 trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
@@ -166,11 +168,14 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
             user =>
                 val root          = init(2, 0)
                 val name          = root.getPrimaryConceptName.getName
+                val (rankLevel, rankName) = TestEntityFactory.randomRankLevelAndName()
+                val expectedRank = Some(s"${{rankLevel.getOrElse("")}}${{rankName.getOrElse("")}}")
+
                 val conceptCreate = ConceptCreate(
                     "SomeChildConcept",
                     Some(root.getPrimaryConceptName.getName),
-                    rankLevel = Some("yoyoyo"),
-                    rankName = Some("yayaya"),
+                    rankLevel = rankLevel,
+                    rankName = rankName,
                     aphiaId = Some(54321L)
                 )
 
@@ -182,7 +187,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                         assertEquals(response.code, StatusCode.Ok)
                         val concept = checkResponse[ConceptMetadata](response.body)
                         assertEquals(concept.name, "SomeChildConcept")
-                        assertEquals(concept.rank, Some("yoyoyoyayaya"))
+                        assertEquals(concept.rank, expectedRank)
                     ,
                     jwt = jwtService.login(user.username, password, user.toEntity)
                 )
@@ -202,10 +207,12 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
             user =>
                 val root          = init(3, 0)
                 val grandChild    = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+                val (rankLevel, rankName) = TestEntityFactory.randomRankLevelAndName()
+                val expectedRank = Some(s"${{rankLevel.getOrElse("")}}${{rankName.getOrElse("")}}")
                 val conceptUpdate = ConceptUpdate(
                     Some(root.getPrimaryConceptName.getName),
-                    rankLevel = Some("yoyoyo"),
-                    rankName = Some("yayaya"),
+                    rankLevel = rankLevel,
+                    rankName = rankName,
                     aphiaId = Some(543210L)
                 )
 
@@ -217,7 +224,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                         assertEquals(response.code, StatusCode.Ok)
                         val concept = checkResponse[ConceptMetadata](response.body)
                         assertEquals(concept.name, grandChild.getPrimaryConceptName.getName)
-                        assertEquals(concept.rank, Some("yoyoyoyayaya"))
+                        assertEquals(concept.rank, expectedRank)
                     ,
                     jwt = jwtService.login(user.username, password, user.toEntity)
                 )

@@ -57,7 +57,7 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
                 val bearerAuth = d.getOrElse(throw new Exception("No bearer auth"))
                 assert(jwtService.verify(bearerAuth.access_token))
 
-    test("login"):
+    test("login (ADMINISTRATOR)"):
         val userService = UserAccountService(entityManagerFactory)
         val userAccount = UserAccount(
             "test1234",
@@ -89,3 +89,29 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
                         assert(d.isRight)
                         val bearerAuth = d.getOrElse(throw new Exception("No bearer auth"))
                         assert(jwtService.verify(bearerAuth.access_token))
+
+    test("login (READONLY)"):
+        val userService = UserAccountService(entityManagerFactory)
+        val userAccount = UserAccount(
+            "test12345",
+            "SuperSecretPassword",
+            UserAccountRoles.READONLY.getRoleName,
+            isEncrypted = Some(false)
+        )
+        userService.create(userAccount) match
+            case Left(e)   => fail(e.getMessage)
+            case Right(ua) =>
+                val backendStub = newBackendStub(authorizationEndpoints.loginEndpointImpl)
+
+                val credentials = Base64.getEncoder.encodeToString(s"${ua.username}:${userAccount.password}".getBytes)
+                val response    = basicRequest
+                    .post(uri"http://test.com/v1/auth/login")
+                    .header("Authorization", s"BASIC $credentials")
+                    .send(backendStub)
+                    .join
+
+                response.body match
+                    case Left(e)     =>
+                        // this is expected. READONLY users cannot login
+                    case Right(body) =>
+                        fail("READONLY user should not be able to login")

@@ -267,8 +267,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                 updatedChild <- conceptService.update(
                                     child.getPrimaryConceptName.getName,
                                     ConceptUpdate(
-                                        rankLevel = Some("supersuper"),
-                                        rankName = Some("genera"),
+                                        rankLevel = Some("sub"),
+                                        rankName = Some("genus"),
                                         aphiaId = Some(1234)
                                     ),
                                     user.username
@@ -280,7 +280,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             case Left(e)      =>
                 fail("Failed to update")
             case Right(child) =>
-                assertEquals(child.rank, Some("supersupergenera"))
+                assertEquals(child.rank, Some("subgenus"))
                 assertEquals(child.aphiaId, Some(1234L))
 
                 historyService.findByConceptName(child.name) match

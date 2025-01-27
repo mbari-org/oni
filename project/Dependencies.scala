@@ -12,7 +12,7 @@ object Dependencies {
     lazy val circeGeneric = "io.circe" %% "circe-generic" % circeVersion
     lazy val circeParser  = "io.circe" %% "circe-parser"  % circeVersion
 
-    lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.17.2"
+    lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.18.0"
     lazy val gson = "com.google.code.gson" % "gson" % "2.11.0"
 
     // THis needs to match the version used by tapirHelidon.

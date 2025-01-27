@@ -241,6 +241,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 repo.findByName(conceptCreate.name).toScala match
                     case Some(_) => throw ConceptNameAlreadyExists(conceptCreate.name)
                     case None    =>
+                        RankValidator.throwExceptionIfInvalid(conceptCreate)
                         val parent = conceptCreate.parentName match
                             case Some(parentName) =>
                                 repo.findByName(parentName).toScala match
@@ -365,6 +366,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 repo.findByName(name).toScala match
                     case None                => throw ConceptNameNotFound(name)
                     case Some(conceptEntity) =>
+                        RankValidator.throwExceptionIfInvalid(conceptUpdate)
                         updateParent(userEntity, conceptEntity, conceptUpdate.parentName)
                         updateRankLevel(userEntity, conceptEntity, conceptUpdate.rankLevel)
                         updateRankName(userEntity, conceptEntity, conceptUpdate.rankName)

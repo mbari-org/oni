@@ -24,6 +24,7 @@ import java.net.URI
 import java.time.Instant
 import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
+import org.mbari.oni.services.RankValidator
 
 object TestEntityFactory:
 
@@ -52,7 +53,8 @@ object TestEntityFactory:
             for _ <- 0 until numberChildren do
                 val entity = buildNode(maxBreadth)
                 if entity.getRankLevel != null then // Add a numbert depth to the rank level
-                    entity.setRankLevel(s"$depth--${entity.getRankLevel}")
+                    // entity.setRankLevel(s"$depth--${entity.getRankLevel}")
+                    entity.setRankLevel(entity.getRankLevel)
 //                println(s"------- Adding " + entity.getPrimaryConceptName.getName + " to " + parent.getPrimaryConceptName.getName)
                 parent.addChildConcept(entity)
                 buildTree(entity, depth - 1, maxBreadth)
@@ -155,8 +157,9 @@ object TestEntityFactory:
         entity.addConceptName(createConceptName())
         entity.setConceptMetadata(createConceptMetadata())
         if random.nextBoolean() then
-            entity.setRankLevel(Strings.random(6))
-            entity.setRankName(Strings.random(12))
+            val (rankLevel, rankName) = randomRankLevelAndName()
+            entity.setRankLevel(rankLevel.orNull)
+            entity.setRankName(rankName.orNull)
 
         if random.nextBoolean() then entity.setAphiaId(random.nextLong(100000000))
 
@@ -192,3 +195,8 @@ object TestEntityFactory:
 //        entity.setCitation(s"B. M. Schlining. 1968. $s")
         entity.setCitation(s)
         entity
+
+
+    def randomRankLevelAndName(): (Option[String], Option[String]) =
+        val idx = random.nextInt(RankValidator.ValidRanks.size)
+        RankValidator.ValidRankLevelsAndNames(idx)
