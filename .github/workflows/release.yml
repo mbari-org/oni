@@ -20,7 +20,9 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-          cache: "sbt"
+          cache: sbt
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
       - name: Package and publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

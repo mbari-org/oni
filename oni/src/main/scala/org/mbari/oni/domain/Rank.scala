@@ -7,5 +7,5 @@
 
 package org.mbari.oni.domain
 
-final case class Rank(rankLevel: Option[String], rankName: Option[String]):
+final case class Rank(rankLevel: Option[String] = None, rankName: Option[String] = None):
     def rank: String = s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
