@@ -18,6 +18,7 @@ import io.vertx.core.VertxOptions
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import io.vertx.core.http.HttpServerOptions
 
 /**
   * Launches Oni
@@ -51,8 +52,8 @@ object Main:
             .options
 
         val vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfThreads))
-        // val vertx  = Vertx.vertx()
-        val server = vertx.createHttpServer()
+        val httpServerOptions = new HttpServerOptions().setCompressionSupported(true)
+        val server = vertx.createHttpServer(httpServerOptions)
         val router = Router.router(vertx)
         val interpreter = VertxFutureServerInterpreter(serverOptions)
 
