@@ -16,6 +16,7 @@ object RankValidator:
         (None, None),
         (None, Some("realm")),
         (Some("sub"), Some("realm")),
+        (Some("super"), Some("kingdom")),
         (None, Some("kingdom")),
         (Some("sub"), Some("kingdom")),
         (None, Some("phylum")),
@@ -89,5 +90,3 @@ object RankValidator:
         }
 
     }
-
-
