@@ -51,42 +51,33 @@ object RankValidator:
     /**
      * A list of commonlhy accepted, valid ranks scraped from Wikipedia
      */
-    val ValidRanks: Seq[String] = ValidRankLevelsAndNames.map {
-        (rankLevel, rankName) => s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
+    val ValidRanks: Seq[String] = ValidRankLevelsAndNames.map { (rankLevel, rankName) =>
+        s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
     }
 
-    def validate(rank: String): Boolean = {
+    def validate(rank: String): Boolean =
         ValidRanks.contains(rank)
-    }
 
-    def validate(rankLevel: Option[String] = None, rankName: Option[String] = None): Boolean = {
+    def validate(rankLevel: Option[String] = None, rankName: Option[String] = None): Boolean =
         val rank = s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
         validate(rank)
-    }
 
-    def validate(conceptCreate: ConceptCreate): Boolean = {
+    def validate(conceptCreate: ConceptCreate): Boolean =
         validate(conceptCreate.rankLevel, conceptCreate.rankName)
-    }
 
-     def validate(conceptUpdate: ConceptUpdate): Boolean = {
+    def validate(conceptUpdate: ConceptUpdate): Boolean =
         validate(conceptUpdate.rankLevel, conceptUpdate.rankName)
-    }
 
-    def throwExceptionIfInvalid(conceptCreate: ConceptCreate): Unit = {
-        if (!validate(conceptCreate)) {
+    def throwExceptionIfInvalid(conceptCreate: ConceptCreate): Unit =
+        if !validate(conceptCreate) then
             val rank = s"${conceptCreate.rankLevel.getOrElse("")}${conceptCreate.rankName.getOrElse("")}"
             throw new IllegalArgumentException(
                 s"Invalid rank level + rank name ($rank). Should be one of ${RankValidator.ValidRanks.mkString(", ")}"
             )
-        }
-    }
 
-    def throwExceptionIfInvalid(conceptUpdate: ConceptUpdate): Unit = {
-        if (!validate(conceptUpdate.rankLevel, conceptUpdate.rankName)) {
+    def throwExceptionIfInvalid(conceptUpdate: ConceptUpdate): Unit =
+        if !validate(conceptUpdate.rankLevel, conceptUpdate.rankName) then
             val rank = s"${conceptUpdate.rankLevel.getOrElse("")}${conceptUpdate.rankName.getOrElse("")}"
             throw new IllegalArgumentException(
                 s"Invalid rank level + rank name ($rank). Should be one of ${RankValidator.ValidRanks.mkString(", ")}"
             )
-        }
-
-    }

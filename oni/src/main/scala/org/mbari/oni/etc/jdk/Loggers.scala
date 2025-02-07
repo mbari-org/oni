@@ -13,9 +13,9 @@ import java.util.function.Supplier
 
 /**
  * Add fluent logging to System.Logger. Usage:
- * 
+ *
  * ```scala
- * import org.fathomnet.support.etc.jdk.Loggers.{given, *}
+ * import org.fathomnet.support.etc.jdk.Loggers.{*, given}
  * given log: Logger = System.getLogger("my.logger")
  *
  * log.atInfo.log("Hello World")

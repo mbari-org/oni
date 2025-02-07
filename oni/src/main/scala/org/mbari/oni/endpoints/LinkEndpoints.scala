@@ -19,7 +19,8 @@ import sttp.tapir.server.ServerEndpoint
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext) extends Endpoints:
+class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext)
+    extends Endpoints:
 
     private val service = LinkService(entityManagerFactory)
     private val base    = "links"

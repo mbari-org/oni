@@ -196,7 +196,6 @@ object TestEntityFactory:
         entity.setCitation(s)
         entity
 
-
     def randomRankLevelAndName(): (Option[String], Option[String]) =
         val idx = random.nextInt(RankValidator.ValidRanks.size)
         RankValidator.ValidRankLevelsAndNames(idx)

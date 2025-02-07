@@ -24,7 +24,10 @@ import org.mbari.oni.etc.jdk.Loggers.given
 import java.net.{URLDecoder, URLEncoder}
 import scala.concurrent.{ExecutionContext, Future}
 
-class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = ReferenceService(entityManagerFactory)
 
@@ -44,8 +47,8 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
         Future {
             service.findById(id) match
                 case Right(Some(reference)) => Right(reference)
-                case Right(None) => Left(NotFound(s"Reference with ID $id not found"))
-                case Left(e) => Left(ServerError(e.getMessage))
+                case Right(None)            => Left(NotFound(s"Reference with ID $id not found"))
+                case Left(e)                => Left(ServerError(e.getMessage))
         }
     }
 
@@ -101,12 +104,12 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSe
     val findReferenceByDoiEndpointImpl: ServerEndpoint[Any, Future] = findReferenceByDoiEndpoint.serverLogic { doi =>
         Future {
             doi.doi match
-                case None => Left(BadRequest("DOI is required"))
+                case None      => Left(BadRequest("DOI is required"))
                 case Some(doi) =>
                     service.findByDoi(doi) match
                         case Right(Some(reference)) => Right(reference)
-                        case Right(None) => Left(NotFound(s"Reference with DOI '${doi}' not found"))
-                        case Left(e) => Left(ServerError(e.getMessage))
+                        case Right(None)            => Left(NotFound(s"Reference with DOI '${doi}' not found"))
+                        case Left(e)                => Left(ServerError(e.getMessage))
         }
     }
 

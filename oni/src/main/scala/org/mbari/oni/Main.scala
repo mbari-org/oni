@@ -21,8 +21,8 @@ import scala.concurrent.duration.Duration
 import io.vertx.core.http.HttpServerOptions
 
 /**
-  * Launches Oni
-  */
+ * Launches Oni
+ */
 object Main:
 
     def main(args: Array[String]): Unit =
@@ -51,13 +51,14 @@ object Main:
             .metricsInterceptor(Endpoints.prometheusMetrics.metricsInterceptor())
             .options
 
-        val vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfThreads))
+        val vertx             = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfThreads))
         val httpServerOptions = new HttpServerOptions().setCompressionSupported(true)
-        val server = vertx.createHttpServer(httpServerOptions)
-        val router = Router.router(vertx)
-        val interpreter = VertxFutureServerInterpreter(serverOptions)
+        val server            = vertx.createHttpServer(httpServerOptions)
+        val router            = Router.router(vertx)
+        val interpreter       = VertxFutureServerInterpreter(serverOptions)
 
-        Endpoints.endpoints
+        Endpoints
+            .endpoints
             .foreach(endpoint =>
                 interpreter
                     .blockingRoute(endpoint)
@@ -65,7 +66,8 @@ object Main:
             )
 
         // Add our documentation endpoints
-        Endpoints.docEndpoints
+        Endpoints
+            .docEndpoints
             .foreach(endpoint =>
                 interpreter
                     .route(endpoint)
@@ -81,7 +83,6 @@ object Main:
         val program = server.requestHandler(router).listen(port).asScala
 
         Await.result(program, Duration.Inf)
-
 
 // --- Helidon WeServer
 //        val serverOptions = NimaServerOptions

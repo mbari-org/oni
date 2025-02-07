@@ -8,7 +8,21 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, LinkRealizationEndpoints, LinkTemplateEndpoints, MediaEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
+import org.mbari.oni.endpoints.{
+    AuthorizationEndpoints,
+    ConceptEndpoints,
+    ConceptNameEndpoints,
+    HealthEndpoints,
+    HistoryEndpoints,
+    LinkEndpoints,
+    LinkRealizationEndpoints,
+    LinkTemplateEndpoints,
+    MediaEndpoints,
+    PhylogenyEndpoints,
+    PrefNodeEndpoints,
+    ReferenceEndpoints,
+    UserAccountEndpoints
+}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
@@ -20,8 +34,8 @@ import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Configures all endpoint/api definitions
-  */
+ * Configures all endpoint/api definitions
+ */
 object Endpoints:
 
     given JwtService =

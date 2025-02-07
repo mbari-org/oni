@@ -28,4 +28,3 @@ extension (obj: Object)
     def asString: Option[String]   = JdbcTypes.stringConverter(obj)
     def asUrl: Option[URL]         = JdbcTypes.urlConverter(obj)
     def asUUID: Option[UUID]       = JdbcTypes.uuidConverter(obj)
-

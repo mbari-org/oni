@@ -13,8 +13,8 @@ import org.mbari.oni.jpa.EntityManagerFactories
 import jakarta.persistence.EntityManagerFactory
 
 /**
-  * Parse configuration info from reference.conf and application.conf
-  */
+ * Parse configuration info from reference.conf and application.conf
+ */
 object AppConfig:
 
     val Config = ConfigFactory.load()
@@ -28,7 +28,7 @@ object AppConfig:
 
     val Description: String = "Organism Naming Infrastructure: Knowledge-base and User Accounts"
 
-    val NumberOfThreads: Int =  Config.getInt("database.threads")
+    val NumberOfThreads: Int = Config.getInt("database.threads")
 
     lazy val DefaultJwtConfig: JwtConfig = JwtConfig(
         issuer = Config.getString("basicjwt.issuer"),

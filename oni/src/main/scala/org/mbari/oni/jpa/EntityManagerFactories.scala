@@ -37,14 +37,14 @@ object EntityManagerFactories:
     val PRODUCTION_PROPS = Map(
 //        "hibernate.cache.region.factory_class"         -> "jcache",
 //        "hibernate.cache.use_second_level_cache"       -> "true",
-        "hibernate.connection.provider_class"          -> "org.hibernate.hikaricp.internal.HikariCPConnectionProvider",
+        "hibernate.connection.provider_class" -> "org.hibernate.hikaricp.internal.HikariCPConnectionProvider",
 //        "hibernate.javax.cache.missing_cache_strategy" -> "create",
 //        "hibernate.javax.cache.provider"               -> "com.github.benmanes.caffeine.jcache.spi.CaffeineCachingProvider",
-        "hibernate.hbm2ddl.auto"                       -> "validate",
-        "hibernate.hikari.idleTimeout"                 -> "30000",
-        "hibernate.hikari.maximumPoolSize"             -> s"${AppConfig.NumberOfThreads}", // Same as vertx worker pool threads
-        "hibernate.hikari.minimumIdle"                 -> "2",
-        "hibernate.jdbc.batch_size"                    -> "100"
+        "hibernate.hbm2ddl.auto"              -> "validate",
+        "hibernate.hikari.idleTimeout"        -> "30000",
+        "hibernate.hikari.maximumPoolSize"    -> s"${AppConfig.NumberOfThreads}", // Same as vertx worker pool threads
+        "hibernate.hikari.minimumIdle"        -> "2",
+        "hibernate.jdbc.batch_size"           -> "100"
     )
 
     def apply(properties: Map[String, String]): EntityManagerFactory =

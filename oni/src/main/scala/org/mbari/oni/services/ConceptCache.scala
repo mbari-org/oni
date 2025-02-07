@@ -20,7 +20,7 @@ import org.mbari.oni.etc.jdk.Loggers.{*, given}
 
 import java.util.concurrent.TimeUnit
 
-class ConceptCache(conceptService: ConceptService, conceptNameService: ConceptNameService) {
+class ConceptCache(conceptService: ConceptService, conceptNameService: ConceptNameService):
 
     private val log = System.getLogger(getClass.getName)
 
@@ -34,43 +34,33 @@ class ConceptCache(conceptService: ConceptService, conceptNameService: ConceptNa
         .expireAfterWrite(15, TimeUnit.MINUTES)
         .build[String, Seq[String]]()
 
-    def findByName(name: String): Either[Throwable, ConceptMetadata] = {
-        Option(nameCache.getIfPresent(name)) match {
+    def findByName(name: String): Either[Throwable, ConceptMetadata] =
+        Option(nameCache.getIfPresent(name)) match
             case Some(node) => Right(node)
-            case None =>
+            case None       =>
                 conceptService.findByName(name) match
-                    case Left(e) =>
+                    case Left(e)            =>
                         log.atInfo.withCause(e).log(s"Failed to find concept by name: $name")
                         Left(e)
                     case Right(conceptNode) =>
                         nameCache.put(name, conceptNode)
                         Right(conceptNode)
-        }
-    }
 
-    def findAllNames(limit: Int, offset: Int): Either[Throwable, Seq[String]] = {
+    def findAllNames(limit: Int, offset: Int): Either[Throwable, Seq[String]] =
         val allNames = Option(allNamesCache.getIfPresent(ConceptCache.AllNamesCacheKey))
-        if (allNames.isDefined && allNames.get.nonEmpty) {
-            Right(allNames.get.slice(offset, offset + limit))
-        }
-        else {
+        if allNames.isDefined && allNames.get.nonEmpty then Right(allNames.get.slice(offset, offset + limit))
+        else
             conceptNameService.findAllNames(1000000, 0) match
-                case Left(e) =>
+                case Left(e)      =>
                     log.atError.withCause(e).log("Failed to find all concept names")
                     Left(e)
                 case Right(names) =>
                     allNamesCache.put(ConceptCache.AllNamesCacheKey, names)
                     Right(names.slice(offset, offset + limit))
-        }
-    }
 
-    def clear(): Unit = {
+    def clear(): Unit =
         nameCache.invalidateAll()
         allNamesCache.invalidateAll()
-    }
 
-}
-
-object ConceptCache {
+object ConceptCache:
     val AllNamesCacheKey = "all-names"
-}

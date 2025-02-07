@@ -20,8 +20,10 @@ import sttp.tapir.server.ServerEndpoint
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext)
-    extends Endpoints:
+class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = LinkRealizationService(entityManagerFactory)
     private val base    = "linkrealizations"

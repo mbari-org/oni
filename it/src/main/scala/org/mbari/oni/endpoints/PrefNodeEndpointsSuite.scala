@@ -200,9 +200,9 @@ trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with Us
     }
 
     test("updateEndpoint (query params with form body)") {
-        val nodes = createNodes(1)
-        val node = nodes.head
-        val newValue = "new_value_" + Strings.random(5)
+        val nodes       = createNodes(1)
+        val node        = nodes.head
+        val newValue    = "new_value_" + Strings.random(5)
         val updatedNode = PrefNodeUpdate(None, None, newValue)
         testWithUserAuth(
             user =>
@@ -224,9 +224,9 @@ trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with Us
     }
 
     test("updateEndpoint (query params with json body)") {
-        val nodes = createNodes(1)
-        val node = nodes.head
-        val newValue = "new_value_" + Strings.random(5)
+        val nodes       = createNodes(1)
+        val node        = nodes.head
+        val newValue    = "new_value_" + Strings.random(5)
         val updatedNode = PrefNodeUpdate(None, None, newValue)
         testWithUserAuth(
             user =>

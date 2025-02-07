@@ -44,7 +44,6 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
             .send(backendStub)
             .join
 
-
         response.body match
             case Left(e)     => fail(e)
             case Right(body) =>
@@ -112,6 +111,6 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
 
                 response.body match
                     case Left(e)     =>
-                        // this is expected. READONLY users cannot login
+                    // this is expected. READONLY users cannot login
                     case Right(body) =>
                         fail("READONLY user should not be able to login")

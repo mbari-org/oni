@@ -367,7 +367,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
 //            service.findRawByName(root.getName, true).map(xs => println(xs.stringify))
             service.findChildrenByParentName(a.getName) match
                 case Right(concepts) =>
-                //    println(concepts.stringify)
+                    //    println(concepts.stringify)
                     val xs = concepts.filter(_.name == b.getName)
                     assert(xs.isEmpty)
                 case Left(_)         => fail("Concept should exist after approval")

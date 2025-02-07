@@ -20,7 +20,8 @@ import jakarta.persistence.EntityManagerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext) extends Endpoints:
+class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext)
+    extends Endpoints:
 
     /** This services does caching so we should share it */
     val service: FastPhylogenyService = FastPhylogenyService(entityManagerFactory)

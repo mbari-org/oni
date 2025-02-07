@@ -86,12 +86,11 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
                 val r = MutableConcept.toTree(cache)
                 rootNode = r._1
                 allNodes = r._2
-            finally
-                lock.unlock()
+            finally lock.unlock()
 
     def findLastUpdate(): Instant =
         val attempt = entityManagerFactory.transaction(entityManager =>
-            val query = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
+            val query      = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
             val lastUpdate = query.getSingleResult.asInstanceOf[Timestamp]
             if lastUpdate == null then
                 log.atWarn
@@ -102,7 +101,7 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
             else lastUpdate.toInstant
         )
         attempt match
-            case Right(result)    => result
+            case Right(result)   => result
             case Left(exception) =>
                 log.atError.withCause(exception).log("Failed to execute last update query")
                 Instant.now()
@@ -114,8 +113,7 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
         )
         attempt match
             case Right(results) =>
-                for
-                    result <- ArraySeq.unsafeWrapArray(results.toArray)
+                for result <- ArraySeq.unsafeWrapArray(results.toArray)
                 yield
                     val row                  = result.asInstanceOf[Array[Object]]
                     val id                   = row(0).asLong.getOrElse(-1L)
@@ -126,7 +124,16 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
                     val nameType             = row(5).asString.orNull
                     val conceptTimestamp     = row(6).asInstant.getOrElse(Instant.now())
                     val conceptNameTimestamp = row(7).asInstant.getOrElse(Instant.now())
-                    ConceptRow(id, parentId, name, rankLevel, rankName, nameType, conceptTimestamp, conceptNameTimestamp)
+                    ConceptRow(
+                        id,
+                        parentId,
+                        name,
+                        rankLevel,
+                        rankName,
+                        nameType,
+                        conceptTimestamp,
+                        conceptNameTimestamp
+                    )
 
             case Left(exception) =>
                 log.atError.withCause(exception).log("Failed to execute query")

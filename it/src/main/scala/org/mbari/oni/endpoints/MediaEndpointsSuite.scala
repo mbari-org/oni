@@ -28,14 +28,14 @@ import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import java.net.URI
 import scala.jdk.CollectionConverters.*
 
-trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin {
+trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
-    given jwtService: JwtService = JwtService("mbari", "foo", "bar")
-    lazy val fastPhylogenyService = FastPhylogenyService(entityManagerFactory)
+    given jwtService: JwtService       = JwtService("mbari", "foo", "bar")
+    lazy val fastPhylogenyService      = FastPhylogenyService(entityManagerFactory)
     lazy val endpoints: MediaEndpoints = MediaEndpoints(entityManagerFactory, fastPhylogenyService)
-    private val password = Strings.random(10)
+    private val password               = Strings.random(10)
 
-    def createMedia(): Seq[Media] = {
+    def createMedia(): Seq[Media] =
         val root = init(1, 6)
         root.getDescendants
             .asScala
@@ -43,13 +43,12 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             .toSeq
             .map(Media.from)
             .sortBy(_.url.toExternalForm)
-    }
 
     test("mediaForConcept") {
         val expected = createMedia()
-        val opt = expected.head.conceptName
+        val opt      = expected.head.conceptName
         assert(opt.isDefined)
-        val name = opt.get
+        val name     = opt.get
         runGet(
             endpoints.mediaForConceptEndpointImpl,
             s"http://test.com/v1/media/${name}",
@@ -62,7 +61,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
     }
 
     test("createMedia") {
-        val root = init(2, 0)
+        val root        = init(2, 0)
         assert(root != null)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
@@ -72,7 +71,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             mediaType = Some(MediaTypes.IMAGE.name),
             isPrimary = Some(true)
         )
-        val attempt = testWithUserAuth(
+        val attempt     = testWithUserAuth(
             user =>
                 runPost(
                     endpoints.createMediaEndpointImpl,
@@ -85,21 +84,21 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
                         assertEquals(mediaCreate.url, obtained.url)
                         assertEquals(mediaCreate.caption, obtained.caption)
                         assertEquals(mediaCreate.credit, obtained.credit)
-                        val t = Media.resolveMimeType(mediaCreate.mediaType.getOrElse(""), obtained.url.toExternalForm)
+                        val t        = Media.resolveMimeType(mediaCreate.mediaType.getOrElse(""), obtained.url.toExternalForm)
                         assertEquals(t, obtained.mimeType)
                         assertEquals(mediaCreate.isPrimary.getOrElse(false), obtained.isPrimary)
-                   ,
-                   jwt = jwtService.login(user.username, password, user.toEntity)
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
                 ),
             password
         )
         attempt match
-            case Left(value) => fail(value.toString)
+            case Left(value)  => fail(value.toString)
             case Right(value) => assert(true)
     }
 
     test("updateMedia") {
-        val media = createMedia().head
+        val media       = createMedia().head
         val mediaUpdate = MediaUpdate(
             url = Some(URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL),
             caption = Some(Strings.random(1000)),
@@ -107,7 +106,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             mediaType = Some(MediaTypes.IMAGE.name),
             isPrimary = Some(true)
         )
-        val attempt = testWithUserAuth(
+        val attempt     = testWithUserAuth(
             user =>
                 runPut(
                     endpoints.updateMediaEndpointImpl,
@@ -119,21 +118,21 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
                         assertEquals(mediaUpdate.url.orNull, obtained.url)
                         assertEquals(mediaUpdate.caption, obtained.caption)
                         assertEquals(mediaUpdate.credit, obtained.credit)
-                        val t = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
+                        val t        = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
                         assertEquals(t, obtained.mimeType)
                         assertEquals(mediaUpdate.isPrimary.getOrElse(false), obtained.isPrimary)
-                   ,
-                   jwt = jwtService.login(user.username, password, user.toEntity)
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
                 ),
             password
         )
         attempt match
-            case Left(value) => fail(value.toString)
+            case Left(value)  => fail(value.toString)
             case Right(value) => assert(true)
     }
 
     test("deleteMedia") {
-        val media = createMedia().head
+        val media   = createMedia().head
         val attempt = testWithUserAuth(
             user =>
                 runDelete(
@@ -145,14 +144,6 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             password
         )
         attempt match
-            case Left(value) => fail(value.toString)
+            case Left(value)  => fail(value.toString)
             case Right(value) => assert(true)
     }
-
-
-
-
-
-
-
-}

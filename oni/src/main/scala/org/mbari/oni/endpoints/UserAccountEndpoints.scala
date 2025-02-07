@@ -20,7 +20,10 @@ import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = UserAccountService(entityManagerFactory)
     private val base    = "users"
@@ -53,7 +56,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     val findByUserNameEndpointImpl: ServerEndpoint[Any, Future] = findByUserNameEndpoint.serverLogic { name =>
         Future {
             handleErrors(service.findByUserName(name)).flatMap {
-                case None => Left(NotFound(s"User account not found: $name"))
+                case None        => Left(NotFound(s"User account not found: $name"))
                 case Some(value) => Right(value)
             }
         }
@@ -94,7 +97,16 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         secureEndpoint
             .post
             .in(base)
-            .in(oneOfBody(jsonBody[UserAccountCreate].description("The user account to create. Accepts camelCase or snake_case."), formBody[UserAccountCreate].description("The user account to create. Accepts camelCase or snake_case.")))
+            .in(
+                oneOfBody(
+                    jsonBody[UserAccountCreate].description(
+                        "The user account to create. Accepts camelCase or snake_case."
+                    ),
+                    formBody[UserAccountCreate].description(
+                        "The user account to create. Accepts camelCase or snake_case."
+                    )
+                )
+            )
             .out(jsonBody[UserAccount])
             .name("createUserAccount")
             .description("Create a new user account")

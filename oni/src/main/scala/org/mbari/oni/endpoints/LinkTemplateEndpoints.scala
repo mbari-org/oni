@@ -8,7 +8,16 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate, ServerError}
+import org.mbari.oni.domain.{
+    ErrorMsg,
+    ExtendedLink,
+    Link,
+    LinkCreate,
+    LinkRenameToConceptRequest,
+    LinkRenameToConceptResponse,
+    LinkUpdate,
+    ServerError
+}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.LinkTemplateService
@@ -21,7 +30,10 @@ import org.mbari.oni.etc.jdk.Loggers.given
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = LinkTemplateService(entityManagerFactory)
     private val base    = "linktemplates"
@@ -93,7 +105,8 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
             handleErrorsAsync(service.findByToConcept(toConcept))
         }
 
-    val renameToConcept: Endpoint[Option[String], LinkRenameToConceptRequest, ErrorMsg, LinkRenameToConceptResponse, Any] =
+    val renameToConcept
+        : Endpoint[Option[String], LinkRenameToConceptRequest, ErrorMsg, LinkRenameToConceptResponse, Any] =
         secureEndpoint
             .put
             .in(base / "toconcept" / "rename")
@@ -105,10 +118,9 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using jw
 
     val renameToConceptImpl: ServerEndpoint[Any, Future] = renameToConcept
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
-        .serverLogic { userAccount => request => 
+        .serverLogic { userAccount => request =>
             handleErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
         }
-        
 
     val createLinkTemplate: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
         .post

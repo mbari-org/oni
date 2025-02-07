@@ -21,7 +21,10 @@ import org.mbari.oni.services.PrefNodeService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = PrefNodeService(entityManagerFactory)
 
@@ -109,7 +112,8 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
             .serverLogic { _ => prefNode => handleErrorsAsync(service.create(prefNode)) }
 
-    val updateEndpoint: Endpoint[Option[String], (Option[String], Option[String], PrefNodeUpdate), ErrorMsg, PrefNode, Any] =
+    val updateEndpoint
+        : Endpoint[Option[String], (Option[String], Option[String], PrefNodeUpdate), ErrorMsg, PrefNode, Any] =
         secureEndpoint
             .put
             .in(base)
@@ -118,22 +122,24 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtSer
             .in(oneOfBody(jsonBody[PrefNodeUpdate], formBody[PrefNodeUpdate]))
             .out(jsonBody[PrefNode])
             .name("updatePrefNode")
-            .description("Update a prefNode. Can be called using form body or json body. If name and key are not in the request body, they must be in the query parameters.")
+            .description(
+                "Update a prefNode. Can be called using form body or json body. If name and key are not in the request body, they must be in the query parameters."
+            )
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] =
         updateEndpoint
             .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
-            .serverLogic { _ => (nameOpt, keyOpt, prefNodeUpdate) => {
-                val name = prefNodeUpdate.name.orElse(nameOpt)
-                val key  = prefNodeUpdate.key.orElse(keyOpt)
+            .serverLogic { _ => (nameOpt, keyOpt, prefNodeUpdate) =>
+                val name  = prefNodeUpdate.name.orElse(nameOpt)
+                val key   = prefNodeUpdate.key.orElse(keyOpt)
                 val value = prefNodeUpdate.value
-                if (name.isEmpty || key.isEmpty) then
+                if name.isEmpty || key.isEmpty then
                     Future(Left(BadRequest("A name and key must be provided in order to update a preference.")))
                 else
                     val prefNode = PrefNode(name.get, key.get, value)
                     handleErrorsAsync(service.update(prefNode))
-            } }
+            }
 
     val deleteEndpoint: Endpoint[Option[String], (String, String), ErrorMsg, Unit, Any] =
         secureEndpoint

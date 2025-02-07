@@ -20,7 +20,10 @@ import org.mbari.oni.etc.circe.CirceCodecs.given
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = ConceptNameService(entityManagerFactory)
     private val base    = "names"

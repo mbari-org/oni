@@ -95,7 +95,6 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                             val conceptMetadata = media.getConceptMetadata
                             conceptMetadata.removeMedia(media)
                             repo.delete(media)
-                        
             )
 
         for
@@ -103,7 +102,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             media <- txn(user.toEntity)
         yield ()
 
-    def update(id: Long, mediaUpdate: MediaUpdate, userName: String) = 
+    def update(id: Long, mediaUpdate: MediaUpdate, userName: String) =
         def txn(userEntity: UserAccountEntity): Either[Throwable, Media] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = MediaRepository(entityManager, fastPhylogenyService)
@@ -118,7 +117,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                         Media.from(media)
             )
 
-        for 
+        for
             user  <- userAccountService.verifyWriteAccess(Option(userName))
             media <- txn(user.toEntity)
         yield media

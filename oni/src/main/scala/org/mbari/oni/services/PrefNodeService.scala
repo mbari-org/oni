@@ -78,6 +78,8 @@ class PrefNodeService(entityManagerFactory: EntityManagerFactory):
             val repo = new PrefNodeRepository(entityManager)
             repo.findAll(limit, offset)
         )
-        attempt.map(_.asScala
+        attempt.map(
+            _.asScala
                 .map(PrefNode.from)
-                .toSeq)
+                .toSeq
+        )

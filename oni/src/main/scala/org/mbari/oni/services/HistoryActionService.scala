@@ -103,8 +103,10 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory, fastPhylo
                     case _                                   => notOkHistoryAction
             case HistoryEntity.ACTION_REPLACE =>
                 historyEntity.getField match
-                    case HistoryEntity.FIELD_CONCEPT_PARENT => okHistoryAction
-                    case _                                  => notOkHistoryAction
+                    case HistoryEntity.FIELD_CONCEPT_PARENT    => okHistoryAction
+                    case HistoryEntity.FIELD_CONCEPT_RANKLEVEL => okHistoryAction
+                    case HistoryEntity.FIELD_CONCEPT_RANKNAME  => okHistoryAction
+                    case _                                     => notOkHistoryAction
 
     private def lookupRejectHistoryAction(historyEntity: HistoryEntity): HistoryAction =
         historyEntity.getAction match
@@ -119,5 +121,9 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory, fastPhylo
             case HistoryEntity.ACTION_DELETE  => okHistoryAction
             case HistoryEntity.ACTION_REPLACE =>
                 historyEntity.getField match
-                    case HistoryEntity.FIELD_CONCEPT_PARENT => conceptService.inTxnRejectReplaceParent
-                    case _                                  => notOkHistoryAction
+                    case HistoryEntity.FIELD_CONCEPT_PARENT    => conceptService.inTxnRejectReplaceParent
+                    case HistoryEntity.FIELD_CONCEPT_RANKLEVEL =>
+                        conceptService.inTxnRejectReplaceRankLevel // TODO revert
+                    case HistoryEntity.FIELD_CONCEPT_RANKNAME  =>
+                        conceptService.inTxnRejectReplaceRankName // TODO revert
+                    case _                                     => notOkHistoryAction

@@ -9,10 +9,24 @@ package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
 import org.mbari.oni.{ConceptNameNotFound, ItemNotFound, LinkRealizationIdNotFound, LinkTemplateIdNotFound}
-import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate}
+import org.mbari.oni.domain.{
+    ExtendedLink,
+    ILink,
+    Link,
+    LinkCreate,
+    LinkRenameToConceptRequest,
+    LinkRenameToConceptResponse,
+    LinkUpdate
+}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkRealizationEntity, LinkTemplateEntity, UserAccountEntity}
+import org.mbari.oni.jpa.entities.{
+    HistoryEntity,
+    HistoryEntityFactory,
+    LinkRealizationEntity,
+    LinkTemplateEntity,
+    UserAccountEntity
+}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
 
 import scala.jdk.CollectionConverters.*
@@ -144,18 +158,22 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
             _    <- txn(user.toEntity)
         yield ()
 
-    def renameToConcept(oldConcept: String, newConcept: String, userName: String): Either[Throwable, LinkRenameToConceptResponse] =
+    def renameToConcept(
+        oldConcept: String,
+        newConcept: String,
+        userName: String
+    ): Either[Throwable, LinkRenameToConceptResponse] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, LinkRenameToConceptResponse] =
             entityManagerFactory.transaction(entityManager =>
                 val query = entityManager.createNamedQuery("LinkTemplate.updateToConcept")
                 query.setParameter(1, newConcept)
                 query.setParameter(2, oldConcept)
-                val n = query.executeUpdate()
+                val n     = query.executeUpdate()
                 LinkRenameToConceptResponse(oldConcept, newConcept, n)
             )
 
         for
-            user <- userAccountService.verifyWriteAccess(Option(userName))
+            user     <- userAccountService.verifyWriteAccess(Option(userName))
             response <- txn(user.toEntity)
         yield response
 

@@ -123,9 +123,9 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
 
                 dto.author
                     .foreach(author =>
-                        if (author.isBlank) existingConceptName.setAuthor(null)
+                        if author.isBlank then existingConceptName.setAuthor(null)
                         else existingConceptName.setAuthor(author)
-                )
+                    )
 
                 dto.updateEntity(existingConceptName)
 

@@ -81,8 +81,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         runGet(
             endpoints.findParentEndpointImpl,
             s"http://test.com/v1/concept/parent/${name}",
-            response =>
-                assertEquals(response.code, StatusCode.NotFound)
+            response => assertEquals(response.code, StatusCode.NotFound)
 //                val obtained = checkResponse[ConceptMetadata](response.body)
 //                assertEquals(obtained.name, root.getPrimaryConceptName.getName)
         )
@@ -126,11 +125,9 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         runGet(
             endpoints.findByNameImpl,
             s"http://test.com/v1/concept/${name}",
-            response =>
-                assertEquals(response.code, StatusCode.NotFound)
+            response => assertEquals(response.code, StatusCode.NotFound)
         )
     }
-
 
     test("findByNameContaining") {
         val root  = init(2, 0)
@@ -168,10 +165,10 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
 
         val attempt = testWithUserAuth(
             user =>
-                val root          = init(2, 0)
-                val name          = root.getPrimaryConceptName.getName
+                val root                  = init(2, 0)
+                val name                  = root.getPrimaryConceptName.getName
                 val (rankLevel, rankName) = TestEntityFactory.randomRankLevelAndName()
-                val expectedRank = Some(s"${{rankLevel.getOrElse("")}}${{rankName.getOrElse("")}}")
+                val expectedRank          = Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
 
                 val conceptCreate = ConceptCreate(
                     "SomeChildConcept",
@@ -207,11 +204,11 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
 
         val attempt = testWithUserAuth(
             user =>
-                val root          = init(3, 0)
-                val grandChild    = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+                val root                  = init(3, 0)
+                val grandChild            = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
                 val (rankLevel, rankName) = TestEntityFactory.randomRankLevelAndName()
-                val expectedRank = Some(s"${{rankLevel.getOrElse("")}}${{rankName.getOrElse("")}}")
-                val conceptUpdate = ConceptUpdate(
+                val expectedRank          = Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
+                val conceptUpdate         = ConceptUpdate(
                     Some(root.getPrimaryConceptName.getName),
                     rankLevel = rankLevel,
                     rankName = rankName,

@@ -110,7 +110,6 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
         val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
 
-
         runPost(
             endpoints.createEndpointImpl,
             "http://test.com/v1/users",
@@ -128,7 +127,6 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
         val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.READONLY.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
 
-
         runPost(
             endpoints.createEndpointImpl,
             "http://test.com/v1/users",
@@ -144,9 +142,9 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
     }
 
     test("createEndpoint (form camelCase)") {
-        val entity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
-        val formBody = userAccount.toFormBody
+        val formBody    = userAccount.toFormBody
 
         runPost(
             endpoints.createEndpointImpl,
@@ -163,9 +161,9 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
     }
 
     test("createEndpoint (form snake_case)") {
-        val entity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
-        val formBody = userAccount.toFormBody.replace("firstName", "first_name").replace("lastName", "last_name")
+        val formBody    = userAccount.toFormBody.replace("firstName", "first_name").replace("lastName", "last_name")
 
         runPost(
             endpoints.createEndpointImpl,

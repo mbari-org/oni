@@ -9,9 +9,10 @@ package org.mbari.oni.domain
 
 import java.net.URL
 
-case class MediaUpdate(    url: Option[URL] = None,
+case class MediaUpdate(
+    url: Option[URL] = None,
     caption: Option[String] = None,
     credit: Option[String] = None,
     mediaType: Option[String] = None,
-    isPrimary: Option[Boolean] = None) {
-}
+    isPrimary: Option[Boolean] = None
+) {}

@@ -20,8 +20,10 @@ object Strings:
 
     /**
      * Change case of a string to init Cap. That is the first letter is capitalized and the rest are lower case.
-     * @param s the string to convert
-     * @return the init cap version of the string
+     * @param s
+     *   the string to convert
+     * @return
+     *   the init cap version of the string
      */
     def initCap(s: String): String =
         val a = s.toLowerCase()

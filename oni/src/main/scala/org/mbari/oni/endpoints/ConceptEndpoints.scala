@@ -13,7 +13,15 @@ import sttp.tapir.*
 import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, ErrorMsg, NotFound, ServerError}
+import org.mbari.oni.domain.{
+    ConceptCreate,
+    ConceptDelete,
+    ConceptMetadata,
+    ConceptUpdate,
+    ErrorMsg,
+    NotFound,
+    ServerError
+}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService}
@@ -23,7 +31,10 @@ import scala.concurrent.{ExecutionContext, Future}
 import org.mbari.oni.domain.Rank
 import org.mbari.oni.services.RankValidator
 
-class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service            = ConceptService(entityManagerFactory)
     private val conceptNameService = ConceptNameService(entityManagerFactory)
@@ -75,12 +86,13 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
     val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => name =>
-            Future(service
-                .delete(name, userAccount.username)
-                .fold(
-                    error => Left(ServerError(error.getMessage)),
-                    _ => Right(())
-                )
+            Future(
+                service
+                    .delete(name, userAccount.username)
+                    .fold(
+                        error => Left(ServerError(error.getMessage)),
+                        _ => Right(())
+                    )
             ).andThen(v =>
                 conceptCache.clear()
                 v
@@ -156,8 +168,8 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
         .tag(tag)
 
     val listValidRanksImpl: ServerEndpoint[Any, Future] = listValidRanks.serverLogic { _ =>
-        Future(Right(RankValidator.ValidRankLevelsAndNames.map {
-            (rankLevel, rankName) => Rank(rankLevel, rankName)
+        Future(Right(RankValidator.ValidRankLevelsAndNames.map { (rankLevel, rankName) =>
+            Rank(rankLevel, rankName)
         }))
     }
 
@@ -168,23 +180,26 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtServ
             .in(jsonBody[ConceptUpdate])
             .out(jsonBody[ConceptMetadata])
             .name("updateConcept")
-            .description("Update a concept. To remove a rank name or level, set it to an empty string. Only administrators can remove rank names and levels.")
+            .description(
+                "Update a concept. To remove a rank name or level, set it to an empty string. Only administrators can remove rank names and levels."
+            )
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (name, conceptUpdate) =>
-            Future(service
-                .update(name, conceptUpdate, userAccount.username)
-                .fold(
-                    error => Left(ServerError(error.getMessage)),
-                    concept => Right(concept)
+            Future(
+                service
+                    .update(name, conceptUpdate, userAccount.username)
+                    .fold(
+                        error => Left(ServerError(error.getMessage)),
+                        concept => Right(concept)
+                    )
+            )
+                .andThen(v =>
+                    conceptCache.clear()
+                    v
                 )
-            )
-            .andThen(v =>
-                conceptCache.clear()
-                v
-            )
         }
 
     override val all: List[Endpoint[?, ?, ?, ?, ?]] = List(

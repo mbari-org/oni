@@ -23,7 +23,8 @@ import sttp.shared.Identity
 import scala.concurrent.{ExecutionContext, Future}
 
 class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
-    jwtService: JwtService, executionContext: ExecutionContext
+    jwtService: JwtService,
+    executionContext: ExecutionContext
 ) extends Endpoints:
 
     private val service              = HistoryService(entityManagerFactory)
@@ -59,11 +60,11 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val pendingEndpointImpl: ServerEndpoint[Any, Future] = pendingEndpoint.serverLogic { paging =>
         Future {
-            val limit = paging.limit.getOrElse(defaultLimit)
-            val offset = paging.offset.getOrElse(0)
+            val limit   = paging.limit.getOrElse(defaultLimit)
+            val offset  = paging.offset.getOrElse(0)
             val attempt =
                 for pending <- service.findAllPending(limit, offset)
-                    yield Page(pending, limit, offset)
+                yield Page(pending, limit, offset)
             handleErrors(attempt)
         }
     }
@@ -95,11 +96,11 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val approvedEndpointsImpl: ServerEndpoint[Any, Future] = approvedEndpoints.serverLogic { paging =>
         Future {
-            val limit = paging.limit.getOrElse(defaultLimit)
-            val offset = paging.offset.getOrElse(0)
+            val limit   = paging.limit.getOrElse(defaultLimit)
+            val offset  = paging.offset.getOrElse(0)
             val attempt =
                 for approved <- service.findAllApproved()
-                    yield Page(approved, limit, offset)
+                yield Page(approved, limit, offset)
             handleErrors(attempt)
         }
     }

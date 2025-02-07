@@ -22,23 +22,20 @@ import org.mbari.oni.jpa.DataInitializer
 
 import java.net.URI
 
-trait Issue6 extends DataInitializer with UserAuthMixin {
+trait Issue6 extends DataInitializer with UserAuthMixin:
 
     lazy val fastPhylogenyService = new FastPhylogenyService(entityManagerFactory)
-    lazy val historyService = new HistoryService(entityManagerFactory)
+    lazy val historyService       = new HistoryService(entityManagerFactory)
     lazy val historyActionService = new HistoryActionService(entityManagerFactory, fastPhylogenyService)
-    lazy val mediaService = new MediaService(entityManagerFactory, fastPhylogenyService)
-
+    lazy val mediaService         = new MediaService(entityManagerFactory, fastPhylogenyService)
 
     test("6 - Duplicate ConceptMetadata") {
-        val root = init(2, 0)
+        val root        = init(2, 0)
         assert(root != null)
-        val a = conceptService.findByName(root.getName)
+        val a           = conceptService.findByName(root.getName)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
             url = URI.create("http://www.mbari.org").toURL
         )
-        
-    }
 
-}
+    }

@@ -7,7 +7,5 @@
 
 package org.mbari.oni.domain
 
-trait ToSnakeCase[A] {
+trait ToSnakeCase[A]:
     def toSnakeCase: A
-}
-

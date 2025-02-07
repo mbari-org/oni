@@ -27,9 +27,11 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
             val repo = UserAccountRepository(entityManager)
             repo.findAll()
         )
-        attempt.map(_.asScala
-            .toSeq
-            .map(UserAccount.from))
+        attempt.map(
+            _.asScala
+                .toSeq
+                .map(UserAccount.from)
+        )
 
     def findByUserName(name: String): Either[Throwable, Option[UserAccount]] =
         val attempt = entityManagerFactory.transaction(entityManager =>
@@ -43,9 +45,11 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
             val repo = UserAccountRepository(entityManager)
             repo.findAllByRole(role)
         )
-        attempt.map(_.asScala
-            .toSeq
-            .map(UserAccount.from))
+        attempt.map(
+            _.asScala
+                .toSeq
+                .map(UserAccount.from)
+        )
 
     def deleteByUserName(name: String): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>

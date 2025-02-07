@@ -36,7 +36,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 trait EndpointsSuite extends munit.FunSuite:
 
-    given ExecutionContext = ExecutionContext.global
+    given ExecutionContext         = ExecutionContext.global
     private val log: System.Logger = System.getLogger(getClass.getName)
 
     def runDelete(
@@ -96,7 +96,6 @@ trait EndpointsSuite extends munit.FunSuite:
                     .body(body)
                     .auth
                     .bearer(bearer)
-
 
         val response = request.send(backendStub).join
         assertions(response)

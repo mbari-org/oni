@@ -16,7 +16,15 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept, RawConceptName, UserAccount, UserAccountRoles}
+import org.mbari.oni.domain.{
+    ConceptNameCreate,
+    ConceptNameTypes,
+    ConceptNameUpdate,
+    RawConcept,
+    RawConceptName,
+    UserAccount,
+    UserAccountRoles
+}
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
@@ -88,19 +96,23 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
         val dto     =
-            ConceptNameUpdate(newName = Some("newName"), nameType = Some(ConceptNameTypes.PRIMARY.getType), author = Some(Strings.random(5)))
+            ConceptNameUpdate(
+                newName = Some("newName"),
+                nameType = Some(ConceptNameTypes.PRIMARY.getType),
+                author = Some(Strings.random(5))
+            )
 
         val attempt = runWithUserAuth(user => conceptNameService.updateName(name, dto, user.username))
 
         attempt match
             case Right(rawConcept) =>
                 println(rawConcept.stringify)
-                val obtained = rawConcept.names.map(_.name).toSeq
+                val obtained       = rawConcept.names.map(_.name).toSeq
                 assert(!obtained.contains(name))
                 assert(obtained.contains(dto.newName.getOrElse("")))
                 val updatedNameOpt = rawConcept.names.find(_.name == dto.newName.getOrElse(""))
                 assert(updatedNameOpt.isDefined)
-                val updatedName = updatedNameOpt.get
+                val updatedName    = updatedNameOpt.get
                 assertEquals(updatedName.nameType, ConceptNameTypes.PRIMARY.getType)
                 assertEquals(updatedName.author, dto.author)
             case Left(error)       =>
@@ -109,23 +121,23 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
     test("updateName with blank author - changes author to null in the database") {
 
-            val root    = init(3, 3)
-            assert(root != null)
-            val rawRoot = RawConcept.from(root)
-            val name    = rawRoot.primaryName
-            val dto     =
-                ConceptNameUpdate(author = Some(""))
+        val root    = init(3, 3)
+        assert(root != null)
+        val rawRoot = RawConcept.from(root)
+        val name    = rawRoot.primaryName
+        val dto     =
+            ConceptNameUpdate(author = Some(""))
 
-            val attempt = runWithUserAuth(user => conceptNameService.updateName(name, dto, user.username))
+        val attempt = runWithUserAuth(user => conceptNameService.updateName(name, dto, user.username))
 
-            attempt match
-                case Right(rawConcept) =>
-                    val updatedNameOpt = rawConcept.names.find(_.name == name)
-                    assert(updatedNameOpt.isDefined)
-                    val updatedName = updatedNameOpt.get
-                    assertEquals(updatedName.author, dto.author)
-                case Left(error)       =>
-                    fail(error.toString)
+        attempt match
+            case Right(rawConcept) =>
+                val updatedNameOpt = rawConcept.names.find(_.name == name)
+                assert(updatedNameOpt.isDefined)
+                val updatedName    = updatedNameOpt.get
+                assertEquals(updatedName.author, dto.author)
+            case Left(error)       =>
+                fail(error.toString)
     }
 
     test("updateName (attempt to change primary to non-primary)") {
