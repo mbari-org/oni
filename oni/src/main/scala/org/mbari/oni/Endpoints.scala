@@ -20,6 +20,7 @@ import org.mbari.oni.endpoints.{
     MediaEndpoints,
     PhylogenyEndpoints,
     PrefNodeEndpoints,
+    RawEndpoints,
     ReferenceEndpoints,
     UserAccountEndpoints
 }
@@ -57,6 +58,7 @@ object Endpoints:
     val linkTemplateEndpoints: LinkTemplateEndpoints       = LinkTemplateEndpoints(entityMangerFactory)
     val mediaEndpoints: MediaEndpoints                     = MediaEndpoints(entityMangerFactory, phylogenyEndpoints.service)
     val prefNodeEndpoints: PrefNodeEndpoints               = PrefNodeEndpoints(entityMangerFactory)
+    val rawEndpoints: RawEndpoints                         = RawEndpoints(entityMangerFactory)
     val referenceEndpoints: ReferenceEndpoints             = ReferenceEndpoints(entityMangerFactory)
     val userAccountEndpoints: UserAccountEndpoints         = UserAccountEndpoints(entityMangerFactory)
 
@@ -72,6 +74,7 @@ object Endpoints:
         mediaEndpoints,
         phylogenyEndpoints,
         prefNodeEndpoints,
+        rawEndpoints,
         referenceEndpoints,
         userAccountEndpoints
     ).flatMap(_.allImpl)
