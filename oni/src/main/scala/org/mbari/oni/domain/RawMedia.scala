@@ -16,7 +16,8 @@ case class RawMedia(
     caption: Option[String] = None,
     credit: Option[String] = None,
     primaryMedia: Option[Boolean] = None,
-    `type`: Option[String] = None
+    `type`: Option[String] = None,
+    id: Option[Long] = None
 ):
 
     def toEntity: MediaEntity =
@@ -26,6 +27,7 @@ case class RawMedia(
         entity.setPrimary(primaryMedia.getOrElse(false))
         entity.setType(`type`.orNull)
         entity.setUrl(url.toExternalForm)
+        id.foreach(v => entity.setId(v.longValue()))
         entity
 
 object RawMedia:
@@ -35,5 +37,6 @@ object RawMedia:
             caption = Option(entity.getCaption),
             credit = Option(entity.getCredit),
             primaryMedia = Option(entity.isPrimary),
-            `type` = Option(entity.getType)
+            `type` = Option(entity.getType),
+            id = Option(entity.getId)
         )

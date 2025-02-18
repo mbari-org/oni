@@ -16,11 +16,12 @@
 
 package org.mbari.oni.issues
 
+import org.mbari.oni.domain.ConceptUpdate
 import org.mbari.oni.endpoints.{EndpointsSuite, HistoryEndpoints}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.services.{HistoryService, LinkTemplateService, UserAuthMixin}
+import org.mbari.oni.services.{ConceptService, HistoryService, LinkTemplateService, UserAuthMixin}
 
 trait Oni7 extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
@@ -33,6 +34,9 @@ trait Oni7 extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
     test("mbari-org/oni#7 - accept rank level replace") {
         val root = init(2, 0)
+        // val conceptUpdate = ConceptUpdate(rankLevel = Some("test"))
+        // conceptService.update(root.getName, conceptUpdate)
+        // TODO
 
     }
 

@@ -14,7 +14,8 @@ import scala.jdk.CollectionConverters.*
 case class RawConceptMetadata(
     linkRealizations: Option[Seq[RawLink]] = None,
     linkTemplates: Option[Seq[RawLink]] = None,
-    medias: Option[Seq[RawMedia]] = None
+    medias: Option[Seq[RawMedia]] = None,
+    id: Option[Long] = None
 ):
 
     def toEntity: ConceptMetadataEntity =
@@ -58,5 +59,6 @@ object RawConceptMetadata:
                     .map(RawMedia.from)
                     .toSeq
                     .sortBy(_.url.toExternalForm)
-            )
+            ),
+            id = Some(entity.getId)
         )
