@@ -62,6 +62,10 @@ object TestEntityFactory:
     def buildNode(maxBreadth: Int): ConceptEntity =
         val entity   = createConcept()
         val metadata = entity.getConceptMetadata
+        if (random.nextBoolean()) {
+          val aphiaid = random.nextLong(Int.MaxValue)
+          entity.setAphiaId(aphiaid)
+        }
 
         if maxBreadth > 0 then
 

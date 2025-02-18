@@ -37,9 +37,11 @@ trait RawEndpointsSuite extends EndpointsSuite with DataInitializer {
             s"http://test.com/v1/raw/concept/${name}",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val rawConcept = checkResponse[RawConcept](response.body)
-                assertEquals(rawConcept.primaryName, name)
-                println(rawConcept.stringify)
+                val obtained = checkResponse[RawConcept](response.body)
+                val expected = RawConcept.from(child)
+                assertEquals(obtained.primaryName, name)
+                assertEquals(obtained, expected)
+                // println(rawConcept.stringify)
         )
 
     }
