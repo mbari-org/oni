@@ -21,12 +21,9 @@ import org.mbari.oni.domain.{
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.LinkTemplateService
-import sttp.shared.Identity
-import sttp.tapir.*
-import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.etc.jdk.Loggers.given
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 

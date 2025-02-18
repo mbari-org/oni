@@ -16,21 +16,16 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, SerdeConcept, UserAccount, UserAccountRoles}
-import org.mbari.oni.jpa.DataInitializer
-
-import scala.jdk.CollectionConverters.*
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, Rank}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.UserAuthMixin
+import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.jpa.entities.TestEntityFactory
+import org.mbari.oni.services.{RankValidator, UserAuthMixin}
 import sttp.model.StatusCode
 
-import scala.concurrent.ExecutionContext
-import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.jpa.entities.TestEntityFactory.randomRankLevelAndName
-import org.mbari.oni.domain.Rank
-import org.mbari.oni.services.RankValidator
+import scala.jdk.CollectionConverters.*
 
 trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 

@@ -23,10 +23,9 @@ package org.mbari.oni.jdbc
  * limitations under the License.
  */
 
-import java.time.Instant
 import org.mbari.oni.domain.ConceptNameTypes
 
-import scala.collection.mutable
+import java.time.Instant
 
 /**
  * @author

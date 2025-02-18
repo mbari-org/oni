@@ -10,12 +10,11 @@ package org.mbari.oni.jpa
 import com.typesafe.config.ConfigFactory
 import jakarta.persistence.{EntityManager, EntityManagerFactory, Persistence}
 import org.mbari.oni.AppConfig
-
-import scala.jdk.CollectionConverters.*
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jpa.EntityManagers.*
 
 import java.lang.System.Logger.Level
+import scala.jdk.CollectionConverters.*
 
 /**
  * https://stackoverflow.com/questions/4106078/dynamic-jpa-connection

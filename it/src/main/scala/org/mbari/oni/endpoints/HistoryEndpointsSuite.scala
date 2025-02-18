@@ -16,14 +16,14 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ConceptUpdate, Count, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
-import org.mbari.oni.jpa.DataInitializer
-import sttp.model.StatusCode
+import org.mbari.oni.domain.{Count, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
-import org.mbari.oni.services.{ConceptService, HistoryService, LinkTemplateService, UserAuthMixin}
+import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.services.{HistoryService, LinkTemplateService, UserAuthMixin}
+import sttp.model.StatusCode
 
 trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 

@@ -8,18 +8,8 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{ConceptNameNotFound, ItemNotFound, LinkRealizationIdNotFound, LinkTemplateIdNotFound}
-import org.mbari.oni.domain.{
-    ExtendedLink,
-    ILink,
-    Link,
-    LinkCreate,
-    LinkRenameToConceptRequest,
-    LinkRenameToConceptResponse,
-    LinkUpdate
-}
+import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkRenameToConceptResponse, LinkUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.entities.{
     HistoryEntity,
     HistoryEntityFactory,
@@ -28,6 +18,7 @@ import org.mbari.oni.jpa.entities.{
     UserAccountEntity
 }
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
+import org.mbari.oni.{ConceptNameNotFound, ItemNotFound, LinkRealizationIdNotFound, LinkTemplateIdNotFound}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*

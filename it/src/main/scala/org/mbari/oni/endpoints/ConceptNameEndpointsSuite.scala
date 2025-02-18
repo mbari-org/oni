@@ -17,13 +17,11 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, Page, RawConcept}
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-
-import scala.concurrent.ExecutionContext
 
 trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 

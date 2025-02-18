@@ -8,13 +8,11 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.etc.jdk.Strings
+import org.mbari.oni.jpa.entities.MediaEntity
 
 import java.net.{URI, URL}
 import java.util.regex.Pattern
-import org.mbari.oni.jpa.entities.MediaEntity
-
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Success, Try}
 
 /**
  * @author

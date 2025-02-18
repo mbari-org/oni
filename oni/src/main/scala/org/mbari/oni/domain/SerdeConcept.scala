@@ -7,7 +7,6 @@
 
 package org.mbari.oni.domain
 
-import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.*
 
 final case class SerdeConcept(

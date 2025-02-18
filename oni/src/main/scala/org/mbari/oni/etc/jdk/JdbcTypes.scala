@@ -7,11 +7,10 @@
 
 package org.mbari.oni.etc.jdk
 
+import java.net.{URI, URL}
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
-import java.net.URL
-import java.net.URI
 
 object JdbcTypes:
 

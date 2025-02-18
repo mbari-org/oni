@@ -20,12 +20,15 @@ ThisBuild / scalacOptions ++= Seq(
     "-language:existentials",
     "-language:higherKinds",
     "-language:implicitConversions",
-    "-unchecked"
-    
+    "-unchecked",
+    "-Wunused:imports", // Warn if an import selector is not referenced.
 )
 ThisBuild / startYear        := Some(2024)
 //ThisBuild / updateOptions    := updateOptions.value.withCachedResolution(true)
 ThisBuild / versionScheme    := Some("semver-spec")
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+
 
 ThisBuild / Test / fork              := true
 ThisBuild / Test / parallelExecution := false
@@ -80,7 +83,7 @@ lazy val oni = project
         circeGeneric,
         circeParser,
         commonsCodec,
-        // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to 
+        // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to
         // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
         hibernateCore,
         hibernateJCache,

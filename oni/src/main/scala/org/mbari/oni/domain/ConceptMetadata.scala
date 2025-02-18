@@ -7,9 +7,10 @@
 
 package org.mbari.oni.domain
 
-import scala.jdk.CollectionConverters.*
-import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.etc.jdk.Numbers.*
+import org.mbari.oni.jpa.entities.ConceptEntity
+
+import scala.jdk.CollectionConverters.*
 
 /**
  * Detailed information about a concept

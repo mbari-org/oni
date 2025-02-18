@@ -8,15 +8,13 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import sttp.tapir.*
-import sttp.tapir.Endpoint
-import sttp.tapir.json.circe.*
-import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameUpdate, ErrorMsg, Page, RawConcept, RawConceptName}
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameUpdate, ErrorMsg, Page, RawConcept}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.ConceptNameService
-import sttp.shared.Identity
-import org.mbari.oni.etc.circe.CirceCodecs.given
+import sttp.tapir.json.circe.*
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 

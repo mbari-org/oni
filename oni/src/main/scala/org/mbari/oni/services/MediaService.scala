@@ -8,15 +8,13 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{ConceptNameNotFound, ItemNotFound}
 import org.mbari.oni.domain.{Media, MediaCreate, MediaUpdate}
-import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jdbc.FastPhylogenyService
+import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, MediaEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, MediaRepository}
+import org.mbari.oni.{ConceptNameNotFound, ItemNotFound}
 
-import java.net.URL
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 

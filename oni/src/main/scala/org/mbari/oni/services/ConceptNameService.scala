@@ -8,18 +8,11 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
-import org.mbari.oni.domain.{
-    ConceptMetadata,
-    ConceptNameCreate,
-    ConceptNameTypes,
-    ConceptNameUpdate,
-    RawConcept,
-    RawConceptName
-}
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptNameRepository, ConceptRepository}
+import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*

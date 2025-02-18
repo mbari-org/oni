@@ -10,16 +10,11 @@ package org.mbari.oni.jdbc
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{Concept, SimpleConcept}
 import org.mbari.oni.etc.jdk.Loggers
+import org.mbari.oni.etc.jdk.Loggers.{*, given}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 
-import java.sql.{ResultSet, Timestamp}
+import java.sql.Timestamp
 import java.time.Instant
-import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try, Using}
-import scala.util.control.NonFatal
-import org.mbari.oni.etc.jdk.Loggers.{*, given}
-
 import java.util.concurrent.locks.ReentrantLock
 import scala.collection.immutable.ArraySeq
 

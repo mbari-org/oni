@@ -7,18 +7,16 @@
 
 package org.mbari.oni
 
+import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.{Vertx, VertxOptions}
+import io.vertx.ext.web.Router
 import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
-import sttp.tapir.server.vertx.VertxFutureServerOptions
-import io.vertx.core.Vertx
-import io.vertx.ext.web.Router
-import sttp.tapir.server.vertx.{VertxFutureServerInterpreter, VertxFutureServerOptions}
 import sttp.tapir.server.vertx.VertxFutureServerInterpreter.VertxFutureToScalaFuture
-import io.vertx.core.VertxOptions
+import sttp.tapir.server.vertx.{VertxFutureServerInterpreter, VertxFutureServerOptions}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import io.vertx.core.http.HttpServerOptions
 
 /**
  * Launches Oni

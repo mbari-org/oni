@@ -28,11 +28,10 @@ import org.mbari.oni.domain.{
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.jpa.entities.HistoryEntity
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import org.mbari.oni.jpa.entities.HistoryEntity
 
 trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
 

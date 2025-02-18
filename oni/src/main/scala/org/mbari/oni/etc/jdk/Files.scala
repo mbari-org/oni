@@ -7,12 +7,9 @@
 
 package org.mbari.oni.etc.jdk
 
-import java.io.{BufferedOutputStream, FileOutputStream}
-import java.nio.file.Path
+import java.io.{BufferedInputStream, BufferedOutputStream}
+import java.nio.file.{Files as JFiles, Path}
 import scala.util.Using
-
-import java.nio.file.Files as JFiles
-import java.io.BufferedInputStream
 
 object Files:
 

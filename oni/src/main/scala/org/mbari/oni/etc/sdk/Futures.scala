@@ -8,11 +8,10 @@
 package org.mbari.oni.etc.sdk
 
 import java.time.Duration as JDuration
-import java.util.concurrent.{Executors, TimeUnit}
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration as SDuration
-import scala.util.Try
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.jdk.DurationConverters.*
+import scala.util.Try
 
 object Futures:
     val DefaultTimeout = JDuration.ofSeconds(10)

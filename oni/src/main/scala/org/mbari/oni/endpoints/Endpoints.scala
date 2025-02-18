@@ -7,28 +7,24 @@
 
 package org.mbari.oni.endpoints
 
-import sttp.tapir.json.circe.TapirJsonCirce
 import io.circe.Printer
+import org.mbari.oni.domain.*
 import org.mbari.oni.etc.circe.CirceCodecs
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import org.mbari.oni.domain.*
+import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.{AppConfig, ConceptNotFoundException}
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.*
-import sttp.tapir.Endpoint
+import sttp.shared.Identity
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.shared.Identity
-import org.mbari.oni.etc.jdk.Loggers.given
+import sttp.tapir.{Endpoint, *}
 
-import scala.concurrent.{ExecutionContext, Future}
-import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.{AppConfig, ConceptNameNotFound, ConceptNotFoundException}
-
-import java.net.URI
+import java.net.{URI, URL}
 import java.time.Instant
-import java.net.URL
+import scala.concurrent.{ExecutionContext, Future}
 
 case class Paging(offset: Option[Int] = Some(0), limit: Option[Int] = Some(100))
 

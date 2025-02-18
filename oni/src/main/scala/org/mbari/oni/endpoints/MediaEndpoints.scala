@@ -8,22 +8,16 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.services.MediaService
-import sttp.shared.Identity
-import sttp.tapir.*
-import sttp.tapir.Endpoint
+import org.mbari.oni.domain.{ErrorMsg, Media, MediaCreate, MediaUpdate}
+import org.mbari.oni.etc.circe.CirceCodecs.given
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.jdbc.FastPhylogenyService
+import org.mbari.oni.services.{ConceptService, MediaService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.Media
-import org.mbari.oni.domain.ErrorMsg
-import org.mbari.oni.domain.MediaCreate
-import org.mbari.oni.domain.MediaUpdate
-import org.mbari.oni.jdbc.FastPhylogenyService
-import org.mbari.oni.services.ConceptService
-import scala.concurrent.ExecutionContext
-import org.mbari.oni.etc.circe.CirceCodecs.given
-import scala.concurrent.Future
-import org.mbari.oni.etc.jwt.JwtService
+import sttp.tapir.{Endpoint, *}
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
     jwtService: JwtService,

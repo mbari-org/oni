@@ -24,10 +24,8 @@ import org.mbari.oni.endpoints.{
     UserAccountEndpoints
 }
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
-import sttp.shared.Identity
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import java.util.concurrent.Executors

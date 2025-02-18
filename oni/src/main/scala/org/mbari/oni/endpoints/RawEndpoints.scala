@@ -8,28 +8,21 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import scala.concurrent.ExecutionContext
+import org.mbari.oni.domain.{ErrorMsg, RawConcept}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.services.ConceptService
-import sttp.tapir.*
-import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{
-    ErrorMsg,
-    NotFound,
-    RawConcept,
-    ServerError
-}
-import org.mbari.oni.etc.circe.CirceCodecs.given
-import scala.concurrent.Future
+import sttp.tapir.{Endpoint, *}
 
-class RawEndpoints(entityManagerFactory: EntityManagerFactory)
-    (using executionContext: ExecutionContext) extends Endpoints {
+import scala.concurrent.{ExecutionContext, Future}
 
+class RawEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext)
+    extends Endpoints:
 
-    private val service            = ConceptService(entityManagerFactory)
-    val base = "raw"
-    val tag = "Raw"
+    private val service = ConceptService(entityManagerFactory)
+    val base            = "raw"
+    val tag             = "Raw"
 
     val findRawConceptByName: Endpoint[Unit, String, ErrorMsg, RawConcept, Any] = openEndpoint
         .get
@@ -44,14 +37,6 @@ class RawEndpoints(entityManagerFactory: EntityManagerFactory)
             handleErrorsAsync(service.findRawByName(name))
         }
 
-
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(findRawConceptByName)
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(findRawConceptByNameImpl)
-
-
-
-
-
-
-}

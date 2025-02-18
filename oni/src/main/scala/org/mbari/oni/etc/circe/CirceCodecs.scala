@@ -10,13 +10,11 @@ package org.mbari.oni.etc.circe
 import io.circe
 import io.circe.*
 import io.circe.generic.semiauto.*
-
-import scala.util.Try
-import java.net.URL
+import org.mbari.oni.domain.*
 import org.mbari.oni.util.HexUtil
 
-import java.net.URI
-import org.mbari.oni.domain.*
+import java.net.{URI, URL}
+import scala.util.Try
 
 object CirceCodecs:
 

@@ -7,7 +7,7 @@
 
 package org.mbari.oni.domain
 
-import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity}
+import org.mbari.oni.jpa.entities.ConceptNameEntity
 
 case class ConceptNameCreate(
     name: String,

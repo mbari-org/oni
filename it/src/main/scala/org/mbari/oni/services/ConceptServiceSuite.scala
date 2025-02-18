@@ -16,24 +16,12 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{
-    ConceptCreate,
-    ConceptDelete,
-    ConceptMetadata,
-    ConceptUpdate,
-    RawConcept,
-    UserAccount,
-    UserAccountRoles
-}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
 import org.mbari.oni.jpa.DatabaseFunSuite
-import org.mbari.oni.jpa.entities.{EntityUtilities, TestEntityFactory}
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import org.mbari.oni.jpa.repositories.TestRepository
+import org.mbari.oni.jpa.entities.TestEntityFactory
 
-import java.nio.file.{Files, Paths}
 import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters.*
-import scala.util.Properties
 
 trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 

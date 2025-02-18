@@ -16,10 +16,6 @@
 
 package org.mbari.oni.jpa
 
-import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
-import org.mbari.oni.services.ConceptService
-import org.mbari.oni.etc.jdk.Loggers.given
 
-import java.util.concurrent.atomic.AtomicReference
 
 trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {}

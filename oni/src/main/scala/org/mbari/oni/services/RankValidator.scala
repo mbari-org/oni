@@ -7,8 +7,7 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.ConceptCreate
-import org.mbari.oni.domain.ConceptUpdate
+import org.mbari.oni.domain.{ConceptCreate, ConceptUpdate}
 
 object RankValidator:
 

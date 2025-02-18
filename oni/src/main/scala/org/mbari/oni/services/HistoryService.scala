@@ -7,17 +7,15 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.ExtendedHistory
-import jakarta.persistence.{EntityManager, EntityManagerFactory}
+import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.ItemNotFound
+import org.mbari.oni.domain.ExtendedHistory
 import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.entities.{HistoryEntity, UserAccountEntity}
+import org.mbari.oni.jpa.entities.HistoryEntity
 import org.mbari.oni.jpa.repositories.HistoryRepository
 
-import java.util.Objects
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
-import scala.util.Try
 
 class HistoryService(entityManagerFactory: EntityManagerFactory):
 

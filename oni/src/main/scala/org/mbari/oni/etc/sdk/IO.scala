@@ -7,7 +7,6 @@
 
 package org.mbari.oni.etc.sdk
 
-import java.util.Optional
 import scala.concurrent.{ExecutionContext, Future}
 
 /**

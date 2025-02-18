@@ -17,14 +17,14 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
-import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.services.{UserAccountService, UserAuthMixin}
-import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jdk.Strings
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.jpa.entities.TestEntityFactory
+import org.mbari.oni.services.UserAccountService
+import sttp.model.StatusCode
 
 trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
 

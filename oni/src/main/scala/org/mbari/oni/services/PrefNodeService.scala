@@ -11,9 +11,10 @@ import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.PrefNode
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.PreferenceNodeEntity
-import org.mbari.oni.jpa.repositories.{PrefNodeRepository, VarsUserPreferencesFactory}
-import scala.jdk.OptionConverters.*
+import org.mbari.oni.jpa.repositories.PrefNodeRepository
+
 import scala.jdk.CollectionConverters.*
+import scala.jdk.OptionConverters.*
 
 class PrefNodeService(entityManagerFactory: EntityManagerFactory):
 

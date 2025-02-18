@@ -8,9 +8,8 @@
 package org.mbari.oni
 
 import com.typesafe.config.ConfigFactory
-import scala.util.Try
-import org.mbari.oni.jpa.EntityManagerFactories
 import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.jpa.EntityManagerFactories
 
 /**
  * Parse configuration info from reference.conf and application.conf

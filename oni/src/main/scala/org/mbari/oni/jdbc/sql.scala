@@ -7,13 +7,11 @@
 
 package org.mbari.oni.jdbc
 
+import org.mbari.oni.etc.jdk.{JdbcTypes, Numbers}
+
+import java.net.URL
 import java.time.Instant
 import java.util.UUID
-import scala.util.Try
-import java.net.URL
-import java.net.URI
-import org.mbari.oni.etc.jdk.Numbers
-import org.mbari.oni.etc.jdk.JdbcTypes
 
 /**
  * This is a collection of explicit conversions to convert from java.sql.ResultSet to various types. This is used in the

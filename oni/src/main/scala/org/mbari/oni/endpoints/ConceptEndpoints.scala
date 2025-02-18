@@ -8,28 +8,15 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.ConceptNameNotFound
-import sttp.tapir.*
-import sttp.tapir.Endpoint
-import sttp.tapir.json.circe.*
-import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{
-    ConceptCreate,
-    ConceptDelete,
-    ConceptMetadata,
-    ConceptUpdate,
-    ErrorMsg,
-    NotFound,
-    ServerError
-}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, ErrorMsg, Rank, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService}
-import sttp.shared.Identity
+import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService, RankValidator}
+import sttp.tapir.json.circe.*
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
-import org.mbari.oni.domain.Rank
-import org.mbari.oni.services.RankValidator
 
 class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
     jwtService: JwtService,

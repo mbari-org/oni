@@ -8,7 +8,6 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
-import org.mbari.oni.jpa.IPersistentObject
 
 case class RawLink(linkName: String, toConcept: String, linkValue: String, id: Option[Long] = None):
 
@@ -24,5 +23,3 @@ object RawLink:
 
     def from(entity: LinkTemplateEntity): RawLink =
         RawLink(entity.getLinkName, entity.getToConcept, entity.getLinkValue, Option(entity.getId))
-
-    

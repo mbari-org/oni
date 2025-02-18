@@ -8,20 +8,15 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.ReferenceIdNotFound
 import org.mbari.oni.domain.{BadRequest, ErrorMsg, NotFound, Reference, ReferenceQuery, ReferenceUpdate, ServerError}
 import org.mbari.oni.endpoints.ReferenceEndpoints.DefaultLimit
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.ReferenceService
-import sttp.shared.Identity
-import sttp.tapir.*
-import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.etc.jdk.Loggers.given
+import sttp.tapir.{Endpoint, *}
 
-import java.net.{URLDecoder, URLEncoder}
 import scala.concurrent.{ExecutionContext, Future}
 
 class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using

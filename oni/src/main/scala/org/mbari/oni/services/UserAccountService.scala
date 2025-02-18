@@ -8,12 +8,11 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException, WrappedException}
 import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.UserAccountEntity
 import org.mbari.oni.jpa.repositories.UserAccountRepository
-import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException, WrappedException}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*

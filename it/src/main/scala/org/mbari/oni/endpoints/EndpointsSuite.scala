@@ -18,19 +18,17 @@ package org.mbari.oni.endpoints
 
 import io.circe.*
 import io.circe.parser.*
-import sttp.client3.*
-import sttp.client3.testing.SttpBackendStub
-import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.server.stub.TapirStubInterpreter
-import sttp.shared.Identity
-import sttp.tapir.server.interceptor.exception.ExceptionHandler
-import sttp.tapir.server.interceptor.CustomiseInterceptors
-import sttp.model.StatusCode
-import sttp.client3.SttpBackend
-import sttp.tapir.server.model.ValuedEndpointOutput
 import org.mbari.oni.etc.jdk.Loggers.given
-import sttp.tapir.server.vertx.VertxFutureServerOptions
 import org.mbari.oni.etc.sdk.Futures.*
+import sttp.client3.testing.SttpBackendStub
+import sttp.client3.{SttpBackend, *}
+import sttp.model.StatusCode
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.server.interceptor.CustomiseInterceptors
+import sttp.tapir.server.interceptor.exception.ExceptionHandler
+import sttp.tapir.server.model.ValuedEndpointOutput
+import sttp.tapir.server.stub.TapirStubInterpreter
+import sttp.tapir.server.vertx.VertxFutureServerOptions
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -146,7 +144,6 @@ trait EndpointsSuite extends munit.FunSuite:
         )
 
         val customOptions: CustomiseInterceptors[Future, VertxFutureServerOptions] =
-            import scala.concurrent.ExecutionContext.Implicits.global
             VertxFutureServerOptions
                 .customiseInterceptors
                 .exceptionHandler(exceptionHandler)

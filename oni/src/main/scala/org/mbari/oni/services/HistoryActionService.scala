@@ -8,13 +8,13 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{AccessDenied, HistoryHasBeenPreviouslyProcessed}
 import org.mbari.oni.domain.ExtendedHistory
+import org.mbari.oni.etc.sdk.Eithers.*
+import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{HistoryRepository, UserAccountRepository}
-import org.mbari.oni.etc.sdk.Eithers.*
-import org.mbari.oni.jdbc.FastPhylogenyService
+import org.mbari.oni.{AccessDenied, HistoryHasBeenPreviouslyProcessed}
 
 type HistoryAction = (HistoryEntity, UserAccountEntity, EntityManager) => Either[Throwable, Boolean]
 

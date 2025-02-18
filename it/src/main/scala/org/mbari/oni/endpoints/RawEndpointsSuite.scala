@@ -16,19 +16,17 @@
 
 package org.mbari.oni.endpoints
 
-import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.RawConcept
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.jpa.DataInitializer
 import sttp.model.StatusCode
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
-trait RawEndpointsSuite extends EndpointsSuite with DataInitializer {
+trait RawEndpointsSuite extends EndpointsSuite with DataInitializer:
 
     lazy val endpoints: RawEndpoints = RawEndpoints(entityManagerFactory)
 
-
     test("findRawConceptByName") {
-        val root = init(2, 2)
+        val root  = init(2, 2)
         val child = root.getChildConcepts.iterator().next()
         val name  = child.getPrimaryConceptName.getName
 
@@ -45,4 +43,3 @@ trait RawEndpointsSuite extends EndpointsSuite with DataInitializer {
         )
 
     }
-}

@@ -8,19 +8,9 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{
-    AccessDenied,
-    AccessDeniedMissingCredentials,
-    ChildConceptNotFound,
-    ConceptNameAlreadyExists,
-    ConceptNameNotFound,
-    HistoryIsInvalid,
-    MissingRootConcept,
-    OniException,
-    ParentConceptNotFound,
-    RootAlreadyExists
-}
-import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, SimpleConcept}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
+import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{
     ConceptEntity,
     ConceptNameEntity,
@@ -28,10 +18,8 @@ import org.mbari.oni.jpa.entities.{
     HistoryEntityFactory,
     UserAccountEntity
 }
-import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.repositories.ConceptRepository
-import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.{AccessDenied, ChildConceptNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, HistoryIsInvalid, MissingRootConcept, ParentConceptNotFound, RootAlreadyExists}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
