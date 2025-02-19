@@ -57,7 +57,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         )
 
     /**
-     * Inserts an eRantire tree of concepts in the database. Requires that the database is empty. This is a non-ACID as
+     * Inserts an entire tree of concepts in the database. Requires that the database is empty. This is a non-ACID as
      * one concept (and it's associated metadata) is inserted at a time. This is useful for testing and for very large
      * trees.
      * @param root
