@@ -10,7 +10,7 @@ package org.mbari.oni.jdbc
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{Concept, SimpleConcept}
 import org.mbari.oni.etc.jdk.Loggers
-import org.mbari.oni.etc.jdk.Loggers.{*, given}
+import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.EntityManagerFactories.*
 
 import java.sql.Timestamp

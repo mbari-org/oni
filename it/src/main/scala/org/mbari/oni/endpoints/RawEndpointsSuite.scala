@@ -16,10 +16,12 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.RawConcept
+import org.mbari.oni.domain.{RawConcept, RawConceptName}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.jpa.DataInitializer
 import sttp.model.StatusCode
+
+//import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
 trait RawEndpointsSuite extends EndpointsSuite with DataInitializer:
 
@@ -42,4 +44,21 @@ trait RawEndpointsSuite extends EndpointsSuite with DataInitializer:
                 // println(rawConcept.stringify)
         )
 
+    }
+
+    test("findRawConceptNamesByName") {
+        val root     = init(2, 4)
+        val child    = root.getChildConcepts.iterator().next()
+        val name     = child.getPrimaryConceptName.getName
+        val expected = RawConcept.from(child).names.toSeq.sortBy(_.name)
+
+        runGet(
+            endpoints.findRawConceptNamesByNameImpl,
+            s"http://test.com/v1/raw/names/${name}",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Seq[RawConceptName]](response.body)
+                assertEquals(obtained, expected)
+//                println(obtained.stringify)
+        )
     }

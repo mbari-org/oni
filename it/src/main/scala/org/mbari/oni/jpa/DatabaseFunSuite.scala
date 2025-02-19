@@ -16,6 +16,4 @@
 
 package org.mbari.oni.jpa
 
-
-
 trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {}

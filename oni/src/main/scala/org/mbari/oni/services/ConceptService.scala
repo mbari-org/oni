@@ -19,7 +19,16 @@ import org.mbari.oni.jpa.entities.{
     UserAccountEntity
 }
 import org.mbari.oni.jpa.repositories.ConceptRepository
-import org.mbari.oni.{AccessDenied, ChildConceptNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, HistoryIsInvalid, MissingRootConcept, ParentConceptNotFound, RootAlreadyExists}
+import org.mbari.oni.{
+    AccessDenied,
+    ChildConceptNotFound,
+    ConceptNameAlreadyExists,
+    ConceptNameNotFound,
+    HistoryIsInvalid,
+    MissingRootConcept,
+    ParentConceptNotFound,
+    RootAlreadyExists
+}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -48,7 +57,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         )
 
     /**
-     * Inserts an entire tree of concepts in the database. Requires that the database is empty. This is a non-ACID as
+     * Inserts an eRantire tree of concepts in the database. Requires that the database is empty. This is a non-ACID as
      * one concept (and it's associated metadata) is inserted at a time. This is useful for testing and for very large
      * trees.
      * @param root
