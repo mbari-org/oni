@@ -63,7 +63,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
 
     val findMediaByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Media, Any] = openEndpoint
         .get
-        .in(base / path[Long]("id"))
+        .in(base / "id" / path[Long]("id"))
         .out(jsonBody[Media])
         .name("findMediaById")
         .description("Find a media record by ID")
@@ -103,6 +103,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        findMediaByIdEndpoint,
         mediaForConceptEndpoint,
         createMediaEndpoint,
         updateMediaEndpoint,
@@ -110,6 +111,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
+        findMediaByIdEndpointImpl,
         mediaForConceptEndpointImpl,
         createMediaEndpointImpl,
         updateMediaEndpointImpl,

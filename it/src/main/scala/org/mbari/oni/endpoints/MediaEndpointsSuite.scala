@@ -65,7 +65,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
         assert(media.id.isDefined)
         runGet(
             endpoints.findMediaByIdEndpointImpl,
-            s"http://test.com/v1/media/${media.id.get}",
+            s"http://test.com/v1/media/id/${media.id.get}",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Media](response.body)

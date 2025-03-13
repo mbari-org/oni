@@ -101,6 +101,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        findConceptNameEndpoint,
         allEndpoint,
         addConceptNameEndpoint,
         updateConceptNameEndpoint,
@@ -108,6 +109,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
+        findConceptNameEndpointImpl,
         allEndpointImpl,
         addConceptNameEndpointImpl,
         updateConceptNameEndpointImpl,
