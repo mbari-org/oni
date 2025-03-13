@@ -60,6 +60,19 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
         )
     }
 
+    test("findMediaById") {
+        val media = createMedia().head
+        assert(media.id.isDefined)
+        runGet(
+            endpoints.findMediaByIdEndpointImpl,
+            s"http://test.com/v1/media/${media.id.get}",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Media](response.body)
+                assertEquals(obtained, media)
+        )
+    }
+
     test("createMedia") {
         val root        = init(2, 0)
         assert(root != null)

@@ -16,6 +16,7 @@ import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
+import net.bytebuddy.pool.TypePool.Default.LazyTypeDescription.GenericTypeToken.Resolution.Raw
 
 trait ConceptNameServiceBase:
 
@@ -36,6 +37,15 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
         entityManagerFactory.transaction(entityManger =>
             val repo = new ConceptNameRepository(entityManger)
             repo.findAllNamesAsStrings().asScala.toSeq
+        )
+
+    def findByName(name: String): Either[Throwable, RawConcept] =
+        entityManagerFactory.transaction(entityManger =>
+            val repo = new ConceptNameRepository(entityManger)
+            repo.findByName(name).toScala match
+                case None => throw ConceptNameNotFound(name)
+                case Some(entity) =>
+                    RawConcept.from(entity.getConcept(), false)
         )
 
     def addName(dto: ConceptNameCreate, userName: String): Either[Throwable, RawConcept] =

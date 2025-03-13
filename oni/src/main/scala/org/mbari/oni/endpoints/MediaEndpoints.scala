@@ -18,6 +18,7 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
+import org.mbari.oni.ItemNotFound
 
 class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
     jwtService: JwtService,
@@ -59,6 +60,18 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         .serverLogic { userAccount => mediaCreate =>
             handleErrorsAsync(service.create(mediaCreate, userAccount.username))
         }
+
+    val findMediaByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Media, Any] = openEndpoint
+        .get
+        .in(base / path[Long]("id"))
+        .out(jsonBody[Media])
+        .name("findMediaById")
+        .description("Find a media record by ID")
+        .tag(tag)
+
+    val findMediaByIdEndpointImpl: ServerEndpoint[Any, Future] = findMediaByIdEndpoint.serverLogic { id =>
+        handleErrorsAsync(service.findById(id).map(_.getOrElse(throw ItemNotFound(s"Media with ID $id not found"))))
+    }
 
     val updateMediaEndpoint: Endpoint[Option[String], (Long, MediaUpdate), ErrorMsg, Media, Any] = secureEndpoint
         .put

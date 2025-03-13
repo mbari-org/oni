@@ -43,6 +43,19 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
     }
 
+    test("findByName") {
+        val root = init(3, 3)
+        assert(root != null)
+        val rawRoot = RawConcept.from(root)
+        val name    = rawRoot.primaryName
+        conceptNameService.findByName(name) match
+            case Right(rawConcept) =>
+                val obtained = rawConcept.names.map(_.name).toSeq
+                assert(obtained.contains(name))
+            case Left(error)       =>
+                fail(error.toString)
+    }
+
     test("addName (new primary name)") {
         val root    = init(3, 3)
         assert(root != null)

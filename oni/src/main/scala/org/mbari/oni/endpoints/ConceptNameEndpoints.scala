@@ -57,6 +57,19 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
             handleErrorsAsync(service.addName(dto, userAccount.username))
         }
 
+    val findConceptNameEndpoint: Endpoint[Unit, String, ErrorMsg, RawConcept, Any] = openEndpoint
+        .get
+        .in(base / path[String]("name"))
+        .out(jsonBody[RawConcept])
+        .name("findConceptName")
+        .description("Find a concept name")
+        .tag(tag)
+
+    val findConceptNameEndpointImpl: ServerEndpoint[Any, Future] = findConceptNameEndpoint
+        .serverLogic { name =>
+            handleErrorsAsync(service.findByName(name))
+        }
+
     val updateConceptNameEndpoint: Endpoint[Option[String], (String, ConceptNameUpdate), ErrorMsg, RawConcept, Any] =
         secureEndpoint
             .put

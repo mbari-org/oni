@@ -44,6 +44,22 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
         )
     }
 
+    test("findConceptName") {
+        val root    = init(3, 3)
+        assert(root != null)
+        val rawRoot = RawConcept.from(root)
+        val name    = rawRoot.primaryName
+        runGet(
+            endpoints.findConceptNameEndpointImpl,
+            s"http://test.com/v1/names/$name",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val rawConcept = checkResponse[RawConcept](response.body)
+                val obtained   = rawConcept.names.map(_.name).toSeq
+                assert(obtained.contains(name))
+        )
+    }
+
     test("addConceptName") {
         val root    = init(3, 3)
         assert(root != null)
