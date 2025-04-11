@@ -385,6 +385,27 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                         assertEquals(conceptMetadata.rankLevel, None)
     }
 
+    test("update that creates cyclic relation should fail") {
+        val root = TestEntityFactory.buildRoot(5)
+
+        val attempt = runWithUserAuth(user =>
+            for
+                rootEntity     <- conceptService.init(root)
+                child           = rootEntity.getChildConcepts.iterator().next()
+                greatGrandChild = child.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+                updated        <- conceptService.update(
+                                      child.getName,
+                                      ConceptUpdate(parentName = Some(greatGrandChild.getName)),
+                                      user.username
+                                  )
+            yield updated
+        )
+
+        attempt match
+            case Left(e)  => // expected
+            case Right(_) => fail("Should not have been able to create a cyclic relation")
+    }
+
     test("delete") {
 
         val root        = TestEntityFactory.buildRoot(3, 0)

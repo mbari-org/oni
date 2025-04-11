@@ -303,6 +303,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                         s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation"
                     )
 
+//                println(s"Updating $name to parent ${conceptEntity.getPrimaryConceptName.getName} with descendants ${conceptEntity.getDescendants.asScala.map(_.getPrimaryConceptName.getName).mkString(", ")}")
+
                 repo.findByName(name).toScala match
                     case None               => throw ConceptNameNotFound(name)
                     case Some(parentEntity) =>
