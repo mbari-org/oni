@@ -44,7 +44,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     val findByUserNameEndpoint: Endpoint[Unit, String, ErrorMsg, UserAccount, Any] =
         openEndpoint
             .get
-            .in(base / path[String]("name"))
+            .in(base / "search" / "username" / path[String]("name"))
             .out(jsonBody[UserAccount])
             .name("userAccountByName")
             .description("Find a user account by username")

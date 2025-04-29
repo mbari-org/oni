@@ -35,7 +35,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory,
 
     val mediaForConceptEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[Media], Any] = openEndpoint
         .get
-        .in(base / path[String]("name"))
+        .in(base / "search" / "concept" / path[String]("name"))
         .out(jsonBody[Seq[Media]])
         .name("mediaForConcept")
         .description("Get all media for a concept")
