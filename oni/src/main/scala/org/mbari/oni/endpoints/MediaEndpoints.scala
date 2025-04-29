@@ -63,7 +63,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
 
     val findMediaByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Media, Any] = openEndpoint
         .get
-        .in(base / "id" / path[Long]("id"))
+        .in(base / path[Long]("id"))
         .out(jsonBody[Media])
         .name("findMediaById")
         .description("Find a media record by ID")

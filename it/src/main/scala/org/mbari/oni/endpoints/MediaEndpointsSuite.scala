@@ -51,7 +51,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
         val name     = opt.get
         runGet(
             endpoints.mediaForConceptEndpointImpl,
-            s"http://test.com/v1/media/${name}",
+            s"http://test.com/v1/media/search/concept/${name}",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[Media]](response.body)
@@ -65,7 +65,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
         assert(media.id.isDefined)
         runGet(
             endpoints.findMediaByIdEndpointImpl,
-            s"http://test.com/v1/media/id/${media.id.get}",
+            s"http://test.com/v1/media/${media.id.get}",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Media](response.body)
