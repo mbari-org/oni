@@ -23,10 +23,9 @@ package org.mbari.oni.jdbc
  * limitations under the License.
  */
 
-import java.time.Instant
 import org.mbari.oni.domain.ConceptNameTypes
 
-import scala.collection.mutable
+import java.time.Instant
 
 /**
  * @author
@@ -48,7 +47,6 @@ case class ConceptRow(
 
     lazy val lastUpdate: Instant = Seq(conceptTimestamp, conceptNameTimestamp)
         .maxBy(i => i.toEpochMilli)
-
 
 case class CName(name: String, nameType: String):
     val isPrimary: Boolean = nameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType)

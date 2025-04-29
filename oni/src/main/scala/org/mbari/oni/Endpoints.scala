@@ -8,20 +8,33 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, LinkRealizationEndpoints, LinkTemplateEndpoints, MediaEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, ReferenceEndpoints, UserAccountEndpoints}
+import org.mbari.oni.endpoints.{
+    AuthorizationEndpoints,
+    ConceptEndpoints,
+    ConceptNameEndpoints,
+    HealthEndpoints,
+    HistoryEndpoints,
+    LinkEndpoints,
+    LinkRealizationEndpoints,
+    LinkTemplateEndpoints,
+    MediaEndpoints,
+    PhylogenyEndpoints,
+    PrefNodeEndpoints,
+    RawEndpoints,
+    ReferenceEndpoints,
+    UserAccountEndpoints
+}
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
-import sttp.shared.Identity
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 
 import java.util.concurrent.Executors
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Configures all endpoint/api definitions
-  */
+ * Configures all endpoint/api definitions
+ */
 object Endpoints:
 
     given JwtService =
@@ -45,6 +58,7 @@ object Endpoints:
     val linkTemplateEndpoints: LinkTemplateEndpoints       = LinkTemplateEndpoints(entityMangerFactory)
     val mediaEndpoints: MediaEndpoints                     = MediaEndpoints(entityMangerFactory, phylogenyEndpoints.service)
     val prefNodeEndpoints: PrefNodeEndpoints               = PrefNodeEndpoints(entityMangerFactory)
+    val rawEndpoints: RawEndpoints                         = RawEndpoints(entityMangerFactory)
     val referenceEndpoints: ReferenceEndpoints             = ReferenceEndpoints(entityMangerFactory)
     val userAccountEndpoints: UserAccountEndpoints         = UserAccountEndpoints(entityMangerFactory)
 
@@ -60,6 +74,7 @@ object Endpoints:
         mediaEndpoints,
         phylogenyEndpoints,
         prefNodeEndpoints,
+        rawEndpoints,
         referenceEndpoints,
         userAccountEndpoints
     ).flatMap(_.allImpl)

@@ -323,10 +323,12 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         }
 
         // ---- Iterate down to the grandchildren (and so on
-        for (ConceptEntity child : children) {
-            match = hasDescendent(childName, child);
-            if (match) {
-                break;
+        if (!match) {
+            for (ConceptEntity child : children) {
+                match = hasDescendent(childName, child);
+                if (match) {
+                    break;
+                }
             }
         }
 

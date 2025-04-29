@@ -16,24 +16,21 @@
 
 package org.mbari.oni.jpa.repositories
 
-import jakarta.persistence.{EntityManager, EntityManagerFactory}
+import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.RawConcept
-import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers
-
-import java.io.{BufferedInputStream, InputStream}
-import java.nio.file.{FileSystems, Files, Path, Paths}
-import java.util.Scanner
-import java.util.zip.ZipFile
-import scala.util.{Failure, Success, Using}
-import scala.util.control.NonFatal
-import scala.jdk.CollectionConverters.*
-import Loggers.given
-import org.mbari.oni.etc.jpa.EntityManagers.{*, given}
+import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.etc.jpa.EntityManagers.*
+import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.services.ConceptService
 
+import java.io.InputStream
+import java.nio.file.{Files, Path, Paths}
 import java.util
+import java.util.Scanner
+import java.util.zip.ZipFile
+import scala.util.Using
 
 object TestRepository:
 

@@ -7,7 +7,7 @@ ThisBuild / licenses         := Seq("Apache-2.0" -> url("http://www.apache.org/l
 ThisBuild / organization     := "org.mbari"
 ThisBuild / organizationName := "Monterey Bay Aquarium Research Institute"
 ThisBuild / resolvers ++= Seq(Resolver.githubPackages("mbari-org", "maven"))
-ThisBuild / scalaVersion     := "3.6.2"
+ThisBuild / scalaVersion     := "3.6.4"
 ThisBuild / usePipelining    := true
 // ThisBuild / scalaVersion     := "3.4.2"
 // ThisBuild / scalaVersion     := "3.3.1" // Fails. See https://github.com/lampepfl/dotty/issues/17069#issuecomment-1763053572
@@ -20,12 +20,15 @@ ThisBuild / scalacOptions ++= Seq(
     "-language:existentials",
     "-language:higherKinds",
     "-language:implicitConversions",
-    "-unchecked"
-    
+    "-unchecked",
+    "-Wunused:imports", // Warn if an import selector is not referenced.
 )
 ThisBuild / startYear        := Some(2024)
 //ThisBuild / updateOptions    := updateOptions.value.withCachedResolution(true)
 ThisBuild / versionScheme    := Some("semver-spec")
+ThisBuild / semanticdbEnabled := true
+ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
+
 
 ThisBuild / Test / fork              := true
 ThisBuild / Test / parallelExecution := false
@@ -80,7 +83,7 @@ lazy val oni = project
         circeGeneric,
         circeParser,
         commonsCodec,
-        // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to 
+        // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to
         // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
         hibernateCore,
         hibernateJCache,

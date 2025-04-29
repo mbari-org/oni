@@ -17,7 +17,7 @@
 package org.mbari.oni.services
 
 import org.mbari.oni.domain.{ExtendedLink, Link}
-import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
+import org.mbari.oni.jpa.DataInitializer
 
 import scala.jdk.CollectionConverters.*
 

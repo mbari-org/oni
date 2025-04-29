@@ -9,18 +9,19 @@ package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{ErrorMsg, NotFound, UserAccount, UserAccountCreate, UserAccountUpdate}
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAccountService
-import sttp.tapir.*
-import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.shared.Identity
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = UserAccountService(entityManagerFactory)
     private val base    = "users"
@@ -53,7 +54,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     val findByUserNameEndpointImpl: ServerEndpoint[Any, Future] = findByUserNameEndpoint.serverLogic { name =>
         Future {
             handleErrors(service.findByUserName(name)).flatMap {
-                case None => Left(NotFound(s"User account not found: $name"))
+                case None        => Left(NotFound(s"User account not found: $name"))
                 case Some(value) => Right(value)
             }
         }
@@ -94,7 +95,16 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         secureEndpoint
             .post
             .in(base)
-            .in(oneOfBody(jsonBody[UserAccountCreate].description("The user account to create. Accepts camelCase or snake_case."), formBody[UserAccountCreate].description("The user account to create. Accepts camelCase or snake_case.")))
+            .in(
+                oneOfBody(
+                    jsonBody[UserAccountCreate].description(
+                        "The user account to create. Accepts camelCase or snake_case."
+                    ),
+                    formBody[UserAccountCreate].description(
+                        "The user account to create. Accepts camelCase or snake_case."
+                    )
+                )
+            )
             .out(jsonBody[UserAccount])
             .name("createUserAccount")
             .description("Create a new user account")

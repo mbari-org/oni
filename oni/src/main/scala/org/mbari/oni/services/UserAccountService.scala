@@ -8,12 +8,11 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException, WrappedException}
 import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.UserAccountEntity
 import org.mbari.oni.jpa.repositories.UserAccountRepository
-import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException, WrappedException}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -27,9 +26,11 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
             val repo = UserAccountRepository(entityManager)
             repo.findAll()
         )
-        attempt.map(_.asScala
-            .toSeq
-            .map(UserAccount.from))
+        attempt.map(
+            _.asScala
+                .toSeq
+                .map(UserAccount.from)
+        )
 
     def findByUserName(name: String): Either[Throwable, Option[UserAccount]] =
         val attempt = entityManagerFactory.transaction(entityManager =>
@@ -43,9 +44,11 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
             val repo = UserAccountRepository(entityManager)
             repo.findAllByRole(role)
         )
-        attempt.map(_.asScala
-            .toSeq
-            .map(UserAccount.from))
+        attempt.map(
+            _.asScala
+                .toSeq
+                .map(UserAccount.from)
+        )
 
     def deleteByUserName(name: String): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>

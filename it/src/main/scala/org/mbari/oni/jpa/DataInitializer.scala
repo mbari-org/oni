@@ -16,10 +16,9 @@
 
 package org.mbari.oni.jpa
 
+import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
 import org.mbari.oni.services.ConceptService
-import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jdbc.FastPhylogenyService
 
 trait DataInitializer extends DatabaseFunSuite:
 

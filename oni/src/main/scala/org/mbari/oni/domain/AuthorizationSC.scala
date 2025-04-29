@@ -8,11 +8,13 @@
 package org.mbari.oni.domain
 
 /**
-  * Authorization information as snake_case
-  *
-  * @param token_type Typically it will be `Beaerer`
-  * @param access_token For Oni this will be a JWT
-  */
+ * Authorization information as snake_case
+ *
+ * @param token_type
+ *   Typically it will be `Beaerer`
+ * @param access_token
+ *   For Oni this will be a JWT
+ */
 final case class AuthorizationSC(token_type: String, access_token: String)
 
 object AuthorizationSC:

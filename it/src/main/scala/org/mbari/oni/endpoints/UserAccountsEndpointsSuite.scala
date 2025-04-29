@@ -17,14 +17,14 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
-import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.services.{UserAccountService, UserAuthMixin}
-import sttp.model.StatusCode
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jdk.Strings
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.jpa.entities.TestEntityFactory
+import org.mbari.oni.services.UserAccountService
+import sttp.model.StatusCode
 
 trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
 
@@ -110,7 +110,6 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
         val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
 
-
         runPost(
             endpoints.createEndpointImpl,
             "http://test.com/v1/users",
@@ -128,7 +127,6 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
         val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.READONLY.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
 
-
         runPost(
             endpoints.createEndpointImpl,
             "http://test.com/v1/users",
@@ -144,9 +142,9 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
     }
 
     test("createEndpoint (form camelCase)") {
-        val entity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
-        val formBody = userAccount.toFormBody
+        val formBody    = userAccount.toFormBody
 
         runPost(
             endpoints.createEndpointImpl,
@@ -163,9 +161,9 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
     }
 
     test("createEndpoint (form snake_case)") {
-        val entity = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
+        val entity      = TestEntityFactory.createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName)
         val userAccount = UserAccount.from(entity).copy(password = Strings.random(10))
-        val formBody = userAccount.toFormBody.replace("firstName", "first_name").replace("lastName", "last_name")
+        val formBody    = userAccount.toFormBody.replace("firstName", "first_name").replace("lastName", "last_name")
 
         runPost(
             endpoints.createEndpointImpl,

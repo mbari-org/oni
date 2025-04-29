@@ -7,21 +7,20 @@
 
 package org.mbari.oni
 
+import io.vertx.core.http.HttpServerOptions
+import io.vertx.core.{Vertx, VertxOptions}
+import io.vertx.ext.web.Router
 import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
-import sttp.tapir.server.vertx.VertxFutureServerOptions
-import io.vertx.core.Vertx
-import io.vertx.ext.web.Router
-import sttp.tapir.server.vertx.{VertxFutureServerInterpreter, VertxFutureServerOptions}
 import sttp.tapir.server.vertx.VertxFutureServerInterpreter.VertxFutureToScalaFuture
-import io.vertx.core.VertxOptions
+import sttp.tapir.server.vertx.{VertxFutureServerInterpreter, VertxFutureServerOptions}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 /**
-  * Launches Oni
-  */
+ * Launches Oni
+ */
 object Main:
 
     def main(args: Array[String]): Unit =
@@ -50,13 +49,14 @@ object Main:
             .metricsInterceptor(Endpoints.prometheusMetrics.metricsInterceptor())
             .options
 
-        val vertx = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfThreads))
-        // val vertx  = Vertx.vertx()
-        val server = vertx.createHttpServer()
-        val router = Router.router(vertx)
-        val interpreter = VertxFutureServerInterpreter(serverOptions)
+        val vertx             = Vertx.vertx(new VertxOptions().setWorkerPoolSize(AppConfig.NumberOfThreads))
+        val httpServerOptions = new HttpServerOptions().setCompressionSupported(true)
+        val server            = vertx.createHttpServer(httpServerOptions)
+        val router            = Router.router(vertx)
+        val interpreter       = VertxFutureServerInterpreter(serverOptions)
 
-        Endpoints.endpoints
+        Endpoints
+            .endpoints
             .foreach(endpoint =>
                 interpreter
                     .blockingRoute(endpoint)
@@ -64,7 +64,8 @@ object Main:
             )
 
         // Add our documentation endpoints
-        Endpoints.docEndpoints
+        Endpoints
+            .docEndpoints
             .foreach(endpoint =>
                 interpreter
                     .route(endpoint)
@@ -80,7 +81,6 @@ object Main:
         val program = server.requestHandler(router).listen(port).asScala
 
         Await.result(program, Duration.Inf)
-
 
 // --- Helidon WeServer
 //        val serverOptions = NimaServerOptions

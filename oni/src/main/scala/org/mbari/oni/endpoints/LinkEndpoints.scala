@@ -11,15 +11,14 @@ import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.services.LinkService
-import sttp.shared.Identity
-import sttp.tapir.*
-import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext) extends Endpoints:
+class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext)
+    extends Endpoints:
 
     private val service = LinkService(entityManagerFactory)
     private val base    = "links"

@@ -7,17 +7,15 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.ExtendedHistory
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.ItemNotFound
+import org.mbari.oni.domain.ExtendedHistory
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.HistoryEntity
 import org.mbari.oni.jpa.repositories.HistoryRepository
 
-import java.util.Objects
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
-import scala.util.Try
 
 class HistoryService(entityManagerFactory: EntityManagerFactory):
 
@@ -39,7 +37,9 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             repo.findPendingHistories(limit, offset)
                 .asScala
                 .toSeq
-                .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)) // TRY because of the potential for nulls
+                .map(h =>
+                    ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)
+                ) // TRY because of the potential for nulls
                 .sortBy(_.creationTimestamp)
         )
 
@@ -49,7 +49,9 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             repo.findApprovedHistories()
                 .asScala
                 .toSeq
-                .map(h => ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)) // TRY because of the potential for nulls
+                .map(h =>
+                    ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)
+                ) // TRY because of the potential for nulls
                 .sortBy(_.creationTimestamp)
         )
 

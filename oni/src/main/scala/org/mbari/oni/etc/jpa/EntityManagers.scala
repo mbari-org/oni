@@ -8,11 +8,10 @@
 package org.mbari.oni.etc.jpa
 
 import jakarta.persistence.EntityManager
-import org.checkerframework.checker.units.qual.N
 import org.mbari.oni.MissingRootConcept
+import org.mbari.oni.etc.jdk.Loggers.given
 
 import scala.util.control.NonFatal
-import org.mbari.oni.etc.jdk.Loggers.given
 
 object EntityManagers:
 

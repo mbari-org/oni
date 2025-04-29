@@ -1,7 +1,7 @@
 import sbt.*
 object Dependencies {
 
-    lazy val auth0 = "com.auth0" % "java-jwt" % "4.4.0"
+    lazy val auth0 = "com.auth0" % "java-jwt" % "4.5.0"
 
     val caffeineVersion     = "3.2.0"
     lazy val caffeine       = "com.github.ben-manes.caffeine" % "caffeine" % caffeineVersion
@@ -13,7 +13,7 @@ object Dependencies {
     lazy val circeParser  = "io.circe" %% "circe-parser"  % circeVersion
 
     lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.18.0"
-    lazy val gson = "com.google.code.gson" % "gson" % "2.11.0"
+    lazy val gson = "com.google.code.gson" % "gson" % "2.12.1"
 
     // THis needs to match the version used by tapirHelidon.
     // Just including these in the build allows Helidon to use them for content encoding.
@@ -21,7 +21,7 @@ object Dependencies {
     lazy val helidonEncodingDeflate = "io.helidon.http.encoding" % "helidon-http-encoding-deflate" % helidonVersion
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
-    val hibernateVersion      = "6.6.5.Final"
+    val hibernateVersion      = "6.6.8.Final"
     lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
@@ -42,7 +42,7 @@ object Dependencies {
     lazy val slf4jJulBridge = "org.slf4j" % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem    = "org.slf4j" % "slf4j-jdk-platform-logging" % slf4jVersion
 
-    private val tapirVersion = "1.11.13"
+    private val tapirVersion = "1.11.15"
     lazy val tapirCirce      = "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion
     lazy val tapirHelidon    = "com.softwaremill.sttp.tapir" %% "tapir-nima-server"        % tapirVersion
     lazy val tapirPrometheus = "com.softwaremill.sttp.tapir" %% "tapir-prometheus-metrics" % tapirVersion
@@ -50,7 +50,7 @@ object Dependencies {
     lazy val tapirSwagger    = "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle"  % tapirVersion
     lazy val tapirVertex     = "com.softwaremill.sttp.tapir" %% "tapir-vertx-server"       % tapirVersion
 
-    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.10.2"
+    lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.10.3"
 
     val testcontainersVersion        = "1.20.4"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion

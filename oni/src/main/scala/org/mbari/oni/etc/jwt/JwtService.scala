@@ -7,9 +7,9 @@
 
 package org.mbari.oni.etc.jwt
 
-import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.JWT
-import org.mbari.oni.domain.{UserAccount, UserAccountRoles}
+import com.auth0.jwt.algorithms.Algorithm
+import org.mbari.oni.domain.UserAccount
 import org.mbari.oni.jpa.entities.UserAccountEntity
 
 import java.time.Instant

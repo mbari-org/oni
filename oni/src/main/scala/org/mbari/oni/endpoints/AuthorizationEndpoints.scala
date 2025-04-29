@@ -8,24 +8,24 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.etc.jwt.JwtService
-import sttp.model.StatusCode
-import sttp.tapir.*
-import sttp.tapir.Endpoint
-import sttp.tapir.generic.auto.*
-import sttp.tapir.json.circe.*
-import sttp.tapir.server.ServerEndpoint
 import org.mbari.oni.domain.{AuthorizationSC, BadRequest, ErrorMsg, NotFound, ServerError, Unauthorized}
 import org.mbari.oni.etc.circe.CirceCodecs.given
+import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAccountService
-import sttp.tapir.model.UsernamePassword
-import sttp.shared.Identity
+import sttp.model.StatusCode
 import sttp.model.headers.{AuthenticationScheme, WWWAuthenticateChallenge}
+import sttp.tapir.generic.auto.*
+import sttp.tapir.json.circe.*
+import sttp.tapir.model.UsernamePassword
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext)
-    extends Endpoints:
+class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = UserAccountService(entityManagerFactory)
     private val base    = "auth"
@@ -102,13 +102,18 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using j
                                            _.toRight(NotFound("User account not found"))
                                        )
                     entity      <- Right(userAccount.toEntity)
-                    jwt         <- jwtService
-                                       .login(usernamePassword.username, usernamePassword.password.getOrElse(""), entity)
-                                       .toRight(Unauthorized("Unable to login. Check your username and password and verify that you are an administrator or maintainer"))
+                    jwt         <-
+                        jwtService
+                            .login(usernamePassword.username, usernamePassword.password.getOrElse(""), entity)
+                            .toRight(
+                                Unauthorized(
+                                    "Unable to login. Check your username and password and verify that you are an administrator or maintainer"
+                                )
+                            )
                 yield AuthorizationSC.bearer(jwt)
             }
             .serverLogic(bearerAuth => Unit => Future(Right(bearerAuth)))
 
-    override val all: List[Endpoint[?, ?, ?, ?, ?]]           = List(loginEndpoint, authEndpoint)
+    override val all: List[Endpoint[?, ?, ?, ?, ?]]         = List(loginEndpoint, authEndpoint)
     override val allImpl: List[ServerEndpoint[Any, Future]] =
         List(loginEndpointImpl, authEndpointImpl)

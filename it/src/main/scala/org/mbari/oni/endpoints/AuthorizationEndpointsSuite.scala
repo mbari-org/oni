@@ -20,14 +20,13 @@ import io.circe.parser.decode
 import org.mbari.oni.domain.{AuthorizationSC, UserAccount, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.etc.sdk.Futures.*
 import org.mbari.oni.jpa.DatabaseFunSuite
 import org.mbari.oni.services.UserAccountService
 import sttp.client3.*
 import sttp.model.StatusCode
-import org.mbari.oni.etc.sdk.Futures.*
 
 import java.util.Base64
-import scala.concurrent.ExecutionContext
 
 trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
 
@@ -43,7 +42,6 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
             .header("Authorization", "APIKEY foo")
             .send(backendStub)
             .join
-
 
         response.body match
             case Left(e)     => fail(e)
@@ -112,6 +110,6 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
 
                 response.body match
                     case Left(e)     =>
-                        // this is expected. READONLY users cannot login
+                    // this is expected. READONLY users cannot login
                     case Right(body) =>
                         fail("READONLY user should not be able to login")

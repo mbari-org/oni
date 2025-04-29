@@ -16,24 +16,12 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{
-    ConceptCreate,
-    ConceptDelete,
-    ConceptMetadata,
-    ConceptUpdate,
-    RawConcept,
-    UserAccount,
-    UserAccountRoles
-}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
 import org.mbari.oni.jpa.DatabaseFunSuite
-import org.mbari.oni.jpa.entities.{EntityUtilities, TestEntityFactory}
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import org.mbari.oni.jpa.repositories.TestRepository
+import org.mbari.oni.jpa.entities.TestEntityFactory
 
-import java.nio.file.{Files, Paths}
 import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters.*
-import scala.util.Properties
 
 trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
@@ -372,16 +360,16 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
     }
 
     test("update to remove rank name and rank level") {
-        val root       = TestEntityFactory.buildRoot(2)
+        val root    = TestEntityFactory.buildRoot(2)
         root.setRankName("genus")
         root.setRankLevel("sub")
         val attempt = runWithUserAuth(user =>
             for
                 rootEntity <- conceptService.init(root)
                 updated    <- conceptService.update(
-                                root.getPrimaryConceptName.getName,
-                                ConceptUpdate(rankName = Some(""), rankLevel = Some("")),
-                                user.username
+                                  root.getPrimaryConceptName.getName,
+                                  ConceptUpdate(rankName = Some(""), rankLevel = Some("")),
+                                  user.username
                               )
             yield updated
         )
@@ -391,10 +379,31 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                 fail("Failed to update")
             case Right(_) =>
                 conceptService.findByName(root.getPrimaryConceptName.getName) match
-                    case Left(_)    =>
+                    case Left(_)                =>
                     case Right(conceptMetadata) =>
                         assertEquals(conceptMetadata.rankName, None)
                         assertEquals(conceptMetadata.rankLevel, None)
+    }
+
+    test("update that creates cyclic relation should fail") {
+        val root = TestEntityFactory.buildRoot(5)
+
+        val attempt = runWithUserAuth(user =>
+            for
+                rootEntity     <- conceptService.init(root)
+                child           = rootEntity.getChildConcepts.iterator().next()
+                greatGrandChild = child.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+                updated        <- conceptService.update(
+                                      child.getName,
+                                      ConceptUpdate(parentName = Some(greatGrandChild.getName)),
+                                      user.username
+                                  )
+            yield updated
+        )
+
+        attempt match
+            case Left(e)  => // expected
+            case Right(_) => fail("Should not have been able to create a cyclic relation")
     }
 
     test("delete") {

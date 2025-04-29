@@ -8,19 +8,20 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import sttp.tapir.*
-import sttp.tapir.Endpoint
-import sttp.tapir.json.circe.*
-import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameUpdate, ErrorMsg, Page, RawConcept, RawConceptName}
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameUpdate, ErrorMsg, Page, RawConcept}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.ConceptNameService
-import sttp.shared.Identity
-import org.mbari.oni.etc.circe.CirceCodecs.given
+import sttp.tapir.json.circe.*
+import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = ConceptNameService(entityManagerFactory)
     private val base    = "names"
@@ -56,6 +57,19 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
             handleErrorsAsync(service.addName(dto, userAccount.username))
         }
 
+    val findConceptNameEndpoint: Endpoint[Unit, String, ErrorMsg, RawConcept, Any] = openEndpoint
+        .get
+        .in(base / path[String]("name"))
+        .out(jsonBody[RawConcept])
+        .name("findConceptName")
+        .description("Find a concept name")
+        .tag(tag)
+
+    val findConceptNameEndpointImpl: ServerEndpoint[Any, Future] = findConceptNameEndpoint
+        .serverLogic { name =>
+            handleErrorsAsync(service.findByName(name))
+        }
+
     val updateConceptNameEndpoint: Endpoint[Option[String], (String, ConceptNameUpdate), ErrorMsg, RawConcept, Any] =
         secureEndpoint
             .put
@@ -87,6 +101,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        findConceptNameEndpoint,
         allEndpoint,
         addConceptNameEndpoint,
         updateConceptNameEndpoint,
@@ -94,6 +109,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using jwt
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
+        findConceptNameEndpointImpl,
         allEndpointImpl,
         addConceptNameEndpointImpl,
         updateConceptNameEndpointImpl,

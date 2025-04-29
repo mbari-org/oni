@@ -16,9 +16,8 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ExtendedHistory, RawConcept}
-import org.mbari.oni.jdbc.FastPhylogenyService
-import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
+import org.mbari.oni.domain.ExtendedHistory
+import org.mbari.oni.jpa.DataInitializer
 
 import scala.jdk.CollectionConverters.*
 

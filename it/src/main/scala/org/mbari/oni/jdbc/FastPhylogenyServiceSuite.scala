@@ -17,13 +17,12 @@
 package org.mbari.oni.jdbc
 
 import org.mbari.oni.domain.Concept
-import org.mbari.oni.jpa.DataInitializer
-
-import scala.jdk.CollectionConverters.*
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.jpa.DataInitializer
 
 import scala.annotation.tailrec
+import scala.jdk.CollectionConverters.*
 
 trait FastPhylogenyServiceSuite extends DataInitializer:
 

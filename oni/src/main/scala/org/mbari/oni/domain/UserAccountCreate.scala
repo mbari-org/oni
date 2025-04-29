@@ -8,16 +8,16 @@
 package org.mbari.oni.domain
 
 case class UserAccountCreate(
-        username: String,
-        password: String,
-        role: Option[String] = Some(UserAccountRoles.READONLY.getRoleName),
-        affiliation: Option[String] = None,
-        firstName: Option[String] = None,
-        lastName: Option[String] = None,
-        email: Option[String] = None,
-        first_name: Option[String] = None,
-        last_name: Option[String] = None
-) {
+    username: String,
+    password: String,
+    role: Option[String] = Some(UserAccountRoles.READONLY.getRoleName),
+    affiliation: Option[String] = None,
+    firstName: Option[String] = None,
+    lastName: Option[String] = None,
+    email: Option[String] = None,
+    first_name: Option[String] = None,
+    last_name: Option[String] = None
+):
     def toUserAccount: UserAccount = UserAccount(
         username,
         password,
@@ -27,9 +27,8 @@ case class UserAccountCreate(
         lastName.orElse(last_name),
         email
     )
-}
 
-object UserAccountCreate {
+object UserAccountCreate:
     def fromUserAccount(userAccount: UserAccount): UserAccountCreate = UserAccountCreate(
         userAccount.username,
         userAccount.password,
@@ -39,4 +38,3 @@ object UserAccountCreate {
         userAccount.lastName,
         userAccount.email
     )
-}

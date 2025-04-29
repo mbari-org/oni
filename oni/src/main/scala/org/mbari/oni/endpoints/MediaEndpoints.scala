@@ -8,30 +8,27 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.services.MediaService
-import sttp.shared.Identity
-import sttp.tapir.*
-import sttp.tapir.Endpoint
+import org.mbari.oni.domain.{ErrorMsg, Media, MediaCreate, MediaUpdate}
+import org.mbari.oni.etc.circe.CirceCodecs.given
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.jdbc.FastPhylogenyService
+import org.mbari.oni.services.{ConceptService, MediaService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import org.mbari.oni.domain.Media
-import org.mbari.oni.domain.ErrorMsg
-import org.mbari.oni.domain.MediaCreate
-import org.mbari.oni.domain.MediaUpdate
-import org.mbari.oni.jdbc.FastPhylogenyService
-import org.mbari.oni.services.ConceptService
-import scala.concurrent.ExecutionContext
-import org.mbari.oni.etc.circe.CirceCodecs.given
-import scala.concurrent.Future
-import org.mbari.oni.etc.jwt.JwtService
+import sttp.tapir.{Endpoint, *}
 
-class MediaEndpoints(entityManagerFactory: EntityManagerFactory,
-     fastPhylogenyService: FastPhylogenyService)(using jwtService: JwtService, executionContext: ExecutionContext) extends Endpoints:
+import scala.concurrent.{ExecutionContext, Future}
+import org.mbari.oni.ItemNotFound
 
-    private val service = MediaService(entityManagerFactory, fastPhylogenyService)
+class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
+
+    private val service        = MediaService(entityManagerFactory, fastPhylogenyService)
     private val conceptService = ConceptService(entityManagerFactory)
-    private val base    = "media"
-    private val tag     = "Media"
+    private val base           = "media"
+    private val tag            = "Media"
 
     val mediaForConceptEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[Media], Any] = openEndpoint
         .get
@@ -48,7 +45,11 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory,
     val createMediaEndpoint: Endpoint[Option[String], MediaCreate, ErrorMsg, Media, Any] = secureEndpoint
         .post
         .in(base)
-        .in(jsonBody[MediaCreate].description("The media record to create. mediaType defaults to 'IMAGE', but can also be set to 'VIDEO'"))
+        .in(
+            jsonBody[MediaCreate].description(
+                "The media record to create. mediaType defaults to 'IMAGE', but can also be set to 'VIDEO'"
+            )
+        )
         .out(jsonBody[Media])
         .name("createMedia")
         .description("Create a new media record")
@@ -59,6 +60,18 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory,
         .serverLogic { userAccount => mediaCreate =>
             handleErrorsAsync(service.create(mediaCreate, userAccount.username))
         }
+
+    val findMediaByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Media, Any] = openEndpoint
+        .get
+        .in(base / "id" / path[Long]("id"))
+        .out(jsonBody[Media])
+        .name("findMediaById")
+        .description("Find a media record by ID")
+        .tag(tag)
+
+    val findMediaByIdEndpointImpl: ServerEndpoint[Any, Future] = findMediaByIdEndpoint.serverLogic { id =>
+        handleErrorsAsync(service.findById(id).map(_.getOrElse(throw ItemNotFound(s"Media with ID $id not found"))))
+    }
 
     val updateMediaEndpoint: Endpoint[Option[String], (Long, MediaUpdate), ErrorMsg, Media, Any] = secureEndpoint
         .put
@@ -90,6 +103,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory,
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        findMediaByIdEndpoint,
         mediaForConceptEndpoint,
         createMediaEndpoint,
         updateMediaEndpoint,
@@ -97,10 +111,9 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory,
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
+        findMediaByIdEndpointImpl,
         mediaForConceptEndpointImpl,
         createMediaEndpointImpl,
         updateMediaEndpointImpl,
         deleteMediaEndpointImpl
     )
-
-    

@@ -25,4 +25,3 @@ object PrefNode:
     )
 
 case class PrefNodeUpdate(name: Option[String], key: Option[String], value: String)
-

@@ -8,21 +8,15 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
-import org.mbari.oni.domain.{
-    ConceptMetadata,
-    ConceptNameCreate,
-    ConceptNameTypes,
-    ConceptNameUpdate,
-    RawConcept,
-    RawConceptName
-}
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptNameRepository, ConceptRepository}
+import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
+import net.bytebuddy.pool.TypePool.Default.LazyTypeDescription.GenericTypeToken.Resolution.Raw
 
 trait ConceptNameServiceBase:
 
@@ -43,6 +37,15 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
         entityManagerFactory.transaction(entityManger =>
             val repo = new ConceptNameRepository(entityManger)
             repo.findAllNamesAsStrings().asScala.toSeq
+        )
+
+    def findByName(name: String): Either[Throwable, RawConcept] =
+        entityManagerFactory.transaction(entityManger =>
+            val repo = new ConceptNameRepository(entityManger)
+            repo.findByName(name).toScala match
+                case None => throw ConceptNameNotFound(name)
+                case Some(entity) =>
+                    RawConcept.from(entity.getConcept(), false)
         )
 
     def addName(dto: ConceptNameCreate, userName: String): Either[Throwable, RawConcept] =
@@ -123,9 +126,9 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
 
                 dto.author
                     .foreach(author =>
-                        if (author.isBlank) existingConceptName.setAuthor(null)
+                        if author.isBlank then existingConceptName.setAuthor(null)
                         else existingConceptName.setAuthor(author)
-                )
+                    )
 
                 dto.updateEntity(existingConceptName)
 

@@ -28,11 +28,10 @@ import org.mbari.oni.domain.{
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.jpa.entities.HistoryEntity
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import org.mbari.oni.jpa.entities.HistoryEntity
 
 trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
 
@@ -367,7 +366,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
 //            service.findRawByName(root.getName, true).map(xs => println(xs.stringify))
             service.findChildrenByParentName(a.getName) match
                 case Right(concepts) =>
-                //    println(concepts.stringify)
+                    //    println(concepts.stringify)
                     val xs = concepts.filter(_.name == b.getName)
                     assert(xs.isEmpty)
                 case Left(_)         => fail("Concept should exist after approval")

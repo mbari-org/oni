@@ -16,17 +16,10 @@
 
 package org.mbari.oni.endpoints
 
-import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.SerdeConcept
-import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.{DataInitializer, DatabaseFunSuite}
-import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
-import org.mbari.oni.services.ConceptService
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.circe.CirceCodecs.given
+import org.mbari.oni.jpa.DataInitializer
 import sttp.model.StatusCode
-
-import java.util.concurrent.atomic.AtomicReference
 
 trait PhylogenyEndpointsSuite extends EndpointsSuite with DataInitializer:
 

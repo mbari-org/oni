@@ -17,10 +17,9 @@
 package org.mbari.oni.services
 
 import org.mbari.oni.domain.{Reference, ReferenceUpdate}
-import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
 import java.net.URI
 

@@ -7,11 +7,9 @@
 
 package org.mbari.oni.domain
 
-import org.mbari.oni.domain.ILink
+import org.mbari.oni.etc.jdk.Numbers.*
 import org.mbari.oni.jpa.IPersistentObject
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
-
-import org.mbari.oni.etc.jdk.Numbers.{*, given}
 
 /**
  * @author

@@ -8,13 +8,27 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, ChildConceptNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, MissingRootConcept, OniException, ParentConceptNotFound, RootAlreadyExists}
-import org.mbari.oni.domain.{ConceptCreate, ConceptDelete, ConceptMetadata, ConceptUpdate, RawConcept, SimpleConcept}
-import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
-import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.repositories.ConceptRepository
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.jpa.EntityManagerFactories.*
+import org.mbari.oni.jpa.entities.{
+    ConceptEntity,
+    ConceptNameEntity,
+    HistoryEntity,
+    HistoryEntityFactory,
+    UserAccountEntity
+}
+import org.mbari.oni.jpa.repositories.ConceptRepository
+import org.mbari.oni.{
+    AccessDenied,
+    ChildConceptNotFound,
+    ConceptNameAlreadyExists,
+    ConceptNameNotFound,
+    HistoryIsInvalid,
+    MissingRootConcept,
+    ParentConceptNotFound,
+    RootAlreadyExists
+}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -86,8 +100,12 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         handleByConceptNameQuery(name, ConceptMetadata.from)
 
     def findParentByChildName(name: String): Either[Throwable, ConceptMetadata] =
-        handleByConceptNameQuery(name, c => if (c.getParentConcept == null) throw ParentConceptNotFound(name) else
-            ConceptMetadata.from(c.getParentConcept))
+        handleByConceptNameQuery(
+            name,
+            c =>
+                if c.getParentConcept == null then throw ParentConceptNotFound(name)
+                else ConceptMetadata.from(c.getParentConcept)
+        )
 
     def findChildrenByParentName(name: String): Either[Throwable, Set[ConceptMetadata]] =
         handleByConceptNameQuery(name, c => c.getChildConcepts.asScala.map(ConceptMetadata.from).toSet)
@@ -285,6 +303,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                         s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation"
                     )
 
+//                println(s"Updating $name to parent ${conceptEntity.getPrimaryConceptName.getName} with descendants ${conceptEntity.getDescendants.asScala.map(_.getPrimaryConceptName.getName).mkString(", ")}")
+
                 repo.findByName(name).toScala match
                     case None               => throw ConceptNameNotFound(name)
                     case Some(parentEntity) =>
@@ -315,10 +335,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             rankLevel.foreach(v =>
                 if v != conceptEntity.getRankLevel then
                     if v.isBlank then
-                        if userEntity.isAdministrator then
-                            conceptEntity.setRankLevel(null)
-                        else
-                            throw new IllegalArgumentException("Rank level can only be removed by an administrator")
+                        if userEntity.isAdministrator then conceptEntity.setRankLevel(null)
+                        else throw new IllegalArgumentException("Rank level can only be removed by an administrator")
                     else
                         val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
                         conceptEntity.getConceptMetadata.addHistory(history)
@@ -335,10 +353,8 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             rankLevel.foreach(v =>
                 if v != conceptEntity.getRankName then
                     if v.isBlank then
-                        if userEntity.isAdministrator then
-                            conceptEntity.setRankName(null)
-                        else
-                            throw new IllegalArgumentException("Rank name can only be removed by an administrator")
+                        if userEntity.isAdministrator then conceptEntity.setRankName(null)
+                        else throw new IllegalArgumentException("Rank name can only be removed by an administrator")
                     else
                         val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
                         conceptEntity.getConceptMetadata.addHistory(history)
@@ -466,15 +482,14 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         userEntity: UserAccountEntity,
         entityManager: EntityManager
     ): Either[Throwable, Boolean] =
-        try {
+        try
             val repo    = ConceptRepository(entityManager)
             val concept = historyEntity.getConceptMetadata.getConcept
             // val parent = concept.getParentConcept
 
-
             val parent = repo.findByName(historyEntity.getNewValue).toScala match
-               case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
-               case Some(p) => p
+                case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
+                case Some(p) => p
 
             val oldParentConcept = repo.findByName(historyEntity.getOldValue).toScala match
                 case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
@@ -496,7 +511,36 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                     s"Rejected replace parent. Moving ${concept.getName} from ${parent.getName} back to ${oldParentConcept.getName} "
                 )
             Right(true)
-        }
-        catch {
-            case e: Throwable => Left(e)
-        }
+        catch case e: Throwable => Left(e)
+
+    def inTxnRejectReplaceRankLevel(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
+            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKLEVEL)
+        then
+            val conceptMetadata = history.getConceptMetadata
+            val concept         = conceptMetadata.getConcept
+            val oldRankLevel    = history.getOldValue
+            if oldRankLevel.isEmpty || oldRankLevel.isBlank then concept.setRankLevel(null)
+            else concept.setRankLevel(oldRankLevel)
+            Right(true)
+        else Left(HistoryIsInvalid("History is not a replace rank level history"))
+
+    def inTxnRejectReplaceRankName(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
+            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKNAME)
+        then
+            val conceptMetadata = history.getConceptMetadata
+            val concept         = conceptMetadata.getConcept
+            val oldRankName     = history.getOldValue
+            if oldRankName.isEmpty || oldRankName.isBlank then concept.setRankName(null)
+            else concept.setRankName(oldRankName)
+            Right(true)
+        else Left(HistoryIsInvalid("History is not a replace rank name history"))

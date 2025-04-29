@@ -19,9 +19,9 @@ package org.mbari.oni.etc.jdbc
 import jakarta.persistence.EntityManager
 import munit.internal.io.PlatformIO.Path
 import org.mbari.oni.etc.jdk.Files
+import org.mbari.oni.etc.jpa.EntityManagers.*
 
 import java.nio.file.Files as JFiles
-import org.mbari.oni.etc.jpa.EntityManagers.*
 
 object Scripts:
 

@@ -8,13 +8,11 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.etc.jdk.Strings
+import org.mbari.oni.jpa.entities.MediaEntity
 
 import java.net.{URI, URL}
 import java.util.regex.Pattern
-import org.mbari.oni.jpa.entities.MediaEntity
-
-import scala.util.Success
-import scala.util.Try
+import scala.util.{Success, Try}
 
 /**
  * @author
@@ -62,7 +60,7 @@ object Media:
         )
 
     def resolveMimeType(t: String, url: String): String =
-        val ext = url.split(Pattern.quote(".")).last.toLowerCase
+        val ext       = url.split(Pattern.quote(".")).last.toLowerCase
         val mediaType = Strings.initCap(t)
         Try(MediaType.valueOf(mediaType)) match
             case Success(MediaType.Image) => s"image/$ext"

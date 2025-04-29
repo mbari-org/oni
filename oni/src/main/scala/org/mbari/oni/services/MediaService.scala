@@ -8,15 +8,13 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.{ConceptNameNotFound, ItemNotFound}
 import org.mbari.oni.domain.{Media, MediaCreate, MediaUpdate}
-import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jdbc.FastPhylogenyService
+import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, MediaEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, MediaRepository}
+import org.mbari.oni.{ConceptNameNotFound, ItemNotFound}
 
-import java.net.URL
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 
@@ -95,7 +93,6 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                             val conceptMetadata = media.getConceptMetadata
                             conceptMetadata.removeMedia(media)
                             repo.delete(media)
-                        
             )
 
         for
@@ -103,7 +100,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             media <- txn(user.toEntity)
         yield ()
 
-    def update(id: Long, mediaUpdate: MediaUpdate, userName: String) = 
+    def update(id: Long, mediaUpdate: MediaUpdate, userName: String) =
         def txn(userEntity: UserAccountEntity): Either[Throwable, Media] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = MediaRepository(entityManager, fastPhylogenyService)
@@ -118,7 +115,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                         Media.from(media)
             )
 
-        for 
+        for
             user  <- userAccountService.verifyWriteAccess(Option(userName))
             media <- txn(user.toEntity)
         yield media

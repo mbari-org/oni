@@ -7,17 +7,14 @@
 
 package org.mbari.oni.endpoints
 
-import scala.concurrent.ExecutionContext
-import sttp.tapir.Endpoint
-import sttp.tapir.server.ServerEndpoint
-import scala.concurrent.Future
+import org.mbari.oni.domain.{ErrorMsg, HealthStatus}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
-import org.mbari.oni.domain.HealthStatus
-import org.mbari.oni.etc.circe.CirceCodecs.given
-import org.mbari.oni.domain.{ErrorMsg, HealthStatus}
-import sttp.shared.Identity
+import sttp.tapir.server.ServerEndpoint
+
+import scala.concurrent.{ExecutionContext, Future}
 
 class HealthEndpoints(using executionContext: ExecutionContext) extends Endpoints:
 

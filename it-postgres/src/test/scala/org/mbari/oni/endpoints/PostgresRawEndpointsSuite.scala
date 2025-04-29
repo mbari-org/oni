@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
-package org.mbari.oni.jpa
+package org.mbari.oni.endpoints
 
-trait DatabaseFunSuite extends munit.FunSuite with EntityManagerFactoryProvider {}
+import org.mbari.oni.PostgresMixin
+import org.mbari.oni.domain.RawConcept
+
+class PostgresRawEndpointsSuite extends RawEndpointsSuite with PostgresMixin {
+}

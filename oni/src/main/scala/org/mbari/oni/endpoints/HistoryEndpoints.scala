@@ -8,22 +8,20 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.AccessDenied
 import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedHistory, Page, ServerError, Unauthorized}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.services.{HistoryActionService, HistoryService}
-import sttp.tapir.*
-import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.shared.Identity
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
-    jwtService: JwtService, executionContext: ExecutionContext
+    jwtService: JwtService,
+    executionContext: ExecutionContext
 ) extends Endpoints:
 
     private val service              = HistoryService(entityManagerFactory)
@@ -59,11 +57,11 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val pendingEndpointImpl: ServerEndpoint[Any, Future] = pendingEndpoint.serverLogic { paging =>
         Future {
-            val limit = paging.limit.getOrElse(defaultLimit)
-            val offset = paging.offset.getOrElse(0)
+            val limit   = paging.limit.getOrElse(defaultLimit)
+            val offset  = paging.offset.getOrElse(0)
             val attempt =
                 for pending <- service.findAllPending(limit, offset)
-                    yield Page(pending, limit, offset)
+                yield Page(pending, limit, offset)
             handleErrors(attempt)
         }
     }
@@ -95,11 +93,11 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val approvedEndpointsImpl: ServerEndpoint[Any, Future] = approvedEndpoints.serverLogic { paging =>
         Future {
-            val limit = paging.limit.getOrElse(defaultLimit)
-            val offset = paging.offset.getOrElse(0)
+            val limit   = paging.limit.getOrElse(defaultLimit)
+            val offset  = paging.offset.getOrElse(0)
             val attempt =
                 for approved <- service.findAllApproved()
-                    yield Page(approved, limit, offset)
+                yield Page(approved, limit, offset)
             handleErrors(attempt)
         }
     }

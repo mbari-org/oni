@@ -7,28 +7,24 @@
 
 package org.mbari.oni.endpoints
 
-import sttp.tapir.json.circe.TapirJsonCirce
 import io.circe.Printer
+import org.mbari.oni.domain.*
 import org.mbari.oni.etc.circe.CirceCodecs
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import org.mbari.oni.domain.*
+import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.{AppConfig, ConceptNotFoundException}
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
-import sttp.tapir.*
-import sttp.tapir.Endpoint
+import sttp.shared.Identity
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.shared.Identity
-import org.mbari.oni.etc.jdk.Loggers.given
+import sttp.tapir.{Endpoint, *}
 
-import scala.concurrent.{ExecutionContext, Future}
-import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.{AppConfig, ConceptNameNotFound, ConceptNotFoundException}
-
-import java.net.URI
+import java.net.{URI, URL}
 import java.time.Instant
-import java.net.URL
+import scala.concurrent.{ExecutionContext, Future}
 
 case class Paging(offset: Option[Int] = Some(0), limit: Option[Int] = Some(100))
 
@@ -42,40 +38,42 @@ trait Endpoints:
     val log: System.Logger = System.getLogger(getClass.getName)
 
     // --- Schemas
-    implicit lazy val sCount: Schema[Count]                                       = Schema.derived[Count]
-    implicit lazy val sExtendedHistory: Schema[ExtendedHistory]                   = Schema.derived[ExtendedHistory]
-    implicit lazy val sExtendedLink: Schema[ExtendedLink]                         = Schema.derived[ExtendedLink]
-    implicit lazy val sLink: Schema[Link]                                         = Schema.derived[Link]
-    implicit lazy val sURI: Schema[URI]                                           = Schema.string
-    implicit lazy val sURL: Schema[URL]                                           = Schema.string
-    implicit lazy val sInstant: Schema[Instant]                                   = Schema.string
-    implicit lazy val sDoi: Schema[ReferenceQuery]                                = Schema.derived[ReferenceQuery]
-    implicit lazy val sLinkCreate: Schema[LinkCreate]                             = Schema.derived[LinkCreate]
-    implicit lazy val sRenameToConceptRequest: Schema[LinkRenameToConceptRequest] = Schema.derived[LinkRenameToConceptRequest]
-    implicit lazy val sRenameToConceptResponse: Schema[LinkRenameToConceptResponse] = Schema.derived[LinkRenameToConceptResponse]
-    implicit lazy val sLinkUpdate: Schema[LinkUpdate]                             = Schema.derived[LinkUpdate]
-    implicit lazy val sMedia: Schema[Media]                                       = Schema.derived[Media]
-    implicit lazy val sMediaCreate: Schema[MediaCreate]                           = Schema.derived[MediaCreate]
-    implicit lazy val sMediaUpdate: Schema[MediaUpdate]                           = Schema.derived[MediaUpdate]
-    implicit lazy val sPaging: Schema[Paging]                                     = Schema.derived[Paging]
-    implicit lazy val sPrefNode: Schema[PrefNode]                                 = Schema.derived[PrefNode]
-    implicit lazy val sPrefNodeUpdate: Schema[PrefNodeUpdate]                     = Schema.derived[PrefNodeUpdate]
-    implicit lazy val sReference: Schema[Reference]                               = Schema.derived[Reference]
-    implicit lazy val sReferenceUpdate: Schema[ReferenceUpdate]                   = Schema.derived[ReferenceUpdate]
-    implicit lazy val sConceptCreate: Schema[ConceptCreate]                       = Schema.derived[ConceptCreate]
-    implicit lazy val sConceptDelete: Schema[ConceptDelete]                       = Schema.derived[ConceptDelete]
-    implicit lazy val sConceptNameCreate: Schema[ConceptNameCreate]               = Schema.derived[ConceptNameCreate]
-    implicit lazy val sConceptNameUpdate: Schema[ConceptNameUpdate]               = Schema.derived[ConceptNameUpdate]
-    implicit lazy val sConceptUpdate: Schema[ConceptUpdate]                       = Schema.derived[ConceptUpdate]
-    implicit lazy val sConceptMetadata: Schema[ConceptMetadata]                   = Schema.derived[ConceptMetadata]
-    implicit lazy val sConceptName: Schema[RawConceptName]                        = Schema.derived[RawConceptName]
-    implicit lazy val sPageSeqExtendedHistory: Schema[Page[Seq[ExtendedHistory]]] =
+    implicit lazy val sCount: Schema[Count]                                         = Schema.derived[Count]
+    implicit lazy val sExtendedHistory: Schema[ExtendedHistory]                     = Schema.derived[ExtendedHistory]
+    implicit lazy val sExtendedLink: Schema[ExtendedLink]                           = Schema.derived[ExtendedLink]
+    implicit lazy val sLink: Schema[Link]                                           = Schema.derived[Link]
+    implicit lazy val sURI: Schema[URI]                                             = Schema.string
+    implicit lazy val sURL: Schema[URL]                                             = Schema.string
+    implicit lazy val sInstant: Schema[Instant]                                     = Schema.string
+    implicit lazy val sDoi: Schema[ReferenceQuery]                                  = Schema.derived[ReferenceQuery]
+    implicit lazy val sLinkCreate: Schema[LinkCreate]                               = Schema.derived[LinkCreate]
+    implicit lazy val sRenameToConceptRequest: Schema[LinkRenameToConceptRequest]   =
+        Schema.derived[LinkRenameToConceptRequest]
+    implicit lazy val sRenameToConceptResponse: Schema[LinkRenameToConceptResponse] =
+        Schema.derived[LinkRenameToConceptResponse]
+    implicit lazy val sLinkUpdate: Schema[LinkUpdate]                               = Schema.derived[LinkUpdate]
+    implicit lazy val sMedia: Schema[Media]                                         = Schema.derived[Media]
+    implicit lazy val sMediaCreate: Schema[MediaCreate]                             = Schema.derived[MediaCreate]
+    implicit lazy val sMediaUpdate: Schema[MediaUpdate]                             = Schema.derived[MediaUpdate]
+    implicit lazy val sPaging: Schema[Paging]                                       = Schema.derived[Paging]
+    implicit lazy val sPrefNode: Schema[PrefNode]                                   = Schema.derived[PrefNode]
+    implicit lazy val sPrefNodeUpdate: Schema[PrefNodeUpdate]                       = Schema.derived[PrefNodeUpdate]
+    implicit lazy val sReference: Schema[Reference]                                 = Schema.derived[Reference]
+    implicit lazy val sReferenceUpdate: Schema[ReferenceUpdate]                     = Schema.derived[ReferenceUpdate]
+    implicit lazy val sConceptCreate: Schema[ConceptCreate]                         = Schema.derived[ConceptCreate]
+    implicit lazy val sConceptDelete: Schema[ConceptDelete]                         = Schema.derived[ConceptDelete]
+    implicit lazy val sConceptNameCreate: Schema[ConceptNameCreate]                 = Schema.derived[ConceptNameCreate]
+    implicit lazy val sConceptNameUpdate: Schema[ConceptNameUpdate]                 = Schema.derived[ConceptNameUpdate]
+    implicit lazy val sConceptUpdate: Schema[ConceptUpdate]                         = Schema.derived[ConceptUpdate]
+    implicit lazy val sConceptMetadata: Schema[ConceptMetadata]                     = Schema.derived[ConceptMetadata]
+    implicit lazy val sConceptName: Schema[RawConceptName]                          = Schema.derived[RawConceptName]
+    implicit lazy val sPageSeqExtendedHistory: Schema[Page[Seq[ExtendedHistory]]]   =
         Schema.derived[Page[Seq[ExtendedHistory]]]
-    implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]                   = Schema.derived[Page[Seq[String]]]
-    implicit lazy val sRank: Schema[Rank]                                         = Schema.derived[Rank]
-    implicit lazy val sUserAccount: Schema[UserAccount]                           = Schema.derived[UserAccount]
-    implicit lazy val sUserAccountCreate: Schema[UserAccountCreate]               = Schema.derived[UserAccountCreate]
-    implicit lazy val sUserAccountUpdate: Schema[UserAccountUpdate]               = Schema.derived[UserAccountUpdate]
+    implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]                     = Schema.derived[Page[Seq[String]]]
+    implicit lazy val sRank: Schema[Rank]                                           = Schema.derived[Rank]
+    implicit lazy val sUserAccount: Schema[UserAccount]                             = Schema.derived[UserAccount]
+    implicit lazy val sUserAccountCreate: Schema[UserAccountCreate]                 = Schema.derived[UserAccountCreate]
+    implicit lazy val sUserAccountUpdate: Schema[UserAccountUpdate]                 = Schema.derived[UserAccountUpdate]
 
     // Make Tapir recursive types happy by using `implicit def`, not lazy val
     // https://tapir.softwaremill.com/en/latest/endpoint/schemas.html#derivation-for-recursive-types-in-scala3
@@ -117,9 +115,9 @@ trait Endpoints:
 
     def handleErrors[T](f: => Either[Throwable, T]): Either[ErrorMsg, T] =
         f match
-            case Right(concept) => Right(concept)
+            case Right(concept)                    => Right(concept)
             case Left(c: ConceptNotFoundException) => Left(NotFound(c.getMessage))
-            case Left(e) =>
+            case Left(e)                           =>
                 log.atError.withCause(e).log("Error")
                 Left(ServerError(e.getMessage))
 
@@ -130,7 +128,7 @@ trait Endpoints:
 //            ,
 //            Right(_)
 //        )
-        
+
     def handleErrorsAsync[T](f: => Either[Throwable, T])(using ec: ExecutionContext): Future[Either[ErrorMsg, T]] =
         Future(handleErrors(f))
 
@@ -165,7 +163,7 @@ trait Endpoints:
                 jwtService.decode(jwt) match
                     case None              => Left(Unauthorized("Invalid token"))
                     case Some(userAccount) => Right(userAccount)
-                    
+
     def verifyLoginAsync(
         jwtOpt: Option[String]
     )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, UserAccount]] =

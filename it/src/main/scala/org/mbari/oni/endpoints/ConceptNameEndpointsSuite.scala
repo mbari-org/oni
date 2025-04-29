@@ -17,13 +17,11 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, Page, RawConcept}
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-
-import scala.concurrent.ExecutionContext
 
 trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
 
@@ -43,6 +41,22 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
                 assertEquals(response.code, StatusCode.Ok)
                 val conceptNames = checkResponse[Page[Seq[String]]](response.body).content.sorted
                 assertEquals(conceptNames, expected)
+        )
+    }
+
+    test("findConceptName") {
+        val root    = init(3, 3)
+        assert(root != null)
+        val rawRoot = RawConcept.from(root)
+        val name    = rawRoot.primaryName
+        runGet(
+            endpoints.findConceptNameEndpointImpl,
+            s"http://test.com/v1/names/$name",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val rawConcept = checkResponse[RawConcept](response.body)
+                val obtained   = rawConcept.names.map(_.name).toSeq
+                assert(obtained.contains(name))
         )
     }
 

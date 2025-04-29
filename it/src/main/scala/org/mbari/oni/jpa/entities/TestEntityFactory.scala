@@ -18,13 +18,12 @@ package org.mbari.oni.jpa.entities
 
 import org.mbari.oni.domain.{ConceptNameTypes, MediaTypes, UserAccountRoles}
 import org.mbari.oni.etc.jdk.Strings
-import sun.security.util.Password
+import org.mbari.oni.services.RankValidator
 
 import java.net.URI
 import java.time.Instant
 import java.util.Date
 import java.util.concurrent.atomic.AtomicLong
-import org.mbari.oni.services.RankValidator
 
 object TestEntityFactory:
 
@@ -62,6 +61,9 @@ object TestEntityFactory:
     def buildNode(maxBreadth: Int): ConceptEntity =
         val entity   = createConcept()
         val metadata = entity.getConceptMetadata
+        if random.nextBoolean() then
+            val aphiaid = random.nextLong(Int.MaxValue)
+            entity.setAphiaId(aphiaid)
 
         if maxBreadth > 0 then
 
@@ -195,7 +197,6 @@ object TestEntityFactory:
 //        entity.setCitation(s"B. M. Schlining. 1968. $s")
         entity.setCitation(s)
         entity
-
 
     def randomRankLevelAndName(): (Option[String], Option[String]) =
         val idx = random.nextInt(RankValidator.ValidRanks.size)

@@ -7,8 +7,7 @@
 
 package org.mbari.oni.etc.xml
 
-import org.w3c.dom.NodeList
-import org.w3c.dom.Node
+import org.w3c.dom.{Node, NodeList}
 
 given Conversion[NodeList, List[Node]] with
     def apply(nodeList: NodeList): List[Node] =

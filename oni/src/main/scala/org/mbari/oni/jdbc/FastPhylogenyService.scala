@@ -10,16 +10,11 @@ package org.mbari.oni.jdbc
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{Concept, SimpleConcept}
 import org.mbari.oni.etc.jdk.Loggers
+import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.EntityManagerFactories.*
 
-import java.sql.{ResultSet, Timestamp}
+import java.sql.Timestamp
 import java.time.Instant
-import scala.collection.mutable
-import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try, Using}
-import scala.util.control.NonFatal
-import org.mbari.oni.etc.jdk.Loggers.{*, given}
-
 import java.util.concurrent.locks.ReentrantLock
 import scala.collection.immutable.ArraySeq
 
@@ -86,12 +81,11 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
                 val r = MutableConcept.toTree(cache)
                 rootNode = r._1
                 allNodes = r._2
-            finally
-                lock.unlock()
+            finally lock.unlock()
 
     def findLastUpdate(): Instant =
         val attempt = entityManagerFactory.transaction(entityManager =>
-            val query = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
+            val query      = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
             val lastUpdate = query.getSingleResult.asInstanceOf[Timestamp]
             if lastUpdate == null then
                 log.atWarn
@@ -102,7 +96,7 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
             else lastUpdate.toInstant
         )
         attempt match
-            case Right(result)    => result
+            case Right(result)   => result
             case Left(exception) =>
                 log.atError.withCause(exception).log("Failed to execute last update query")
                 Instant.now()
@@ -114,8 +108,7 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
         )
         attempt match
             case Right(results) =>
-                for
-                    result <- ArraySeq.unsafeWrapArray(results.toArray)
+                for result <- ArraySeq.unsafeWrapArray(results.toArray)
                 yield
                     val row                  = result.asInstanceOf[Array[Object]]
                     val id                   = row(0).asLong.getOrElse(-1L)
@@ -126,7 +119,16 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
                     val nameType             = row(5).asString.orNull
                     val conceptTimestamp     = row(6).asInstant.getOrElse(Instant.now())
                     val conceptNameTimestamp = row(7).asInstant.getOrElse(Instant.now())
-                    ConceptRow(id, parentId, name, rankLevel, rankName, nameType, conceptTimestamp, conceptNameTimestamp)
+                    ConceptRow(
+                        id,
+                        parentId,
+                        name,
+                        rankLevel,
+                        rankName,
+                        nameType,
+                        conceptTimestamp,
+                        conceptNameTimestamp
+                    )
 
             case Left(exception) =>
                 log.atError.withCause(exception).log("Failed to execute query")

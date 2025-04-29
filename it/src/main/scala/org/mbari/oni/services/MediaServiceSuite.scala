@@ -17,20 +17,19 @@
 package org.mbari.oni.services
 
 import org.mbari.oni.domain.{Media, MediaCreate, MediaTypes, MediaUpdate}
+import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import org.mbari.oni.etc.jdk.Strings
 
 import java.net.URI
 
 trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
 
     lazy val fastPhylogenyService = FastPhylogenyService(entityManagerFactory)
-    lazy val mediaService = MediaService(entityManagerFactory, fastPhylogenyService)
+    lazy val mediaService         = MediaService(entityManagerFactory, fastPhylogenyService)
 
     test("create") {
-        val root = init(2, 0)
+        val root        = init(2, 0)
         assert(root != null)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
@@ -40,10 +39,10 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
             mediaType = Some(MediaTypes.IMAGE.name),
             isPrimary = Some(true)
         )
-        val attempt = runWithUserAuth(user =>  mediaService.create(mediaCreate, user.username))
+        val attempt     = runWithUserAuth(user => mediaService.create(mediaCreate, user.username))
 
         attempt match
-            case Left(e) => fail(e.getMessage)
+            case Left(e)      => fail(e.getMessage)
             case Right(media) =>
                 assert(media.id.isDefined)
                 assertEquals(mediaCreate.conceptName, media.conceptName.getOrElse(""))
@@ -57,7 +56,7 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("update") {
-        val root = init(2, 0)
+        val root        = init(2, 0)
         assert(root != null)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
@@ -83,7 +82,7 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
         )
 
         attempt match
-            case Left(e) => fail(e.getMessage)
+            case Left(e)      => fail(e.getMessage)
             case Right(media) =>
                 assertEquals(mediaUpdate.url.orNull, media.url)
                 assertEquals(mediaUpdate.caption, media.caption)
@@ -94,7 +93,7 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("delete") {
-        val root = init(2, 0)
+        val root        = init(2, 0)
         assert(root != null)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
@@ -104,22 +103,22 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
             mediaType = Some(MediaTypes.IMAGE.name),
             isPrimary = Some(true)
         )
-        val attempt = runWithUserAuth(user =>  mediaService.create(mediaCreate, user.username))
+        val attempt     = runWithUserAuth(user => mediaService.create(mediaCreate, user.username))
 
         attempt match
-            case Left(e) => fail(e.getMessage)
+            case Left(e)      => fail(e.getMessage)
             case Right(media) =>
                 val attempt = runWithUserAuth(user => mediaService.deleteById(media.id.getOrElse(0L), user.username))
                 attempt match
-                    case Left(e) => fail(e.getMessage)
+                    case Left(e)  => fail(e.getMessage)
                     case Right(_) =>
                         mediaService.findById(media.id.getOrElse(0L)) match
-                            case Left(e) => fail(e.getMessage)
+                            case Left(e)    => fail(e.getMessage)
                             case Right(opt) => assert(opt.isEmpty)
     }
 
     test("findById") {
-        val root = init(2, 0)
+        val root        = init(2, 0)
         assert(root != null)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
@@ -129,14 +128,14 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
             mediaType = Some(MediaTypes.IMAGE.name),
             isPrimary = Some(true)
         )
-        val attempt0 = runWithUserAuth(user =>  mediaService.create(mediaCreate, user.username))
+        val attempt0    = runWithUserAuth(user => mediaService.create(mediaCreate, user.username))
 
         attempt0 match
-            case Left(e) => fail(e.getMessage)
+            case Left(e)      => fail(e.getMessage)
             case Right(media) =>
                 val attempt1 = runWithUserAuth(user => mediaService.findById(media.id.getOrElse(0L)))
                 attempt1 match
-                    case Left(e) => fail(e.getMessage)
+                    case Left(e)    => fail(e.getMessage)
                     case Right(opt) =>
                         assert(opt.isDefined)
                         val m = opt.get

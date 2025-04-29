@@ -7,6 +7,5 @@
 
 package org.mbari.oni.domain
 
-trait ToCamelCase[A] {
+trait ToCamelCase[A]:
     def toCamelCase: A
-}

@@ -14,7 +14,8 @@ import scala.jdk.CollectionConverters.*
 case class RawConceptMetadata(
     linkRealizations: Option[Seq[RawLink]] = None,
     linkTemplates: Option[Seq[RawLink]] = None,
-    medias: Option[Seq[RawMedia]] = None
+    media: Option[Seq[RawMedia]] = None,
+    id: Option[Long] = None
 ):
 
     def toEntity: ConceptMetadataEntity =
@@ -26,7 +27,7 @@ case class RawConceptMetadata(
         val lts = linkTemplates.map(_.map(_.toLinkTemplateEntity)).getOrElse(Seq.empty)
         lts.foreach(entity.addLinkTemplate)
 
-        val ms = medias.map(_.map(_.toEntity)).getOrElse(Seq.empty)
+        val ms = media.map(_.map(_.toEntity)).getOrElse(Seq.empty)
 
         ms.foreach(entity.addMedia)
 
@@ -51,12 +52,13 @@ object RawConceptMetadata:
                     .toSeq
                     .sortBy(_.toString)
             ), // HACK
-            medias = Some(
+            media = Some(
                 entity
                     .getMedias
                     .asScala
                     .map(RawMedia.from)
                     .toSeq
                     .sortBy(_.url.toExternalForm)
-            )
+            ),
+            id = Some(entity.getId)
         )

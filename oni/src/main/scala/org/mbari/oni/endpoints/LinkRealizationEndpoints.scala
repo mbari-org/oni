@@ -9,19 +9,19 @@ package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link, LinkCreate, LinkUpdate, ServerError}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.LinkRealizationService
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
-import sttp.shared.Identity
-import sttp.tapir.*
-import sttp.tapir.Endpoint
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
+import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using jwtService: JwtService, executionContext: ExecutionContext)
-    extends Endpoints:
+class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
+    jwtService: JwtService,
+    executionContext: ExecutionContext
+) extends Endpoints:
 
     private val service = LinkRealizationService(entityManagerFactory)
     private val base    = "linkrealizations"
