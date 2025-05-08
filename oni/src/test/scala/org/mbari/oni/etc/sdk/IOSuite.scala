@@ -17,7 +17,7 @@ class IOSuite extends munit.FunSuite:
     val io: IO[Int, String] = i => Right(i.toString())
 
     test("unit") {
-        val a = io.unit
+        val a = IO.unit
         val result = a(1)
         assertEquals(result, Right(()))
     }

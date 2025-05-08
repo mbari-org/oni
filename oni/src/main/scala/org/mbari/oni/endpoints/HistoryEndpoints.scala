@@ -96,7 +96,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
             val limit   = paging.limit.getOrElse(defaultLimit)
             val offset  = paging.offset.getOrElse(0)
             val attempt =
-                for approved <- service.findAllApproved()
+                for approved <- service.findAllApproved(limit, offset)
                 yield Page(approved, limit, offset)
             handleErrors(attempt)
         }

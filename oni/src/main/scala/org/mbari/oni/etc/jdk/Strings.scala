@@ -7,16 +7,21 @@
 
 package org.mbari.oni.etc.jdk
 
+import scala.annotation.tailrec
 import scala.util.Random
 
 object Strings:
 
     private val chars  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    private val random = new Random
+    private val randomGenerator = new Random
 
     def random(length: Int): String =
-        val xs = for (_ <- 0 until length) yield chars.charAt(random.nextInt(chars.length))
+        val xs = for (_ <- 0 until length) yield chars.charAt(randomGenerator.nextInt(chars.length))
         new String(xs.toArray)
+
+    def random(origin: Int, bound: Int): String =
+        val n = randomGenerator.between(origin, bound)
+        random(n)
 
     /**
      * Change case of a string to init Cap. That is the first letter is capitalized and the rest are lower case.

@@ -31,7 +31,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             repo.countPendingHistories()
         )
 
-    def findAllPending(limit: Int, offset: Int): Either[Throwable, Seq[ExtendedHistory]] =
+    def findAllPending(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedHistory]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = HistoryRepository(entityManager)
             repo.findPendingHistories(limit, offset)
@@ -43,10 +43,10 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 .sortBy(_.creationTimestamp)
         )
 
-    def findAllApproved(): Either[Throwable, Seq[ExtendedHistory]] =
+    def findAllApproved(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedHistory]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = HistoryRepository(entityManager)
-            repo.findApprovedHistories()
+            repo.findApprovedHistories(limit, offset)
                 .asScala
                 .toSeq
                 .map(h =>
