@@ -8,31 +8,79 @@
 package org.mbari.oni.etc.sdk
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.{Failure, Success, Try}
 
 /**
- * Brain-dead implementation of an IO monad. This is just a simple way to represent a function that can fail. It's not a
- * real IO monad, but it's good enough for my purposes.
- *
- * This doesn't model asyncrhonous operations, we're going to use sync operations with virual threads instead.
+ * A simplified IO monad, representing a function that can fail. Designed for simplicity, not full IO monad features.
+ * Uses synchronous operations, intended for use with virtual threads.
  */
 type IO[A, B]      = A => Either[Throwable, B]
 type AsyncIO[A, B] = A => Future[B]
 
 object IO:
+
+    /**
+     * Creates an IO that always succeeds with Unit.
+     */
+    def unit[A]: IO[A, Unit] = _ => Right(())
+
+    /**
+     * Creates an IO that always succeeds with the given value.
+     */
+    def pure[B](b: B): IO[Any, B] = _ => Right(b)
+
     extension [A, B](io: IO[A, B])
 
-        def unit: IO[A, Unit] = a => Right(())
+        /**
+         * Chains this IO with another, executing the second only if the first succeeds.
+         */
+        def flatMap[C](f: IO[B, C]): IO[A, C] = a =>
+            io(a) match
+                case Right(b) => f(b)
+                case Left(e)  => Left(e)
 
-        def flatMap[C](f: IO[B, C]): IO[A, C] = a => io(a).flatMap(b => f(b))
-
+        /**
+         * Transforms the successful result of this IO.
+         */
         def map[C](f: B => C): IO[A, C] = a => io(a).map(f)
 
+        /**
+         * Performs a side effect with the successful result of this IO.
+         */
         def foreach(f: B => Unit): IO[A, Unit] = a =>
-            for b <- io(a)
-            yield f(b)
+            io(a) match
+                case Right(b) =>
+                    f(b)
+                    Right(()) // Ensure we return a Right(())
+                case Left(e)  => Left(e)
 
+        /**
+         * Converts this IO to an AsyncIO (a function returning a Future).
+         */
         def async(using executionContext: ExecutionContext): AsyncIO[A, B] = a =>
-            Future(io(a)).map {
-                case Right(b) => b
-                case Left(e)  => throw e
+            Future { // Use Future { ... } for more concise async
+                io(a) match
+                    case Right(b) => b
+                    case Left(e)  => throw e // Use throw e to reject the Future
             }
+
+        /**
+         * Runs the IO, producing the Either result.
+         */
+        def run(a: A): Either[Throwable, B] = io(a)
+
+        /**
+         * Handles the errors, and returns an IO
+         */
+        def handleError(handler: Throwable => B): IO[A, B] = a =>
+            io(a) match
+                case Left(e) => Right(handler(e))
+                case r       => r
+
+        /**
+         * Handles the errors, and returns an IO
+         */
+        def handleErrorWith(handler: Throwable => IO[A, B]): IO[A, B] = a =>
+            io(a) match
+                case Left(e) => handler(e)(a)
+                case r       => r
