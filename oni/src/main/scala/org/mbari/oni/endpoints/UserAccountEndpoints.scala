@@ -120,7 +120,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val updateEndpoint: Endpoint[Option[String], (String, UserAccountUpdate), ErrorMsg, UserAccount, Any] =
         secureEndpoint
             .put
-            .in(base / path[String]("username"))
+            .in(base / path[String]("name"))
             .in(jsonBody[UserAccountUpdate])
             .out(jsonBody[UserAccount])
             .name("updateUserAccount")
@@ -129,8 +129,8 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
         .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
-        .serverLogic { _ => (username, userAccountUpdate) =>
-            handleErrorsAsync(service.update(username, userAccountUpdate))
+        .serverLogic { _ => (name, userAccountUpdate) =>
+            handleErrorsAsync(service.update(name, userAccountUpdate))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

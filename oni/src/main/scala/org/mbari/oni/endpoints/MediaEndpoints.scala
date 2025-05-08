@@ -32,7 +32,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
 
     val mediaForConceptEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[Media], Any] = openEndpoint
         .get
-        .in(base / path[String]("name"))
+        .in(base / "search" / "concept" / path[String]("name"))
         .out(jsonBody[Seq[Media]])
         .name("mediaForConcept")
         .description("Get all media for a concept")
@@ -63,7 +63,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
 
     val findMediaByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Media, Any] = openEndpoint
         .get
-        .in(base / "id" / path[Long]("id"))
+        .in(base / path[Long]("id"))
         .out(jsonBody[Media])
         .name("findMediaById")
         .description("Find a media record by ID")
