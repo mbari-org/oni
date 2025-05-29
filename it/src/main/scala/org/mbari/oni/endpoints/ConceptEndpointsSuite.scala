@@ -205,7 +205,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 val expectedRank          = if rankLevel.isEmpty && rankName.isEmpty then None
                     else Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
 
-                println(expectedRank)
+                // println(expectedRank)
                 val conceptUpdate         = ConceptUpdate(
                     Some(root.getPrimaryConceptName.getName),
                     rankLevel = rankLevel.orElse(Some("")),
@@ -219,7 +219,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                     conceptUpdate.stringify,
                     response =>
                         assertEquals(response.code, StatusCode.Ok)
-                        println(response.body)
+                        // println(response.body)
                         val concept = checkResponse[ConceptMetadata](response.body)
                         assertEquals(concept.name, grandChild.getPrimaryConceptName.getName)
                         assertEquals(concept.rank, expectedRank)
