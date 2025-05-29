@@ -13,10 +13,11 @@ import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.EntityManagerFactories.*
 
-import java.sql.Timestamp
+
 import java.time.Instant
 import java.util.concurrent.locks.ReentrantLock
 import scala.collection.immutable.ArraySeq
+import org.mbari.oni.etc.jdk.JdbcTypes
 
 /**
  * @author
@@ -86,14 +87,16 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
     def findLastUpdate(): Instant =
         val attempt = entityManagerFactory.transaction(entityManager =>
             val query      = entityManager.createNativeQuery(FastPhylogenyDAO.LAST_UPDATE_SQL)
-            val lastUpdate = query.getSingleResult.asInstanceOf[Timestamp]
-            if lastUpdate == null then
-                log.atWarn
-                    .log(
-                        "No timestamps found in the database! This indicates a serious database issue. Falling back to the current timestamp."
-                    )
-                Instant.now()
-            else lastUpdate.toInstant
+            JdbcTypes.instantConverter(query.getSingleResult()) match
+                case Some(instant) => instant
+                case None =>
+                    log.atWarn
+                        .log(
+                            "Unexpected type for last update timestamp. Expected Instant, got: " + query.getSingleResult.getClass.getName
+                        )
+                    Instant.now()
+
+                
         )
         attempt match
             case Right(result)   => result

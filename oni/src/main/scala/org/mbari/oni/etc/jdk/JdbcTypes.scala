@@ -11,6 +11,7 @@ import java.net.{URI, URL}
 import java.time.Instant
 import java.util.UUID
 import scala.util.Try
+import java.time.ZoneOffset
 
 object JdbcTypes:
 
@@ -31,9 +32,11 @@ object JdbcTypes:
     def instantConverter(obj: Object): Option[Instant] =
         obj match
             case null                            => None
-            case i: Instant                      => Some(i)
-            case ts: java.sql.Timestamp          => Some(ts.toInstant)
+            case i: java.time.Instant            => Some(i)
+            case l: java.time.LocalDateTime      => Some(l.toInstant(ZoneOffset.UTC))
             case m: microsoft.sql.DateTimeOffset => Some(m.getOffsetDateTime().toInstant())
+            case o: java.time.OffsetDateTime     => Some(o.toInstant)
+            case ts: java.sql.Timestamp          => Some(ts.toInstant)
             case _                               => None // TODO handle postgres
 
     def uuidConverter(obj: Object): Option[UUID] =
