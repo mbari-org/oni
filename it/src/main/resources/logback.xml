@@ -28,6 +28,8 @@
 <!--   <logger name="org.hibernate.orm.jdbc.bind" level="trace" />-->
   <!-- <logger name="org.hibernate.stat" level="debug" /> -->
   <logger name="org.hibernate.SQL_SLOW" level="INFO" />
+  <logger name="org.mbari.oni.etc.jpa.EntityManagers$" level="OFF" />
+  <logger name="org.mbari.oni.services.ConceptCache" level="OFF" />
   <!-- <logger name="org.hibernate.cache" level="debug" /> -->
    <!-- <logger name="org.mbari.oni.jpa.repositories" level="DEBUG" /> -->
 

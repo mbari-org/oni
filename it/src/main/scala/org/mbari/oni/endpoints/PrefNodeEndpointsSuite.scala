@@ -99,7 +99,7 @@ trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with Us
         )
 
         attempt match
-            case Right(_)    => println("Success")
+            case Right(_)    => () // println("Success")
             case Left(error) => fail(error.toString)
     }
 

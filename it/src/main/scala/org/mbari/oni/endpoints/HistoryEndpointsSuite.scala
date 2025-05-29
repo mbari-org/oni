@@ -95,7 +95,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val count = checkResponse[Count](response.body)
-                println(count.stringify)
+//                println(count.stringify)
         )
     }
 

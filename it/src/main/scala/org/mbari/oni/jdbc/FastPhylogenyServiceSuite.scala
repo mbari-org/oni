@@ -68,7 +68,7 @@ trait FastPhylogenyServiceSuite extends DataInitializer:
         val candidate = root.getChildConcepts.iterator().next()
         val siblings  = fastPhylogenyService.findSiblings(candidate.getPrimaryConceptName.getName)
         assertEquals(siblings.size, nSiblings)
-        println(siblings.stringify)
+//        println(siblings.stringify)
     }
 
     test("findDescendantNames") {

@@ -44,7 +44,7 @@ trait LinkEndpointsSuite extends EndpointsSuite with DataInitializer with UserAu
             endpoints.allLinksEndpointImpl,
             "http://test.com/v1/links",
             response =>
-                println(response.body)
+//                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[Link]](response.body)
                     .map(_.copy(id = None)) // The expected dont' have the ids but the obtained do
@@ -100,13 +100,13 @@ trait LinkEndpointsSuite extends EndpointsSuite with DataInitializer with UserAu
             .sortBy(_.linkName)
         val expected = links.head
         val linkName = expected.linkName
-        println(s"http://test.com/v1/links/query/linkrealizations/$linkName")
-        println(expected.stringify)
+//        println(s"http://test.com/v1/links/query/linkrealizations/$linkName")
+//        println(expected.stringify)
         runGet(
             endpoints.linkRealizationsEndpointImpl,
             s"http://test.com/v1/links/query/linkrealizations/$linkName",
             response =>
-                println(response.body)
+//                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
                     .sortBy(_.linkName)

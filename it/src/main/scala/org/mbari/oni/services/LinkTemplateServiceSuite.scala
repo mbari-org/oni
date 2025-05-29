@@ -171,7 +171,7 @@ trait LinkTemplateServiceSuite extends DataInitializer with UserAuthMixin:
             val attempt = runWithUserAuth(user => linkTemplateService.deleteById(id, user.username))
             attempt match
                 case Right(_)    =>
-                    println(s"Deleted LinkTemplate with id $id")
+//                    println(s"Deleted LinkTemplate with id $id")
                     linkTemplateService.findById(id) match
                         case Right(_)    => fail(s"LinkTemplate with id $id was not deleted")
                         case Left(error) => // Expected

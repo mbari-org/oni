@@ -110,7 +110,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
         attempt match
             case Right(rawConcept) =>
-                println(rawConcept.stringify)
+//                println(rawConcept.stringify)
                 val obtained       = rawConcept.names.map(_.name).toSeq
                 assert(!obtained.contains(name))
                 assert(obtained.contains(dto.newName.getOrElse("")))
@@ -157,7 +157,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
         attempt match
             case Right(rawConcept) =>
-                println(rawConcept.stringify)
+//                println(rawConcept.stringify)
                 fail("Should have thrown an exception")
             case Left(error)       => ()
     }

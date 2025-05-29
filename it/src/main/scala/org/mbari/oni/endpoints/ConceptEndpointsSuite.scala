@@ -190,7 +190,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
 
         attempt match
-            case Right(_)    => println("Success")
+            case Right(_)    => () //println("Success")
             case Left(error) => fail(error.toString)
 
     }
@@ -227,7 +227,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
 
         attempt match
-            case Right(_)    => println("Success")
+            case Right(_)    => () //println("Success")
             case Left(error) => fail(error.toString)
 
     }
@@ -250,7 +250,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
 
         attempt match
-            case Right(_)    => println("Success")
+            case Right(_)    => () //println("Success")
             case Left(error) => fail(error.toString)
     }
 
