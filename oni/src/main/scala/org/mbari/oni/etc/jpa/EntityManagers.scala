@@ -30,7 +30,7 @@ object EntityManagers:
                 case MissingRootConcept =>
                     log.atInfo.log("Missing root concept")
                     Left(MissingRootConcept)
-                case NonFatal(e) =>
+                case NonFatal(e)        =>
                     log.atError.withCause(e).log("Error in transaction: " + e.getCause)
                     Left(e)
             finally

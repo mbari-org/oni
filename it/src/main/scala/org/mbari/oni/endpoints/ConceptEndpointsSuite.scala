@@ -190,7 +190,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
 
         attempt match
-            case Right(_)    => () //println("Success")
+            case Right(_)    => () // println("Success")
             case Left(error) => fail(error.toString)
 
     }
@@ -202,11 +202,14 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 val root                  = init(3, 0)
                 val grandChild            = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
                 val (rankLevel, rankName) = TestEntityFactory.randomRankLevelAndName()
-                val expectedRank          = Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
+                val expectedRank          = if rankLevel.isEmpty && rankName.isEmpty then None
+                    else Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
+
+                println(expectedRank)
                 val conceptUpdate         = ConceptUpdate(
                     Some(root.getPrimaryConceptName.getName),
-                    rankLevel = rankLevel,
-                    rankName = rankName,
+                    rankLevel = rankLevel.orElse(Some("")),
+                    rankName = rankName.orElse(Some("")),
                     aphiaId = Some(543210L)
                 )
 
@@ -216,6 +219,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                     conceptUpdate.stringify,
                     response =>
                         assertEquals(response.code, StatusCode.Ok)
+                        println(response.body)
                         val concept = checkResponse[ConceptMetadata](response.body)
                         assertEquals(concept.name, grandChild.getPrimaryConceptName.getName)
                         assertEquals(concept.rank, expectedRank)
@@ -227,7 +231,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
 
         attempt match
-            case Right(_)    => () //println("Success")
+            case Right(_)    => () // println("Success")
             case Left(error) => fail(error.toString)
 
     }
@@ -250,7 +254,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
 
         attempt match
-            case Right(_)    => () //println("Success")
+            case Right(_)    => () // println("Success")
             case Left(error) => fail(error.toString)
     }
 

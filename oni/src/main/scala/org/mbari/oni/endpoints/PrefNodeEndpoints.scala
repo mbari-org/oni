@@ -73,8 +73,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
                         case Some(p) => Seq(p)
                         case None    => Nil
                     }
-            case None      => service.findByNodeName(name)
-        )
+            case None      => service.findByNodeName(name))
     }
 
     val findByPrefix: Endpoint[Unit, String, ErrorMsg, Seq[PrefNode], Any] =

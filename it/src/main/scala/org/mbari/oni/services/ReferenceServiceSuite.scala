@@ -131,7 +131,7 @@ trait ReferenceServiceSuite extends DataInitializer:
         )
 
         // This should match only one reference
-        val glob = refs.head.getCitation.split(" ")(5)
+        val glob = refs.head.getCitation.split(" ")(1)
 
         service.findByCitationGlob(glob, 10000, 0) match
             case Right(entities) =>

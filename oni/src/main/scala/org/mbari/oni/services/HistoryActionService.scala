@@ -124,6 +124,6 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory, fastPhylo
                     case HistoryEntity.FIELD_CONCEPT_PARENT    => conceptService.inTxnRejectReplaceParent
                     case HistoryEntity.FIELD_CONCEPT_RANKLEVEL =>
                         conceptService.inTxnRejectReplaceRankLevel // TODO revert
-                    case HistoryEntity.FIELD_CONCEPT_RANKNAME  =>
+                    case HistoryEntity.FIELD_CONCEPT_RANKNAME =>
                         conceptService.inTxnRejectReplaceRankName // TODO revert
-                    case _                                     => notOkHistoryAction
+                    case _ => notOkHistoryAction

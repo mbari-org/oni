@@ -12,7 +12,7 @@ import scala.util.Random
 
 object Strings:
 
-    private val chars  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    private val chars           = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
     private val randomGenerator = new Random
 
     def random(length: Int): String =

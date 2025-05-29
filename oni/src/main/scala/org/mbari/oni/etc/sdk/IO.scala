@@ -52,7 +52,7 @@ object IO:
                 case Right(b) =>
                     f(b)
                     Right(()) // Ensure we return a Right(())
-                case Left(e)  => Left(e)
+                case Left(e) => Left(e)
 
         /**
          * Converts this IO to an AsyncIO (a function returning a Future).

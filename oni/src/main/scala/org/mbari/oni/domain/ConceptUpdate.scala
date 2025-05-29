@@ -9,7 +9,7 @@ package org.mbari.oni.domain
 
 case class ConceptUpdate(
     parentName: Option[String] = None,
-    rankLevel: Option[String] = None,
-    rankName: Option[String] = None,
+    rankLevel: Option[String] = None, // Use Some("") to clear the rank level
+    rankName: Option[String] = None,  // Use Some("") to clear the rank name
     aphiaId: Option[Long] = None
 ) {}

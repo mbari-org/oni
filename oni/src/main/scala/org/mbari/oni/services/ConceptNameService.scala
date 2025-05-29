@@ -43,7 +43,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
         entityManagerFactory.transaction(entityManger =>
             val repo = new ConceptNameRepository(entityManger)
             repo.findByName(name).toScala match
-                case None => throw ConceptNameNotFound(name)
+                case None         => throw ConceptNameNotFound(name)
                 case Some(entity) =>
                     RawConcept.from(entity.getConcept(), false)
         )

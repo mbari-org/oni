@@ -191,8 +191,8 @@ object TestEntityFactory:
             )
         )
 
-        val n = random.nextInt(10) + 1
-        val m = random.nextInt(20) + 5
+        val n = random.nextInt(10) + 2
+        val m = random.nextInt(20) + 6
         val s = 0 to n map { _ => Strings.random(m) } mkString " "
 //        entity.setCitation(s"B. M. Schlining. 1968. $s")
         entity.setCitation(s)
