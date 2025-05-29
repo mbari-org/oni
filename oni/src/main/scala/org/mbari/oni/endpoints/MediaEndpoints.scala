@@ -8,6 +8,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.ItemNotFound
 import org.mbari.oni.domain.{ErrorMsg, Media, MediaCreate, MediaUpdate}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -18,7 +19,6 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
-import org.mbari.oni.ItemNotFound
 
 class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService)(using
     jwtService: JwtService,

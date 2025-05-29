@@ -9,7 +9,7 @@ package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{ErrorMsg, NotFound, UserAccount, UserAccountCreate, UserAccountUpdate}
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAccountService
 import sttp.tapir.json.circe.*

@@ -21,13 +21,11 @@ import org.mbari.oni.domain.RawConcept
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.etc.jpa.EntityManagers.*
 import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.services.ConceptService
 
 import java.io.InputStream
 import java.nio.file.{Files, Path, Paths}
-import java.util
 import java.util.Scanner
 import java.util.zip.ZipFile
 import scala.util.Using

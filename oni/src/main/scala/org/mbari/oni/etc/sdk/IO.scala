@@ -8,7 +8,6 @@
 package org.mbari.oni.etc.sdk
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success, Try}
 
 /**
  * A simplified IO monad, representing a function that can fail. Designed for simplicity, not full IO monad features.

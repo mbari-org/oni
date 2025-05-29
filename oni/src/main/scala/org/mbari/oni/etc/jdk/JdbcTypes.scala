@@ -8,10 +8,9 @@
 package org.mbari.oni.etc.jdk
 
 import java.net.{URI, URL}
-import java.time.Instant
+import java.time.{Instant, ZoneOffset}
 import java.util.UUID
 import scala.util.Try
-import java.time.ZoneOffset
 
 object JdbcTypes:
 

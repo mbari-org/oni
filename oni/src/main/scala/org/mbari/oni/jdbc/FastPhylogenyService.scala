@@ -9,14 +9,13 @@ package org.mbari.oni.jdbc
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{Concept, SimpleConcept}
-import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.etc.jdk.{JdbcTypes, Loggers}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 
 import java.time.Instant
 import java.util.concurrent.locks.ReentrantLock
 import scala.collection.immutable.ArraySeq
-import org.mbari.oni.etc.jdk.JdbcTypes
 
 /**
  * @author

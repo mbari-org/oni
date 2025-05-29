@@ -25,7 +25,6 @@ import org.mbari.oni.domain.{
     MediaCreate,
     UserAccountRoles
 }
-import org.mbari.oni.etc.circe.CirceCodecs.{given, *}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer

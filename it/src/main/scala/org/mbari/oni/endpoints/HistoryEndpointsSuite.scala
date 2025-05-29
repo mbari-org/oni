@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{Count, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService

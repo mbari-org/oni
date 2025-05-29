@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{ExtendedLink, Link}
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.{LinkService, UserAuthMixin}
 import sttp.model.StatusCode

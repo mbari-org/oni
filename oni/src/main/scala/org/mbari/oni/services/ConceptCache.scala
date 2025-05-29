@@ -16,7 +16,7 @@ package org.mbari.oni.services
 
 import com.github.benmanes.caffeine.cache.{Cache, Caffeine}
 import org.mbari.oni.domain.ConceptMetadata
-import org.mbari.oni.etc.jdk.Loggers.{*, given}
+import org.mbari.oni.etc.jdk.Loggers.given
 
 import java.util.concurrent.TimeUnit
 

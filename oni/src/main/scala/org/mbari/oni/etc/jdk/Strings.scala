@@ -7,7 +7,6 @@
 
 package org.mbari.oni.etc.jdk
 
-import scala.annotation.tailrec
 import scala.util.Random
 
 object Strings:

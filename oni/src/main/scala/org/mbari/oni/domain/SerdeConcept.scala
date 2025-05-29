@@ -7,8 +7,6 @@
 
 package org.mbari.oni.domain
 
-import scala.jdk.CollectionConverters.*
-
 final case class SerdeConcept(
     name: String,
     rank: Option[String] = None,

@@ -202,11 +202,12 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 val root                  = init(3, 0)
                 val grandChild            = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
                 val (rankLevel, rankName) = TestEntityFactory.randomRankLevelAndName()
-                val expectedRank          = if rankLevel.isEmpty && rankName.isEmpty then None
+                val expectedRank          =
+                    if rankLevel.isEmpty && rankName.isEmpty then None
                     else Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
 
                 // println(expectedRank)
-                val conceptUpdate         = ConceptUpdate(
+                val conceptUpdate = ConceptUpdate(
                     Some(root.getPrimaryConceptName.getName),
                     rankLevel = rankLevel.orElse(Some("")),
                     rankName = rankName.orElse(Some("")),
