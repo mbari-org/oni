@@ -54,7 +54,7 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "History.findById", query = "SELECT v FROM History v WHERE v.id = :id"),
     @NamedQuery(name = "History.findByProcessedDate", query = "SELECT h FROM History h WHERE h.processedDate = :processedDate"),
     @NamedQuery(name = "History.findByCreationDate", query = "SELECT h FROM History h WHERE h.creationDate = :creationDate"),
-    @NamedQuery(name = "History.findByCreatorName", query = "SELECT h FROM History h WHERE h.creatorName = :creatorName"),
+    @NamedQuery(name = "History.findByCreatorName", query = "SELECT h FROM History h WHERE h.creatorName = :creatorName ORDER BY h.creationDate"),
     @NamedQuery(name = "History.findByProcessorName", query = "SELECT h FROM History h WHERE h.processorName = :processorName ORDER BY h.creationDate") ,
     @NamedQuery(name = "History.findByField", query = "SELECT h FROM History h WHERE h.field = :field ORDER BY h.creationDate") ,
     @NamedQuery(name = "History.findByOldValue", query = "SELECT h FROM History h WHERE h.oldValue = :oldValue ORDER BY h.creationDate") ,
