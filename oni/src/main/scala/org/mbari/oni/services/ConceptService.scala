@@ -495,21 +495,29 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 case None    => throw ConceptNameNotFound(historyEntity.getOldValue)
                 case Some(p) => p
 
-            // println("CONCEPT: " + concept + " " + concept.getName)
-            // println("HISTORY ENTITY: " + historyEntity)
-            // println("PARENT: " + parent + " " + parent.getName())
-            // println("Parent Children:  " + parent.getChildConcepts.asScala)
-            // println("OLD PARENT: " + oldParentConcept + " " + oldParentConcept.getName)
+            // println("CONCEPT:              " + concept + " " + concept.getName)
+            // println("HISTORY ENTITY:       " + historyEntity)
+            // println("PARENT:               " + parent + " " + parent.getName())
+            // println("Parent Children:      " + parent.getChildConcepts.asScala)
+            // println("OLD PARENT:           " + oldParentConcept + " " + oldParentConcept.getName)
             // println("Old Parent Children:  " + oldParentConcept.getChildConcepts.asScala)
 
-            parent.removeChildConcept(concept)
-            oldParentConcept.addChildConcept(concept)
+            // IMPORTANT: the removeChildConcept and addChildConcept methods don't work in this context.
+            // parent.removeChildConcept(concept)
+            // oldParentConcept.addChildConcept(concept)
 
-            println("Old Parent Children:  " + oldParentConcept.getChildConcepts.asScala)
-            log.atInfo
-                .log(
-                    s"Rejected replace parent. Moving ${concept.getName} from ${parent.getName} back to ${oldParentConcept.getName} "
-                )
+            // IMPORTANT: the setParentConcept method does not work in this context.
+            parent.getChildConcepts().remove(concept)
+            oldParentConcept.getChildConcepts().add(concept)
+            concept.setParentConcept(oldParentConcept)
+
+            entityManager.flush() // Ensure the changes are persisted
+
+            // println("Old Parent Children:  " + oldParentConcept.getChildConcepts.asScala)
+            // log.atInfo
+            //     .log(
+            //         s"Rejected replace parent. Moving ${concept.getName} from ${parent.getName} back to ${oldParentConcept.getName} "
+            //     )
             Right(true)
         catch case e: Throwable => Left(e)
 

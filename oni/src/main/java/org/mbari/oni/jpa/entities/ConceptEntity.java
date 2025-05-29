@@ -360,7 +360,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         this.aphiaId = aphiaId;
     }
 
-    private void setParentConcept(ConceptEntity parentConcept) {
+    public void setParentConcept(ConceptEntity parentConcept) {
         this.parentConcept = parentConcept;
     }
 
