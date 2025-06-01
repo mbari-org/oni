@@ -53,7 +53,7 @@ object Dependencies {
 
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.11.0"
 
-    val testcontainersVersion        = "1.21.0"
+    val testcontainersVersion        = "1.21.1"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "mssqlserver"    % testcontainersVersion
