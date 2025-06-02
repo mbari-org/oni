@@ -56,7 +56,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
 
         runPost(
             endpoints.createReferenceEndpointImpl,
-            "http://test.com/v1/reference",
+            "http://test.com/v1/references",
             dto.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
@@ -75,7 +75,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         val update = ReferenceUpdate(citation = Some("Updated citation"))
         runPut(
             endpoints.updateReferenceEndpointImpl,
-            s"http://test.com/v1/reference/${ref.id.getOrElse(-1)}",
+            s"http://test.com/v1/references/${ref.id.getOrElse(-1)}",
             update.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
@@ -92,7 +92,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         val id   = refs.head.id.get
         runDelete(
             endpoints.deleteReferenceEndpointImpl,
-            s"http://test.com/v1/reference/${id}",
+            s"http://test.com/v1/references/${id}",
             response => assertEquals(response.code, StatusCode.Ok),
             jwt = jwtService.authorize(jwtService.apiKey)
         )
@@ -108,7 +108,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         val id   = refs.head.id.get
         runGet(
             endpoints.findReferenceByIdEndpointImpl,
-            s"http://test.com/v1/reference/${id}",
+            s"http://test.com/v1/references/${id}",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Reference](response.body)
@@ -120,7 +120,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         val refs = initRefs(2)
         runGet(
             endpoints.findAllEndpointImpl,
-            "http://test.com/v1/reference",
+            "http://test.com/v1/references",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Page[Seq[Reference]]](response.body)
@@ -138,7 +138,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         val dto      = ReferenceQuery(citation = Some(glob))
         runPost(
             endpoints.findReferencesByCitationGlobEndpointImpl,
-            s"http://test.com/v1/reference/query/citation",
+            s"http://test.com/v1/references/query/citation",
             dto.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
@@ -153,7 +153,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         val dto  = ReferenceQuery(doi = Some(doi))
         runPost(
             endpoints.findReferenceByDoiEndpointImpl,
-            s"http://test.com/v1/reference/query/doi",
+            s"http://test.com/v1/references/query/doi",
             dto.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
@@ -177,7 +177,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         val name = root.getPrimaryConceptName.getName
         runPut(
             endpoints.addConceptEndpointImpl,
-            s"http://test.com/v1/reference/add/${id}/to/${name}",
+            s"http://test.com/v1/references/add/${id}/to/${name}",
             "",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
@@ -211,7 +211,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
 
         runPut(
             endpoints.removeConceptEndpointImpl,
-            s"http://test.com/v1/reference/remove/${id}/from/${name}",
+            s"http://test.com/v1/references/remove/${id}/from/${name}",
             "",
             response =>
                 assertEquals(response.code, StatusCode.Ok)

@@ -27,8 +27,8 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     private val service = ReferenceService(entityManagerFactory)
 
-    private val base = "reference"
-    private val tag  = "Reference"
+    private val base = "references"
+    private val tag  = "References"
 
     val findReferenceByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Reference, Any] =
         openEndpoint
