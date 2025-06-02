@@ -148,6 +148,9 @@ object CirceCodecs:
     given Decoder[Reference] = deriveDecoder
     given Encoder[Reference] = deriveEncoder
 
+    given page3Decoder: Decoder[Page[Seq[Reference]]] = deriveDecoder
+    given page3Encoder: Encoder[Page[Seq[Reference]]] = deriveEncoder
+
     given Decoder[ReferenceUpdate] = deriveDecoder
     given Encoder[ReferenceUpdate] = deriveEncoder
 

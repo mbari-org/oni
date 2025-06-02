@@ -18,6 +18,7 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
+import org.mbari.oni.domain.Page
 
 class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
     jwtService: JwtService,
@@ -47,42 +48,49 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
         }
     }
 
-    val findAllEndpoint: Endpoint[Unit, Paging, ErrorMsg, Seq[Reference], Any] =
+    val findAllEndpoint: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[Reference]], Any] =
         openEndpoint
             .get
             .in(base)
             .in(paging)
-            .out(jsonBody[Seq[Reference]])
+            .out(jsonBody[Page[Seq[Reference]]])
             .name("findAllReferences")
             .description("Find all references")
             .tag(tag)
 
     val findAllEndpointImpl: ServerEndpoint[Any, Future] = findAllEndpoint.serverLogic { paging =>
-        handleErrorsAsync(service.findAll(paging.limit.getOrElse(DefaultLimit), paging.offset.getOrElse(0)))
+        val limit = paging.limit.getOrElse(DefaultLimit)
+        val offset = paging.offset.getOrElse(0)
+        handleErrorsAsync({
+            service.findAll(limit, offset)
+                .map(xs => Page(xs, limit, offset))
+        })
     }
 
-    val findReferencesByCitationGlobEndpoint: Endpoint[Unit, (Paging, ReferenceQuery), ErrorMsg, Seq[Reference], Any] =
+    val findReferencesByCitationGlobEndpoint: Endpoint[Unit, (Paging, ReferenceQuery), ErrorMsg, Page[Seq[Reference]], Any] =
         openEndpoint
             .post
             .in(base / "query" / "citation")
             .in(paging)
             .in(jsonBody[ReferenceQuery])
-            .out(jsonBody[Seq[Reference]])
+            .out(jsonBody[Page[Seq[Reference]]])
             .name("findReferencesByCitationGlob")
             .description("Find references by citation glob")
             .tag(tag)
 
     val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Future] =
         findReferencesByCitationGlobEndpoint.serverLogic { (paging, glob) =>
+            val limit = paging.limit.getOrElse(DefaultLimit)
+            val offset = paging.offset.getOrElse(0)
             glob.citation match
                 case None               => Future(Left(BadRequest("Citation is required")))
                 case Some(citationGlob) =>
                     handleErrorsAsync(
                         service.findByCitationGlob(
                             citationGlob,
-                            paging.limit.getOrElse(DefaultLimit),
-                            paging.offset.getOrElse(0)
-                        )
+                            limit,
+                            offset
+                        ).map(xs => Page(xs, limit, offset))
                     )
         }
 

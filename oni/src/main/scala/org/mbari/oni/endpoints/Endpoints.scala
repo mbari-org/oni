@@ -70,6 +70,7 @@ trait Endpoints:
     implicit lazy val sPageSeqExtendedHistory: Schema[Page[Seq[ExtendedHistory]]]   =
         Schema.derived[Page[Seq[ExtendedHistory]]]
     implicit lazy val sPageSeqString: Schema[Page[Seq[String]]]                     = Schema.derived[Page[Seq[String]]]
+    implicit lazy val sPageSeqReference: Schema[Page[Seq[Reference]]]               = Schema.derived[Page[Seq[Reference]]]
     implicit lazy val sRank: Schema[Rank]                                           = Schema.derived[Rank]
     implicit lazy val sUserAccount: Schema[UserAccount]                             = Schema.derived[UserAccount]
     implicit lazy val sUserAccountCreate: Schema[UserAccountCreate]                 = Schema.derived[UserAccountCreate]

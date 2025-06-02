@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{Reference, ReferenceQuery, ReferenceUpdate}
+import org.mbari.oni.domain.{Page, Reference, ReferenceQuery, ReferenceUpdate}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -123,8 +123,8 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
             "http://test.com/v1/reference",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[Seq[Reference]](response.body)
-                assertEquals(obtained.size, 2)
+                val obtained = checkResponse[Page[Seq[Reference]]](response.body)
+                assertEquals(obtained.content.size, 2)
         )
     }
 
@@ -142,8 +142,8 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
             dto.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[Seq[Reference]](response.body)
-                assertEquals(obtained.size, 1)
+                val obtained = checkResponse[Page[Seq[Reference]]](response.body)
+                assertEquals(obtained.content.size, 1)
         )
     }
 
