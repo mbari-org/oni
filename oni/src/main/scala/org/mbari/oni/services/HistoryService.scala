@@ -16,6 +16,7 @@ import org.mbari.oni.jpa.repositories.HistoryRepository
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
+import scala.util.Try
 
 class HistoryService(entityManagerFactory: EntityManagerFactory):
 
@@ -49,9 +50,10 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             repo.findApprovedHistories(limit, offset)
                 .asScala
                 .toSeq
-                .map(h =>
-                    ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)
-                ) // TRY because of the potential for nulls
+                .flatMap(h =>
+                    // Fix for https://github.com/mbari-org/kb/issues/12
+                    Try(ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)).toOption
+                ) // TRY because of the potential for nulls during development
                 .sortBy(_.creationTimestamp)
         )
 

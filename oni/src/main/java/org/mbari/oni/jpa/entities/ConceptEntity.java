@@ -225,10 +225,10 @@ public class ConceptEntity implements Serializable, IPersistentObject {
 
         // If there is only one concept name, return it.
         // See https://github.com/mbari-org/kb/issues/12
-        if (getConceptNames().size() == 1) {
-            return getConceptNames().iterator().next();
-        }
-
+        // var head = getConceptNames().iterator().next();
+        // if (getConceptNames().size() == 1) {
+        //     return head;
+        // }
 
         return getConceptNames().stream()
                 .filter(cn -> cn.getNameType().equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType()))
