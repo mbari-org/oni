@@ -47,7 +47,7 @@ import org.mbari.oni.jpa.TransactionLogger;
     @NamedQuery(name = "LinkRealization.countAll",
                 query = "SELECT COUNT(v) FROM LinkRealization v"),
     @NamedQuery(name = "LinkRealization.findAll",
-            query = "SELECT v FROM LinkRealization v ORDER BY v.linkName, v.linkValue"),
+            query = "SELECT v FROM LinkRealization v ORDER BY LOWER(v.linkName), v.linkValue"),
     @NamedQuery(name = "LinkRealization.findById",
                 query = "SELECT v FROM LinkRealization v WHERE v.id = :id"),
     @NamedQuery(name = "LinkRealization.findByLinkName",

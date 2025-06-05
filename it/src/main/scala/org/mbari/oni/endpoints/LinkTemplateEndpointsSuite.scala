@@ -195,8 +195,10 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
 //                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val xs       = checkResponse[Page[Seq[ExtendedLink]]](response.body)
-                val obtained = xs.content.sortBy(_.linkName)
-                val expected = links.sortBy(_.linkName)
+                val obtained = xs.content
+                val expected = links.sortBy(_.linkName.toLowerCase())
+                println("EXPECTED: " + expected)
+                println("OBTAINED: " + obtained)
                 assertEquals(obtained.size, expected.size)
                 assertEquals(obtained, expected)
         )
