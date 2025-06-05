@@ -8,7 +8,17 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate, Page, ServerError}
+import org.mbari.oni.domain.{
+    ErrorMsg,
+    ExtendedLink,
+    Link,
+    LinkCreate,
+    LinkRenameToConceptRequest,
+    LinkRenameToConceptResponse,
+    LinkUpdate,
+    Page,
+    ServerError
+}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{LinkService, LinkTemplateService}
@@ -23,10 +33,10 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
     executionContext: ExecutionContext
 ) extends Endpoints:
 
-    private val service = LinkTemplateService(entityManagerFactory)
+    private val service     = LinkTemplateService(entityManagerFactory)
     private val linkService = LinkService(entityManagerFactory)
-    private val base    = "linktemplates"
-    private val tag     = "LinkTemplates"
+    private val base        = "linktemplates"
+    private val tag         = "LinkTemplates"
 
     val findLinkTemplateById: Endpoint[Unit, Long, ErrorMsg, ExtendedLink, Any] = openEndpoint
         .get
@@ -173,7 +183,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     val findAllLinkTemplatesImpl: ServerEndpoint[Any, Future] = findAllLinkTemplates
         .serverLogic { paging =>
-            val limit = paging.limit.getOrElse(100)
+            val limit  = paging.limit.getOrElse(100)
             val offset = paging.offset.getOrElse(0)
             handleErrorsAsync(service.findAll(limit, offset).map(s => Page(s, limit, offset)))
         }
@@ -193,13 +203,14 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
             )
         }
 
-    val findLinkTemplatesForConceptAndLinkName: Endpoint[Unit, (String, String), ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
-        .get
-        .in(base / "query" / "for" / path[String]("conceptName") / "using" / path[String]("linkName"))
-        .out(jsonBody[Seq[ExtendedLink]])
-        .name("findLinkTemplatesForConceptAndLinkName")
-        .description("Find all link templates that can be used to annotate a concept by name and link name")
-        .tag(tag)
+    val findLinkTemplatesForConceptAndLinkName: Endpoint[Unit, (String, String), ErrorMsg, Seq[ExtendedLink], Any] =
+        openEndpoint
+            .get
+            .in(base / "query" / "for" / path[String]("conceptName") / "using" / path[String]("linkName"))
+            .out(jsonBody[Seq[ExtendedLink]])
+            .name("findLinkTemplatesForConceptAndLinkName")
+            .description("Find all link templates that can be used to annotate a concept by name and link name")
+            .tag(tag)
 
     val findLinkTemplatesForConceptAndLinkNameImpl: ServerEndpoint[Any, Future] = findLinkTemplatesForConceptAndLinkName
         .serverLogic { (conceptName, linkName) =>

@@ -23,10 +23,10 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     executionContext: ExecutionContext
 ) extends Endpoints:
 
-    private val service = LinkRealizationService(entityManagerFactory)
+    private val service     = LinkRealizationService(entityManagerFactory)
     private val linkService = LinkService(entityManagerFactory)
-    private val base    = "linkrealizations"
-    private val tag     = "LinkRealizations"
+    private val base        = "linkrealizations"
+    private val tag         = "LinkRealizations"
 
     val findLinkRealizationById: Endpoint[Unit, Long, ErrorMsg, ExtendedLink, Any] = openEndpoint
         .get

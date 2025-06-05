@@ -13,11 +13,13 @@ import java.net.URI
 import scala.jdk.CollectionConverters.*
 import java.time.Instant
 
-case class Reference(citation: String, 
-        doi: Option[URI] = None, 
-        concepts: Seq[String] = Nil, 
-        id: Option[Long] = None,
-        lastUpdated: Option[Instant] = None):
+case class Reference(
+    citation: String,
+    doi: Option[URI] = None,
+    concepts: Seq[String] = Nil,
+    id: Option[Long] = None,
+    lastUpdated: Option[Instant] = None
+):
 
     def toEntity: ReferenceEntity =
         val entity = new ReferenceEntity

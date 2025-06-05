@@ -60,8 +60,8 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
     }
 
     test("findLinkRealizationsByLinkName") {
-        val links       = createLinkRealizations()
-        val linkName    = links.head.linkName
+        val links    = createLinkRealizations()
+        val linkName = links.head.linkName
         runGet(
             endpoints.findLinkRealizationsByLinkNameImpl,
             s"http://test.com/v1/linkrealizations/query/linkname/$linkName",
@@ -99,7 +99,7 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
             response =>
                 //                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
-                val xs = checkResponse[Page[Seq[ExtendedLink]]](response.body)
+                val xs       = checkResponse[Page[Seq[ExtendedLink]]](response.body)
                 val obtained = xs.content.sortBy(_.linkName)
                 val expected = links.sortBy(_.linkName)
                 assertEquals(obtained.size, expected.size)
