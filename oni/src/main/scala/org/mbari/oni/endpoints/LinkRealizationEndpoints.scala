@@ -8,7 +8,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link, LinkCreate, LinkUpdate, Page, ServerError}
+import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedLink, Link, LinkCreate, LinkUpdate, Page, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{LinkRealizationService, LinkService}
@@ -119,6 +119,19 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
             }
         }
 
+    val countAllLinkRealizations: Endpoint[Unit, Unit, ErrorMsg, Count, Any] = openEndpoint
+        .get
+        .in(base / "count")
+        .out(jsonBody[Count])
+        .name("countAllLinkRealizations")
+        .description("Count all link realizations")
+        .tag(tag)
+
+    val countAllLinkRealizationsImpl: ServerEndpoint[Any, Future] =
+        countAllLinkRealizations.serverLogic { _ =>
+            handleErrorsAsync(service.countAll().map(Count.apply))
+        }
+
     val findAllLinkRealizations: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedLink]], Any] = openEndpoint
         .get
         .in(base)
@@ -152,6 +165,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkRealizationsByConceptName,
         findLinkRealizationsByLinkName,
         findLinkRealizationByPrototype,
+        countAllLinkRealizations,
         findAllLinkRealizations,
         create,
         update,
@@ -163,6 +177,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkRealizationsByConceptNameImpl,
         findLinkRealizationsByLinkNameImpl,
         findLinkRealizationByPrototypeImpl,
+        countAllLinkRealizationsImpl,
         findAllLinkRealizationsImpl,
         createImpl,
         updateImpl,

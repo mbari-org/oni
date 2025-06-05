@@ -8,17 +8,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{
-    ErrorMsg,
-    ExtendedLink,
-    Link,
-    LinkCreate,
-    LinkRenameToConceptRequest,
-    LinkRenameToConceptResponse,
-    LinkUpdate,
-    Page,
-    ServerError
-}
+import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedLink, Link, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate, Page, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{LinkService, LinkTemplateService}
@@ -172,6 +162,19 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
             }
         }
 
+    val countAllLinkTemplates: Endpoint[Unit, Unit, ErrorMsg, Count, Any] = openEndpoint
+        .get
+        .in(base / "count")
+        .out(jsonBody[Count])
+        .name("countAllLinkTemplates")
+        .description("Count all link templates")
+        .tag(tag)
+
+    val countAllLinkTemplatesImpl: ServerEndpoint[Any, Future] = countAllLinkTemplates
+        .serverLogic { _ =>
+            handleErrorsAsync(service.countAll().map(Count.apply))
+        }
+
     val findAllLinkTemplates: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedLink]], Any] = openEndpoint
         .get
         .in(base)
@@ -227,6 +230,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkTemplatesForConceptName,
         countByToConcept,
         findByToConcept,
+        countAllLinkTemplates,
         findAllLinkTemplates,
         createLinkTemplate,
         updateLinkTemplate,
@@ -242,6 +246,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkTemplatesForConceptNameImpl,
         countByToConceptImpl,
         findByToConceptImpl,
+        countAllLinkTemplatesImpl,
         findAllLinkTemplatesImpl,
         createLinkTemplateImpl,
         updateLinkTemplateImpl,

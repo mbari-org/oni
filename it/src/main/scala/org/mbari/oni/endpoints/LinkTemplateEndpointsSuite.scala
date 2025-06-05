@@ -16,15 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{
-    ExtendedLink,
-    ILink,
-    LinkCreate,
-    LinkRenameToConceptRequest,
-    LinkRenameToConceptResponse,
-    LinkUpdate,
-    Page
-}
+import org.mbari.oni.domain.{Count, ExtendedLink, ILink, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate, Page}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
@@ -172,6 +164,19 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
         )
     }
 
+    test("countAllLinkTemplates") {
+        val links = createLinkTemplates()
+        runGet(
+            endpoints.countAllLinkTemplatesImpl,
+            "http://test.com/v1/linktemplates/count",
+            response =>
+//                println(response.body)
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Count](response.body)
+                assertEquals(obtained.count, links.size.toLong)
+        )
+    }
+
     test("findAllLinkTemplates") {
         val links = createLinkTemplates()
         runGet(
@@ -180,10 +185,11 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             response =>
 //                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[Page[Seq[ExtendedLink]]](response.body)
+                val xs = checkResponse[Page[Seq[ExtendedLink]]](response.body)
+                val obtained = xs.content.sortBy(_.linkName)
                 val expected = links.sortBy(_.linkName)
-                assertEquals(obtained.content.size, expected.size)
-                assertEquals(obtained.content, expected)
+                assertEquals(obtained.size, expected.size)
+                assertEquals(obtained, expected)
         )
     }
 

@@ -44,6 +44,8 @@ import org.mbari.oni.jpa.TransactionLogger;
                 @Index(name = "idx_LinkRealization_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
 @NamedQueries({
+    @NamedQuery(name = "LinkRealization.countAll",
+                query = "SELECT COUNT(v) FROM LinkRealization v"),
     @NamedQuery(name = "LinkRealization.findAll",
             query = "SELECT v FROM LinkRealization v ORDER BY v.linkName, v.toConcept, v.linkValue"),
     @NamedQuery(name = "LinkRealization.findById",
