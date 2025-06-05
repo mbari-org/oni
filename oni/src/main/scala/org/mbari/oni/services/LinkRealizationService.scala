@@ -35,7 +35,6 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 .asScala
                 .toSeq
                 .map(ExtendedLink.from)
-                .sortBy(_.concept)
         )
 
     def findById(id: Long): Either[Throwable, ExtendedLink] =
