@@ -22,7 +22,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
     private val log                = System.getLogger(getClass.getName)
     private val userAccountService = UserAccountService(entityManagerFactory)
 
-    def countAll() : Either[Throwable, Long] =
+    def countAll(): Either[Throwable, Long] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkRealizationRepository(entityManager)
             repo.countAll()
