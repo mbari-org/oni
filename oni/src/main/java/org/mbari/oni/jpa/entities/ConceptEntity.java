@@ -382,6 +382,11 @@ public class ConceptEntity implements Serializable, IPersistentObject {
     	return getId();
     }
 
+    public Timestamp getLastUpdatedTimestamp() {
+        return updatedTime;
+    }
+
+
     @Override
     public String toString() {
         return getClass().getSimpleName() + " ([id=" + id + "])";

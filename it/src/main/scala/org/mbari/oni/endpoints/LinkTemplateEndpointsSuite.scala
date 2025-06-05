@@ -16,14 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{
-    ExtendedLink,
-    ILink,
-    LinkCreate,
-    LinkRenameToConceptRequest,
-    LinkRenameToConceptResponse,
-    LinkUpdate
-}
+import org.mbari.oni.domain.{ExtendedLink, ILink, LinkCreate, LinkRenameToConceptRequest, LinkRenameToConceptResponse, LinkUpdate, Page}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
@@ -81,6 +74,41 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
         )
     }
 
+    test("findLinkTemplatesForConceptAndLinkName") {
+        val links       = createLinkTemplates()
+        val linkName    = links.head.linkName
+        val conceptName = links.head.concept
+        runGet(
+            endpoints.findLinkTemplatesForConceptAndLinkNameImpl,
+            s"http://test.com/v1/linktemplates/query/for/$conceptName/using/$linkName",
+            response =>
+//                println(response.body)
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Seq[ExtendedLink]](response.body)
+                val expected = links.filter(x => x.linkName == linkName && x.concept == conceptName)
+                    .sortBy(_.linkName)
+                assertEquals(obtained.size, expected.size)
+                assertEquals(obtained, expected)
+        )
+    }
+
+    test("findLinkTemplatesForConceptName") {
+        val links       = createLinkTemplates()
+        val conceptName = links.head.concept
+        runGet(
+            endpoints.findLinkTemplatesForConceptNameImpl,
+            s"http://test.com/v1/linktemplates/query/for/$conceptName",
+            response =>
+//                println(response.body)
+                assertEquals(response.code, StatusCode.Ok)
+                val xs = checkResponse[Seq[ExtendedLink]](response.body)
+                val expected = links.sortBy(_.linkName)
+                val obtained = xs.sortBy(_.linkName)
+                assertEquals(obtained.size, expected.size)
+                assertEquals(obtained, expected)
+        )
+    }
+
     test("countByToConcept") {
         val links = createLinkTemplates()
         val link  = links.head
@@ -135,6 +163,21 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
         )
     }
 
+    test("findAllLinkTemplates") {
+        val links = createLinkTemplates()
+        runGet(
+            endpoints.findAllLinkTemplatesImpl,
+            "http://test.com/v1/linktemplates",
+            response =>
+//                println(response.body)
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Page[Seq[ExtendedLink]]](response.body)
+                val expected = links.sortBy(_.linkName)
+                assertEquals(obtained.content.size, expected.size)
+                assertEquals(obtained.content, expected)
+        )
+    }
+
     test("create") {
         val root         = init(1, 0)
         val linkTemplate = TestEntityFactory.createLinkTemplate()
@@ -149,7 +192,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
 //                    println(response.body)
                         assertEquals(response.code, StatusCode.Ok)
                         val obtained = checkResponse[ExtendedLink](response.body)
-                        assertEquals(obtained.toLink, linkCreate.toLink)
+                        assertEquals(obtained.toLink.copy(id = None), linkCreate.toLink)
                     ,
                     jwt = jwtService.login(user.username, password, user.toEntity)
                 ),

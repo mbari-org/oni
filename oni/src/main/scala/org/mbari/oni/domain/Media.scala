@@ -13,6 +13,7 @@ import org.mbari.oni.jpa.entities.MediaEntity
 import java.net.{URI, URL}
 import java.util.regex.Pattern
 import scala.util.{Success, Try}
+import java.time.Instant
 
 /**
  * @author
@@ -26,7 +27,8 @@ case class Media(
     mimeType: String = "application/octet-stream",
     isPrimary: Boolean = false,
     conceptName: Option[String] = None,
-    id: Option[Long] = None
+    id: Option[Long] = None,
+    lastUpdated: Option[Instant] = None
 )
 
 enum MediaType(name: String):
@@ -46,7 +48,8 @@ object Media:
             resolveMimeType(media.getType, media.getUrl),
             media.isPrimary,
             conceptName,
-            Option(media.getId)
+            Option(media.getId),
+            Option(media.getLastUpdatedTimestamp).map(_.toInstant)
         )
 
     def from(namedMedia: NamedMedia): Media =

@@ -48,7 +48,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionC
         .tag(tag)
 
     val linksForConceptEndpointImpl: ServerEndpoint[Any, Future] = linksForConceptEndpoint.serverLogic { name =>
-        handleErrorsAsync(service.findAllLinkTemplatesForConcept(name))
+        handleErrorsAsync(service.findAllLinkTemplatesForConcept(name).map(_.map(_.toLink)))
     }
 
     // get links for a concept and linkname
@@ -62,7 +62,7 @@ class LinkEndpoints(entityManagerFactory: EntityManagerFactory)(using executionC
 
     val linksForConceptAndLinkNameEndpointImpl: ServerEndpoint[Any, Future] =
         linksForConceptAndLinkNameEndpoint.serverLogic { (name, linkName) =>
-            handleErrorsAsync(service.findLinkTemplatesByNameForConcept(name, linkName))
+            handleErrorsAsync(service.findLinkTemplatesByNameForConcept(name, linkName).map(_.map(_.toLink)))
         }
 
     // get link realizations for a concept

@@ -11,8 +11,13 @@ import org.mbari.oni.jpa.entities.ReferenceEntity
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
+import java.time.Instant
 
-case class Reference(citation: String, doi: Option[URI] = None, concepts: Seq[String] = Nil, id: Option[Long] = None):
+case class Reference(citation: String, 
+        doi: Option[URI] = None, 
+        concepts: Seq[String] = Nil, 
+        id: Option[Long] = None,
+        lastUpdated: Option[Instant] = None):
 
     def toEntity: ReferenceEntity =
         val entity = new ReferenceEntity
@@ -33,5 +38,6 @@ object Reference:
             citation = entity.getCitation,
             doi = Option(entity.getDoi),
             concepts = concepts,
-            id = Option(entity.getId)
+            id = Option(entity.getId),
+            lastUpdated = Option(entity.getLastUpdatedTimestamp).map(_.toInstant)
         )

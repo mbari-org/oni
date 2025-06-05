@@ -25,6 +25,7 @@ object Main:
 
     def main(args: Array[String]): Unit =
 
+        // Set the timezone to UTC to avoid timezone issues with JDBC
         System.setProperty("user.timezone", "UTC")
 
         val s =

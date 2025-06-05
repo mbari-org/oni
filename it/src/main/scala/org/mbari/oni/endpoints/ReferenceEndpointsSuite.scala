@@ -62,7 +62,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Reference](response.body)
                 assert(obtained.id.isDefined)
-                val expected = dto.copy(id = obtained.id)
+                val expected = dto.copy(id = obtained.id, lastUpdated = obtained.lastUpdated)
                 assertEquals(obtained, expected)
             ,
             jwt = jwtService.authorize(jwtService.apiKey)

@@ -34,7 +34,7 @@ import org.mbari.oni.jpa.IPersistentObject;
     @NamedQuery(name = "LinkTemplate.countByToConcept", query = "SELECT COUNT(v) FROM LinkTemplate v WHERE v.toConcept = :toConcept"),
     @NamedQuery(name = "LinkTemplate.findById", query = "SELECT v FROM LinkTemplate v WHERE v.id = :id") ,
     @NamedQuery(name = "LinkTemplate.findAll",
-                query = "SELECT l FROM LinkTemplate l") ,
+                query = "SELECT l FROM LinkTemplate l ORDER BY l.linkName, l.toConcept, l.linkValue") ,
     @NamedQuery(name = "LinkTemplate.findByLinkName",
                 query = "SELECT l FROM LinkTemplate l WHERE l.linkName = :linkName") ,
     @NamedQuery(name = "LinkTemplate.findByToConcept",
@@ -152,11 +152,14 @@ public class LinkTemplateEntity implements Serializable, ILink, IPersistentObjec
         this.toConcept = toConcept;
     }
 
+    public Timestamp getLastUpdatedTimestamp() {
+        return updatedTime;
+    }
+
     public String stringValue() {
         return LinkUtilities.formatAsString(this);
     }
 
-    
 
 	@Override
     public int hashCode() {

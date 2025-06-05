@@ -116,6 +116,10 @@ public class ReferenceEntity implements Serializable, IPersistentObject {
         return conceptMetadatas;
     }
 
+    public Timestamp getLastUpdatedTimestamp() {
+        return updatedTime;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

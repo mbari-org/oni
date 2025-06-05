@@ -27,7 +27,7 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
                 .toSeq
         )
 
-    def findAllLinkTemplatesForConcept(conceptName: String): Either[Throwable, Seq[Link]] =
+    def findAllLinkTemplatesForConcept(conceptName: String): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
             val repo        = new LinkTemplateRepository(entityManager)
             val conceptRepo = new ConceptRepository(entityManager)
@@ -35,7 +35,7 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
                 case Some(concept) =>
                     repo.findAllApplicableToConcept(concept)
                         .stream()
-                        .map(Link.from)
+                        .map(ExtendedLink.from)
                         .toList
                         .asScala
                         .toSeq
@@ -48,7 +48,7 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
      * @param linkName
      * @return
      */
-    def findLinkTemplatesByNameForConcept(conceptName: String, linkName: String): Either[Throwable, Seq[Link]] =
+    def findLinkTemplatesByNameForConcept(conceptName: String, linkName: String): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
             val repo        = new LinkTemplateRepository(entityManager)
             val conceptRepo = new ConceptRepository(entityManager)
@@ -56,7 +56,7 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
                 case Some(concept) =>
                     repo.findAllByLinkName(linkName, concept)
                         .asScala
-                        .map(Link.from)
+                        .map(ExtendedLink.from)
                         .toSeq
                 case None          => throw ConceptNameNotFound(conceptName)
         )

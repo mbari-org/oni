@@ -8,16 +8,18 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
+import java.time.Instant
 
 case class ExtendedLink(
     concept: String,
     linkName: String,
     toConcept: String,
     linkValue: String,
-    id: Option[Long] = None
+    id: Option[Long] = None,
+    lastUpdated: Option[Instant] = None
 ):
     def toLink: Link =
-        Link(linkName, toConcept, linkValue)
+        Link(linkName, toConcept, linkValue, id)
 
     def stringValue: String =
         s"$concept${ILink.DELIMITER}$linkName${ILink.DELIMITER}$toConcept${ILink.DELIMITER}$linkValue"
@@ -28,7 +30,21 @@ object ExtendedLink:
         link match
             case l: LinkTemplateEntity    =>
                 val concept = l.getConceptMetadata.getConcept.getPrimaryConceptName.getName
-                ExtendedLink(concept, l.getLinkName, l.getToConcept, l.getLinkValue, Option(l.getId))
+                ExtendedLink(
+                    concept,
+                    l.getLinkName,
+                    l.getToConcept,
+                    l.getLinkValue,
+                    Option(l.getId),
+                    Option(l.getLastUpdatedTimestamp).map(_.toInstant)
+                )
             case l: LinkRealizationEntity =>
                 val concept = l.getConceptMetadata.getConcept.getPrimaryConceptName.getName
-                ExtendedLink(concept, l.getLinkName, l.getToConcept, l.getLinkValue, Option(l.getId))
+                ExtendedLink(
+                    concept,
+                    l.getLinkName,
+                    l.getToConcept,
+                    l.getLinkValue,
+                    Option(l.getId),
+                    Option(l.getLastUpdatedTimestamp).map(_.toInstant)
+                )
