@@ -77,9 +77,13 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
             entityManagerFactory.transaction(entityManager =>
                 val repo        = new LinkRealizationRepository(entityManager)
                 val conceptRepo = new ConceptRepository(entityManager)
+                val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match
+                            case Some(concept) => concept.getPrimaryConceptName().getName()
+                            case None          => link.toConcept
+                val resolvedLink = link.copy(toConcept = resolvedToConcept)
                 conceptRepo.findByName(link.concept).toScala match
                     case Some(concept) =>
-                        val linkRealization = link.toLink.toLinkRealizationEntity
+                        val linkRealization = resolvedLink.toLink.toLinkRealizationEntity
                         if concept.getConceptMetadata.getLinkRealizations.contains(linkRealization) then
                             throw new IllegalArgumentException(
                                 s"${link.concept} already contains link ${linkRealization.stringValue()}"
@@ -102,10 +106,15 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
         def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new LinkRealizationRepository(entityManager)
+                val conceptRepo = new ConceptRepository(entityManager)
                 repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
                     case Some(linkRealization) =>
                         val before = Link.from(linkRealization)
-                        linkUpdate.updateEntity(linkRealization)
+                        val resolvedName = conceptRepo.findByName(linkRealization.getToConcept).toScala match
+                            case Some(concept) => concept.getPrimaryConceptName().getName()
+                            case None          => linkUpdate.toConcept.getOrElse(linkRealization.getToConcept)
+                        val resolvedLinkUpdate = linkUpdate.copy(toConcept = Some(resolvedName))
+                        resolvedLinkUpdate.updateEntity(linkRealization)
 
                         // add history
                         val history = HistoryEntityFactory.replaceLinkRealization(
