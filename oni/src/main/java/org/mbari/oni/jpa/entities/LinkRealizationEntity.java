@@ -44,6 +44,10 @@ import org.mbari.oni.jpa.TransactionLogger;
                 @Index(name = "idx_LinkRealization_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
 @NamedQueries({
+    @NamedQuery(name = "LinkRealization.countAll",
+                query = "SELECT COUNT(v) FROM LinkRealization v"),
+    @NamedQuery(name = "LinkRealization.findAll",
+            query = "SELECT v FROM LinkRealization v ORDER BY LOWER(v.linkName), v.toConcept, v.linkValue"),
     @NamedQuery(name = "LinkRealization.findById",
                 query = "SELECT v FROM LinkRealization v WHERE v.id = :id"),
     @NamedQuery(name = "LinkRealization.findByLinkName",
@@ -100,6 +104,10 @@ public class LinkRealizationEntity implements Serializable, ILink, IPersistentOb
 
     public String getFromConcept() {
         return (conceptMetadata == null) ? null : conceptMetadata.getConcept().getPrimaryConceptName().getName();
+    }
+
+    public Timestamp getLastUpdatedTimestamp() {
+        return updatedTime;
     }
 
     public String stringValue() {

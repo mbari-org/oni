@@ -9,6 +9,7 @@ package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{
+    Count,
     ErrorMsg,
     ExtendedLink,
     Link,
@@ -16,11 +17,12 @@ import org.mbari.oni.domain.{
     LinkRenameToConceptRequest,
     LinkRenameToConceptResponse,
     LinkUpdate,
+    Page,
     ServerError
 }
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.LinkTemplateService
+import org.mbari.oni.services.{LinkService, LinkTemplateService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
@@ -32,9 +34,10 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
     executionContext: ExecutionContext
 ) extends Endpoints:
 
-    private val service = LinkTemplateService(entityManagerFactory)
-    private val base    = "linktemplates"
-    private val tag     = "LinkTemplates"
+    private val service     = LinkTemplateService(entityManagerFactory)
+    private val linkService = LinkService(entityManagerFactory)
+    private val base        = "linktemplates"
+    private val tag         = "LinkTemplates"
 
     val findLinkTemplateById: Endpoint[Unit, Long, ErrorMsg, ExtendedLink, Any] = openEndpoint
         .get
@@ -183,13 +186,77 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
             }
         }
 
+    val countAllLinkTemplates: Endpoint[Unit, Unit, ErrorMsg, Count, Any] = openEndpoint
+        .get
+        .in(base / "count")
+        .out(jsonBody[Count])
+        .name("countAllLinkTemplates")
+        .description("Count all link templates")
+        .tag(tag)
+
+    val countAllLinkTemplatesImpl: ServerEndpoint[Any, Future] = countAllLinkTemplates
+        .serverLogic { _ =>
+            handleErrorsAsync(service.countAll().map(Count.apply))
+        }
+
+    val findAllLinkTemplates: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedLink]], Any] = openEndpoint
+        .get
+        .in(base)
+        .in(paging)
+        .out(jsonBody[Page[Seq[ExtendedLink]]])
+        .name("findAllLinkTemplates")
+        .description("Find all link templates")
+        .tag(tag)
+
+    val findAllLinkTemplatesImpl: ServerEndpoint[Any, Future] = findAllLinkTemplates
+        .serverLogic { paging =>
+            val limit  = paging.limit.getOrElse(100)
+            val offset = paging.offset.getOrElse(0)
+            handleErrorsAsync(service.findAll(limit, offset).map(s => Page(s, limit, offset)))
+        }
+
+    val findLinkTemplatesForConceptName: Endpoint[Unit, String, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
+        .get
+        .in(base / "query" / "for" / path[String]("conceptName"))
+        .out(jsonBody[Seq[ExtendedLink]])
+        .name("findLinkTemplatesForConceptName")
+        .description("Find all link templates that can be used to annotate a concept by name")
+        .tag(tag)
+
+    val findLinkTemplatesForConceptNameImpl: ServerEndpoint[Any, Future] = findLinkTemplatesForConceptName
+        .serverLogic { conceptName =>
+            handleErrorsAsync(
+                linkService.findAllLinkTemplatesForConcept(conceptName)
+            )
+        }
+
+    val findLinkTemplatesForConceptAndLinkName: Endpoint[Unit, (String, String), ErrorMsg, Seq[ExtendedLink], Any] =
+        openEndpoint
+            .get
+            .in(base / "query" / "for" / path[String]("conceptName") / "using" / path[String]("linkName"))
+            .out(jsonBody[Seq[ExtendedLink]])
+            .name("findLinkTemplatesForConceptAndLinkName")
+            .description("Find all link templates that can be used to annotate a concept by name and link name")
+            .tag(tag)
+
+    val findLinkTemplatesForConceptAndLinkNameImpl: ServerEndpoint[Any, Future] = findLinkTemplatesForConceptAndLinkName
+        .serverLogic { (conceptName, linkName) =>
+            handleErrorsAsync(
+                linkService.findLinkTemplatesByNameForConcept(conceptName, linkName)
+            )
+        }
+
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         renameToConcept,
         countLinkTemplatesByConceptName,
         findLinkTemplateByConceptName,
         findLinkTemplateByPrototype,
+        findLinkTemplatesForConceptAndLinkName,
+        findLinkTemplatesForConceptName,
         countByToConcept,
         findByToConcept,
+        countAllLinkTemplates,
+        findAllLinkTemplates,
         createLinkTemplate,
         updateLinkTemplate,
         deleteLinkTemplate,
@@ -201,8 +268,12 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         countLinkTemplatesByConceptNameImpl,
         findLinkTemplateByConceptNameImpl,
         findLinkTemplateByPrototypeImpl,
+        findLinkTemplatesForConceptAndLinkNameImpl,
+        findLinkTemplatesForConceptNameImpl,
         countByToConceptImpl,
         findByToConceptImpl,
+        countAllLinkTemplatesImpl,
+        findAllLinkTemplatesImpl,
         createLinkTemplateImpl,
         updateLinkTemplateImpl,
         deleteLinkTemplateImpl,

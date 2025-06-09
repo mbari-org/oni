@@ -30,6 +30,14 @@ public class LinkRealizationRepository extends Repository {
     public Collection<LinkRealizationEntity> findAllByLinkName(String linkName) {
         return findByNamedQuery("LinkRealization.findByLinkName", Map.of("linkName", linkName));
     }
+
+    public Long countAll() {
+        return countByNamedQuery("LinkRealization.countAll");
+    }
+
+    public Collection<LinkRealizationEntity> findAll(int limit, int offset) {
+        return findByNamedQuery("LinkRealization.findAll", limit, offset);
+    }
     
 
     public void validateToConcept(LinkRealizationEntity object) {

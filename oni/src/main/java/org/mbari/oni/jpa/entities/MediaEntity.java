@@ -175,6 +175,10 @@ public class MediaEntity implements Serializable, IPersistentObject {
         this.url = url;
     }
 
+    public Timestamp getLastUpdatedTimestamp() {
+        return updatedTime;
+    }
+
     public String stringValue() {
         return url; 
     }

@@ -59,15 +59,17 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val findAllEndpointImpl: ServerEndpoint[Any, Future] = findAllEndpoint.serverLogic { paging =>
-        val limit = paging.limit.getOrElse(DefaultLimit)
+        val limit  = paging.limit.getOrElse(DefaultLimit)
         val offset = paging.offset.getOrElse(0)
-        handleErrorsAsync({
-            service.findAll(limit, offset)
+        handleErrorsAsync {
+            service
+                .findAll(limit, offset)
                 .map(xs => Page(xs, limit, offset))
-        })
+        }
     }
 
-    val findReferencesByCitationGlobEndpoint: Endpoint[Unit, (Paging, ReferenceQuery), ErrorMsg, Page[Seq[Reference]], Any] =
+    val findReferencesByCitationGlobEndpoint
+        : Endpoint[Unit, (Paging, ReferenceQuery), ErrorMsg, Page[Seq[Reference]], Any] =
         openEndpoint
             .post
             .in(base / "query" / "citation")
@@ -80,17 +82,19 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Future] =
         findReferencesByCitationGlobEndpoint.serverLogic { (paging, glob) =>
-            val limit = paging.limit.getOrElse(DefaultLimit)
+            val limit  = paging.limit.getOrElse(DefaultLimit)
             val offset = paging.offset.getOrElse(0)
             glob.citation match
                 case None               => Future(Left(BadRequest("Citation is required")))
                 case Some(citationGlob) =>
                     handleErrorsAsync(
-                        service.findByCitationGlob(
-                            citationGlob,
-                            limit,
-                            offset
-                        ).map(xs => Page(xs, limit, offset))
+                        service
+                            .findByCitationGlob(
+                                citationGlob,
+                                limit,
+                                offset
+                            )
+                            .map(xs => Page(xs, limit, offset))
                     )
         }
 

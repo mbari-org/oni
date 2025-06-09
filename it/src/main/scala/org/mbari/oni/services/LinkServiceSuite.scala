@@ -46,7 +46,7 @@ trait LinkServiceSuite extends DataInitializer:
     test("findAllLinkTemplatesForConcept") {
         val root     = init(3, 3)
         assert(root != null)
-        val expected = root.getConceptMetadata.getLinkTemplates.asScala.map(Link.from).toSeq.sortBy(_.linkName)
+        val expected = root.getConceptMetadata.getLinkTemplates.asScala.map(ExtendedLink.from).toSeq.sortBy(_.linkName)
         linkService.findAllLinkTemplatesForConcept(root.getPrimaryConceptName.getName) match
             case Left(e)       => fail(e.getMessage)
             case Right(actual) =>
@@ -71,7 +71,7 @@ trait LinkServiceSuite extends DataInitializer:
                 linkService.findLinkTemplatesByNameForConcept(expected.concept, expected.linkName) match
                     case Left(e)       => fail(e.getMessage)
                     case Right(actual) =>
-                        assertEquals(expected.toLink, actual.head.copy(id = None))
+                        assertEquals(expected.toLink, actual.head.toLink)
             case None           => fail("No link templates found")
     }
 

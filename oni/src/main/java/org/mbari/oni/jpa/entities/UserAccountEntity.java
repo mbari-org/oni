@@ -212,6 +212,10 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         this.userName = userName;
     }
 
+    public Timestamp getLastUpdatedTimestamp() {
+        return updatedTime;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder(getClass().getSimpleName());

@@ -97,6 +97,10 @@ public class LinkTemplateRepository extends Repository {
                 .collect(Collectors.toList());
 
     }
+    
+    public Long countAll() {
+        return countByNamedQuery("LinkTemplate.countAll");
+    }
 
     public Collection<LinkTemplateEntity> findAll(int limit, int offset) {
         return findByNamedQuery("LinkTemplate.findAll", limit, offset);

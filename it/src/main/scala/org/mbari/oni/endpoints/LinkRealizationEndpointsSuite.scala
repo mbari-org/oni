@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ExtendedLink, ILink, LinkCreate, LinkUpdate}
+import org.mbari.oni.domain.{Count, ExtendedLink, ILink, LinkCreate, LinkUpdate, Page}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
@@ -58,6 +58,23 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
                 assertEquals(obtained, links)
         )
     }
+
+    test("findLinkRealizationsByLinkName") {
+        val links    = createLinkRealizations()
+        val linkName = links.head.linkName
+        runGet(
+            endpoints.findLinkRealizationsByLinkNameImpl,
+            s"http://test.com/v1/linkrealizations/query/linkname/$linkName",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Seq[ExtendedLink]](response.body)
+                    .sortBy(_.linkName)
+                var expected = links.filter(_.linkName == linkName)
+                assertEquals(obtained.size, expected.size)
+                assertEquals(obtained, expected)
+        )
+    }
+
     test("findLinkRealizationByPrototype") {
         val links     = createLinkRealizations()
         val link      = links.head
@@ -71,6 +88,34 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[ExtendedLink]](response.body)
                 assertEquals(obtained, Seq(link))
+        )
+    }
+
+    test("countAllLinkRealizations") {
+        val links = createLinkRealizations()
+        runGet(
+            endpoints.countAllLinkRealizationsImpl,
+            "http://test.com/v1/linkrealizations/count",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val count = checkResponse[Count](response.body)
+                assertEquals(count.count, links.size.toLong)
+        )
+    }
+
+    test("findAllLinkRealizations") {
+        val links = createLinkRealizations()
+        runGet(
+            endpoints.findAllLinkRealizationsImpl,
+            "http://test.com/v1/linkrealizations",
+            response =>
+                //                println(response.body)
+                assertEquals(response.code, StatusCode.Ok)
+                val xs       = checkResponse[Page[Seq[ExtendedLink]]](response.body)
+                val obtained = xs.content
+                val expected = links.sortBy(_.linkName.toLowerCase())
+                assertEquals(obtained.size, expected.size)
+                assertEquals(obtained, expected)
         )
     }
 

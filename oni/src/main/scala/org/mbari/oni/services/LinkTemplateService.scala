@@ -22,6 +22,21 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
     private val log                = System.getLogger(getClass.getName)
     private val userAccountService = UserAccountService(entityManagerFactory)
 
+    def countAll(): Either[Throwable, Long] =
+        entityManagerFactory.transaction(entityManager =>
+            val repo = new LinkTemplateRepository(entityManager)
+            repo.countAll()
+        )
+
+    def findAll(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedLink]] =
+        entityManagerFactory.transaction(entityManager =>
+            val repo = new LinkTemplateRepository(entityManager)
+            repo.findAll(limit, offset)
+                .asScala
+                .toSeq
+                .map(ExtendedLink.from)
+        )
+
     def findById(id: Long): Either[Throwable, ExtendedLink] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)

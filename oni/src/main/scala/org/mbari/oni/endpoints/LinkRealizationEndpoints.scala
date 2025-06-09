@@ -8,10 +8,10 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, ExtendedLink, Link, LinkCreate, LinkUpdate, ServerError}
+import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedLink, Link, LinkCreate, LinkUpdate, Page, ServerError}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.LinkRealizationService
+import org.mbari.oni.services.{LinkRealizationService, LinkService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
@@ -23,9 +23,10 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     executionContext: ExecutionContext
 ) extends Endpoints:
 
-    private val service = LinkRealizationService(entityManagerFactory)
-    private val base    = "linkrealizations"
-    private val tag     = "LinkRealizations"
+    private val service     = LinkRealizationService(entityManagerFactory)
+    private val linkService = LinkService(entityManagerFactory)
+    private val base        = "linkrealizations"
+    private val tag         = "LinkRealizations"
 
     val findLinkRealizationById: Endpoint[Unit, Long, ErrorMsg, ExtendedLink, Any] = openEndpoint
         .get
@@ -118,9 +119,54 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
             }
         }
 
+    val countAllLinkRealizations: Endpoint[Unit, Unit, ErrorMsg, Count, Any] = openEndpoint
+        .get
+        .in(base / "count")
+        .out(jsonBody[Count])
+        .name("countAllLinkRealizations")
+        .description("Count all link realizations")
+        .tag(tag)
+
+    val countAllLinkRealizationsImpl: ServerEndpoint[Any, Future] =
+        countAllLinkRealizations.serverLogic { _ =>
+            handleErrorsAsync(service.countAll().map(Count.apply))
+        }
+
+    val findAllLinkRealizations: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedLink]], Any] = openEndpoint
+        .get
+        .in(base)
+        .in(paging)
+        .out(jsonBody[Page[Seq[ExtendedLink]]])
+        .name("findAllLinkRealizations")
+        .description("Find all link realizations")
+        .tag(tag)
+
+    val findAllLinkRealizationsImpl: ServerEndpoint[Any, Future] =
+        findAllLinkRealizations.serverLogic { paging =>
+            val limit  = paging.limit.getOrElse(100)
+            val offset = paging.offset.getOrElse(0)
+            handleErrorsAsync(service.findAll(limit, offset).map(s => Page(s, limit, offset)))
+        }
+
+    val findLinkRealizationsByLinkName: Endpoint[Unit, String, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
+        .get
+        .in(base / "query" / "linkname" / path[String]("linkName"))
+        .out(jsonBody[Seq[ExtendedLink]])
+        .name("findLinkRealizationsByLinkName")
+        .description("Find all link realizations by link name")
+        .tag(tag)
+
+    val findLinkRealizationsByLinkNameImpl: ServerEndpoint[Any, Future] =
+        findLinkRealizationsByLinkName.serverLogic { linkName =>
+            handleErrorsAsync(linkService.findLinkRealizationsByLinkName(linkName))
+        }
+
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findLinkRealizationsByConceptName,
+        findLinkRealizationsByLinkName,
         findLinkRealizationByPrototype,
+        countAllLinkRealizations,
+        findAllLinkRealizations,
         create,
         update,
         delete,
@@ -129,7 +175,10 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         findLinkRealizationsByConceptNameImpl,
+        findLinkRealizationsByLinkNameImpl,
         findLinkRealizationByPrototypeImpl,
+        countAllLinkRealizationsImpl,
+        findAllLinkRealizationsImpl,
         createImpl,
         updateImpl,
         deleteImpl,

@@ -47,7 +47,6 @@ trait LinkEndpointsSuite extends EndpointsSuite with DataInitializer with UserAu
 //                println(response.body)
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[Link]](response.body)
-                    .map(_.copy(id = None)) // The expected dont' have the ids but the obtained do
                     .sortBy(_.linkName)
                 assertEquals(expected.size, obtained.size)
                 assertEquals(obtained, expected)
@@ -64,7 +63,6 @@ trait LinkEndpointsSuite extends EndpointsSuite with DataInitializer with UserAu
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[Link]](response.body)
-                    .map(_.copy(id = None)) // The expected dont' have the ids but the obtained do
                     .sortBy(_.linkName)
                 assertEquals(links.size, obtained.size)
                 assertEquals(obtained, expected)
@@ -82,7 +80,6 @@ trait LinkEndpointsSuite extends EndpointsSuite with DataInitializer with UserAu
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[Seq[Link]](response.body)
-                    .map(_.copy(id = None)) // The expected dont' have the ids but the obtained do
                     .sortBy(_.linkName)
                 assertEquals(obtained.size, 1)
                 assertEquals(obtained, Seq(expected))

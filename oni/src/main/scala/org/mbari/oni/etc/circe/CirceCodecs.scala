@@ -94,6 +94,9 @@ object CirceCodecs:
     given Decoder[ExtendedLink] = deriveDecoder
     given Encoder[ExtendedLink] = deriveEncoder
 
+    given page3Decoder: Decoder[Page[Seq[ExtendedLink]]] = deriveDecoder
+    given page3Encoder: Encoder[Page[Seq[ExtendedLink]]] = deriveEncoder
+
     given Decoder[Link] = deriveDecoder
     given Encoder[Link] = deriveEncoder
 
@@ -148,8 +151,8 @@ object CirceCodecs:
     given Decoder[Reference] = deriveDecoder
     given Encoder[Reference] = deriveEncoder
 
-    given page3Decoder: Decoder[Page[Seq[Reference]]] = deriveDecoder
-    given page3Encoder: Encoder[Page[Seq[Reference]]] = deriveEncoder
+    given page4Decoder: Decoder[Page[Seq[Reference]]] = deriveDecoder
+    given page4Encoder: Encoder[Page[Seq[Reference]]] = deriveEncoder
 
     given Decoder[ReferenceUpdate] = deriveDecoder
     given Encoder[ReferenceUpdate] = deriveEncoder

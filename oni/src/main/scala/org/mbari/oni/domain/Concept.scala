@@ -11,6 +11,7 @@ import org.mbari.oni.etc.jdk.Numbers.*
 import org.mbari.oni.jpa.entities.ConceptEntity
 
 import scala.jdk.CollectionConverters.*
+import java.time.Instant
 
 /**
  * A node in the knoweldgebase tree
@@ -34,7 +35,8 @@ case class Concept(
     alternativeNames: Seq[String] = Nil,
     children: Seq[Concept] = Nil,
     aphiaId: Option[Long] = None,
-    id: Option[Long] = None
+    id: Option[Long] = None,
+    lastUpdated: Option[Instant] = None
 ):
 
     /**
@@ -82,5 +84,6 @@ object Concept:
             alternativeNames,
             c.getChildConcepts.asScala.map(from).toSeq.sortBy(_.name),
             c.getAphiaId.asLong,
-            c.getId.asLong
+            c.getId.asLong,
+            Option(c.getLastUpdatedTimestamp).map(_.toInstant)
         )
