@@ -63,9 +63,13 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
     def findByPrototype(link: Link): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkRealizationRepository(entityManager)
+            val conceptRepo = new ConceptRepository(entityManager)
+            val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => link.toConcept
             repo.findAllByLinkName(link.linkName)
                 .stream()
-                .filter(lr => lr.getLinkValue == link.linkValue && lr.getToConcept == link.toConcept)
+                .filter(lr => lr.getLinkValue == link.linkValue && (lr.getToConcept == link.toConcept || lr.getToConcept == resolvedToConcept))
                 .map(ExtendedLink.from)
                 .toList
                 .asScala
