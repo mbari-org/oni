@@ -30,6 +30,19 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 case None               => throw LinkRealizationIdNotFound(id)
         )
 
+    def countByConcept(conceptName: String): Either[Throwable, Long] =
+        entityManagerFactory.transaction(entityManager =>
+            val repo = new ConceptRepository(entityManager)
+            repo.findByName(conceptName).toScala match
+                case Some(concept) =>
+                    concept
+                        .getConceptMetadata
+                        .getLinkTemplates
+                        .size()
+                        .toLong
+                case None          => throw ConceptNameNotFound(conceptName)
+        )
+
     def findByConcept(conceptName: String): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new ConceptRepository(entityManager)

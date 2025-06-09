@@ -49,6 +49,20 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             .map(ExtendedLink.from)
             .sortBy(_.linkName)
 
+    test("countLinkTemplatesByConceptName") {
+        val links       = createLinkTemplates()
+        val conceptName = links.head.concept
+        runGet(
+            endpoints.countLinkTemplatesByConceptNameImpl,
+            s"http://test.com/v1/linktemplates/concept/count/$conceptName",
+            response =>
+//                println(response.body)
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Long](response.body)
+                assertEquals(obtained, links.size.toLong)
+        )
+    }
+
     test("findLinkTemplatesByConceptName") {
         val links       = createLinkTemplates()
         val conceptName = links.head.concept

@@ -49,6 +49,19 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
             handleErrorsAsync(service.findById(id))
         }
 
+    val countLinkTemplatesByConceptName: Endpoint[Unit, String, ErrorMsg, Long, Any] = openEndpoint
+        .get
+        .in(base / "concept" / "count" / path[String]("conceptName"))
+        .out(jsonBody[Long])
+        .name("countLinkTemplatesByConceptName")
+        .description("Count all link templates by concept name")
+        .tag(tag)
+
+    val countLinkTemplatesByConceptNameImpl: ServerEndpoint[Any, Future] =
+        countLinkTemplatesByConceptName.serverLogic { conceptName =>
+            handleErrorsAsync(service.countByConcept(conceptName))
+        }
+
     val findLinkTemplateByConceptName: Endpoint[Unit, String, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
         .get
         .in(base / "concept" / path[String]("conceptName"))
@@ -172,6 +185,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         renameToConcept,
+        countLinkTemplatesByConceptName,
         findLinkTemplateByConceptName,
         findLinkTemplateByPrototype,
         countByToConcept,
@@ -184,6 +198,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         renameToConceptImpl,
+        countLinkTemplatesByConceptNameImpl,
         findLinkTemplateByConceptNameImpl,
         findLinkTemplateByPrototypeImpl,
         countByToConceptImpl,
