@@ -79,7 +79,7 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
-        val dto     = ConceptNameCreate(name = name, newName = "newName22", nameType = ConceptNameTypes.SYNONYM.getType)
+        val dto     = ConceptNameCreate(name = name, newName = Strings.random(12), nameType = ConceptNameTypes.SYNONYM.getType)
 
         val attempt = runWithUserAuth(user => conceptNameService.addName(dto, user.username))
 
@@ -90,20 +90,31 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
                 assert(obtained.contains(dto.newName))
             case Left(error)       =>
                 fail(error.toString)
+
+        conceptNameService.findByName(dto.newName) match
+            case Right(rawConcept) =>
+                val obtained = rawConcept.names.map(_.name).toSeq
+                assert(obtained.contains(dto.newName))
+            case Left(error)       =>
+                fail(error.toString)
     }
 
-    test("updateName") {
+    test("updateName (primary name)") {
 
         val root    = init(3, 3)
         assert(root != null)
         val rawRoot = RawConcept.from(root)
         val name    = rawRoot.primaryName
+
+        var newName = Strings.random(12)
         val dto     =
             ConceptNameUpdate(
-                newName = Some("newName"),
+                newName = Some(newName),
                 nameType = Some(ConceptNameTypes.PRIMARY.getType),
                 author = Some(Strings.random(5))
             )
+
+        // println(s"Updating name: $name with dto: $dto")
 
         val attempt = runWithUserAuth(user => conceptNameService.updateName(name, dto, user.username))
 
@@ -118,6 +129,15 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
                 val updatedName    = updatedNameOpt.get
                 assertEquals(updatedName.nameType, ConceptNameTypes.PRIMARY.getType)
                 assertEquals(updatedName.author, dto.author)
+            case Left(error)       =>
+                fail(error.toString)
+
+
+        conceptNameService.findByName(newName) match
+            case Right(rawConcept) =>
+                val obtained = rawConcept.names.map(_.name).toSeq
+                // println(s"Obtained names: ${obtained.mkString(", ")}")
+                assert(obtained.contains(newName))
             case Left(error)       =>
                 fail(error.toString)
     }
