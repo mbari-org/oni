@@ -8,6 +8,7 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
+
 import java.time.Instant
 
 case class ExtendedLink(

@@ -10,8 +10,8 @@ package org.mbari.oni.domain
 import org.mbari.oni.etc.jdk.Numbers.*
 import org.mbari.oni.jpa.entities.ConceptEntity
 
-import scala.jdk.CollectionConverters.*
 import java.time.Instant
+import scala.jdk.CollectionConverters.*
 
 /**
  * A node in the knoweldgebase tree

@@ -10,8 +10,8 @@ package org.mbari.oni.domain
 import org.mbari.oni.jpa.entities.ReferenceEntity
 
 import java.net.URI
-import scala.jdk.CollectionConverters.*
 import java.time.Instant
+import scala.jdk.CollectionConverters.*
 
 case class Reference(
     citation: String,

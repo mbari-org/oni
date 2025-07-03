@@ -11,9 +11,9 @@ import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jpa.entities.MediaEntity
 
 import java.net.{URI, URL}
+import java.time.Instant
 import java.util.regex.Pattern
 import scala.util.{Success, Try}
-import java.time.Instant
 
 /**
  * @author

@@ -7,7 +7,7 @@
 
 package org.mbari.oni.domain
 
-import org.mbari.oni.AppConfig
+import org.mbari.oni.config.AppConfig
 
 final case class HealthStatus(
     jdkVersion: String,

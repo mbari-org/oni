@@ -5,7 +5,7 @@
  * via any medium is strictly prohibited. Proprietary and confidential.
  */
 
-package org.mbari.oni
+package org.mbari.oni.config
 
 import com.typesafe.config.ConfigFactory
 import jakarta.persistence.EntityManagerFactory
@@ -16,7 +16,7 @@ import org.mbari.oni.jpa.EntityManagerFactories
  */
 object AppConfig:
 
-    val Config = ConfigFactory.load()
+    private val Config = ConfigFactory.load()
 
     val Name: String = "oni"
 
@@ -28,6 +28,9 @@ object AppConfig:
     val Description: String = "Organism Naming Infrastructure: Knowledge-base and User Accounts"
 
     val NumberOfThreads: Int = Config.getInt("database.threads")
+
+    /** We should have the same # of max db connections as vertx workers */
+    val NumberOfVertxWorkers: Int = NumberOfThreads
 
     lazy val DefaultJwtConfig: JwtConfig = JwtConfig(
         issuer = Config.getString("basicjwt.issuer"),
@@ -50,15 +53,5 @@ object AppConfig:
         password = Config.getString("database.password")
     )
 
-    lazy val DefaultEntityManagerFactory: EntityManagerFactory = EntityManagerFactories("database")
-
-case class HttpConfig(
-    port: Int,
-    stopTimeout: Int,
-    connectorIdleTimeout: Int,
-    contextPath: String
-)
-
-case class JwtConfig(issuer: String, apiKey: String, signingSecret: String)
-
-case class DatabaseConfig(logLevel: String, driver: String, url: String, user: String, password: String)
+    lazy val DefaultEntityManagerFactory: EntityManagerFactory =
+        EntityManagerFactories("database")

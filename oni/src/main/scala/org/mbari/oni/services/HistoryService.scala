@@ -52,7 +52,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 .toSeq
                 .map(h =>
                     val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
-                    ExtendedHistory.from(concept, h )
+                    ExtendedHistory.from(concept, h)
                     // Fix for https://github.com/mbari-org/kb/issues/12
                     // Try(ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)).toOption
                 ) // TRY because of the potential for nulls during development

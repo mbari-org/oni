@@ -13,6 +13,12 @@ object Dependencies {
     lazy val circeParser  = "io.circe" %% "circe-parser"  % circeVersion
 
     lazy val commonsCodec = "commons-codec" % "commons-codec" % "1.18.0"
+
+    val flywayVersion = "11.10.0"
+    lazy val flywayCore = "org.flywaydb" % "flyway-core" % flywayVersion
+    lazy val flywaySqlserver = "org.flywaydb" % "flyway-sqlserver" % flywayVersion
+    lazy val flywayPostgres = "org.flywaydb" % "flyway-database-postgresql" % flywayVersion
+
     lazy val gson = "com.google.code.gson" % "gson" % "2.13.1"
 
     // THis needs to match the version used by tapirHelidon.
@@ -22,7 +28,7 @@ object Dependencies {
     lazy val helidonEncodingGzip    = "io.helidon.http.encoding" % "helidon-http-encoding-gzip" % helidonVersion
 
     // val hibernateVersion      = "6.6.17.Final"
-     val hibernateVersion      = "7.0.3.Final"
+     val hibernateVersion      = "7.0.4.Final"
     lazy val hibernateCore    = "org.hibernate.orm" % "hibernate-core"     % hibernateVersion
     lazy val hibernateJCache  = "org.hibernate"     % "hibernate-jcache"     % hibernateVersion
     lazy val hibernateEnvers  = "org.hibernate.orm" % "hibernate-envers"   % hibernateVersion
@@ -33,7 +39,7 @@ object Dependencies {
     lazy val jaspyt      = "org.jasypt"              % "jasypt"                     % "1.9.3"
     lazy val junit       = "junit"                   % "junit"                      % "4.13.2"
     lazy val logback     = "ch.qos.logback"          % "logback-classic"            % "1.5.18"
-    lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.10.0.jre11"
+    lazy val mssqlserver = "com.microsoft.sqlserver" % "mssql-jdbc"                 % "12.10.1.jre11"
     lazy val munit       = "org.scalameta"          %% "munit"                      % "1.1.1"
     lazy val oracle      = "com.oracle.ojdbc"        % "ojdbc8"                     % "19.3.0.0"
     lazy val postgresql  = "org.postgresql"          % "postgresql"                 % "42.7.7"
@@ -53,7 +59,7 @@ object Dependencies {
 
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"          % "3.11.0"
 
-    val testcontainersVersion        = "1.21.2"
+    val testcontainersVersion        = "1.21.3"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers" % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "jdbc"           % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "mssqlserver"    % testcontainersVersion
