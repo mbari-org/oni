@@ -80,6 +80,8 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
 
                 if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
 
+                entityManager.flush()
+
                 RawConcept.from(concept, false)
             )
 
@@ -130,6 +132,7 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                     )
 
                 dto.updateEntity(existingConceptName)
+                entityManager.flush()
 
                 RawConcept.from(existingConceptName.getConcept, false)
             )
@@ -162,6 +165,8 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                     history.approveBy(userEntity.getUserName)
                     concept.removeConceptName(conceptName)
                     entityManager.remove(conceptName)
+
+                entityManager.flush()
 
                 RawConcept.from(concept, false)
             )

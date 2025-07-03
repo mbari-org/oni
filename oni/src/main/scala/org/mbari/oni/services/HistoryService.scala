@@ -50,9 +50,11 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             repo.findApprovedHistories(limit, offset)
                 .asScala
                 .toSeq
-                .flatMap(h =>
+                .map(h =>
+                    val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
+                    ExtendedHistory.from(concept, h )
                     // Fix for https://github.com/mbari-org/kb/issues/12
-                    Try(ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)).toOption
+                    // Try(ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)).toOption
                 ) // TRY because of the potential for nulls during development
                 .sortBy(_.creationTimestamp)
         )

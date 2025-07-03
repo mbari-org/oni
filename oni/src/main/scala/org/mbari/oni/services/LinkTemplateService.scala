@@ -75,24 +75,39 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
     def countByToConcept(toConcept: String): Either[Throwable, Long] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
-            repo.countByToConcept(toConcept)
+            val conceptRepo = new ConceptRepository(entityManager)
+            val resolvedName = conceptRepo.findByName(toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => toConcept
+            repo.countByToConcept(resolvedName)
+
+            // A ToConcept might not be an actual concept, most notably during development/testing
+            // So we check if it's used and if not, we check for the primary concept name.
         )
 
     def findByToConcept(toConcept: String): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
-            repo.findByToConcept(toConcept)
-                .asScala
-                .map(ExtendedLink.from)
-                .toSeq
+            val conceptRepo = new ConceptRepository(entityManager)
+            val resolvedName = conceptRepo.findByName(toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => toConcept
+            repo.findByToConcept(resolvedName)
+                        .asScala
+                        .map(ExtendedLink.from)
+                        .toSeq
         )
 
     def findByPrototype(link: Link): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
+            val conceptRepo = new ConceptRepository(entityManager)
+            val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => link.toConcept
             repo.findAllByLinkName(link.linkName)
                 .stream()
-                .filter(lr => lr.getLinkValue == link.linkValue && lr.getToConcept == link.toConcept)
+                .filter(lr => lr.getLinkValue == link.linkValue && (lr.getToConcept == link.toConcept || lr.getToConcept == resolvedToConcept))
                 .map(ExtendedLink.from)
                 .toList
                 .asScala
@@ -104,9 +119,13 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
             entityManagerFactory.transaction(entityManager =>
                 val repo        = new LinkTemplateRepository(entityManager)
                 val conceptRepo = new ConceptRepository(entityManager)
+                val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match
+                            case Some(concept) => concept.getPrimaryConceptName().getName()
+                            case None          => link.toConcept
+                val resolvedLink = link.copy(toConcept = resolvedToConcept)
                 conceptRepo.findByName(link.concept).toScala match
                     case Some(concept) =>
-                        val linkTemplate = link.toLink.toLinkTemplateEntity
+                        val linkTemplate = resolvedLink.toLink.toLinkTemplateEntity
                         // Check all link templates applicable to this concept
                         val applicable   = repo.findAllApplicableToConcept(concept)
                         if applicable.contains(linkTemplate) then
@@ -131,10 +150,15 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new LinkTemplateRepository(entityManager)
+                val conceptRepo = new ConceptRepository(entityManager)
                 repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
                     case Some(linkTemplate) =>
                         val before  = Link.from(linkTemplate)
-                        linkUpdate.updateEntity(linkTemplate)
+                        val resolvedName = conceptRepo.findByName(linkTemplate.getToConcept).toScala match
+                            case Some(concept) => concept.getPrimaryConceptName().getName()
+                            case None          => linkUpdate.toConcept.getOrElse(linkTemplate.getToConcept)
+                        val resolvedLinkUpdate = linkUpdate.copy(toConcept = Some(resolvedName))
+                        resolvedLinkUpdate.updateEntity(linkTemplate)
                         // add history
                         val history = HistoryEntityFactory.replaceLinkTemplate(
                             userEntity,
