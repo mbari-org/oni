@@ -24,7 +24,7 @@ import org.testcontainers.containers.{JdbcDatabaseContainerProvider, PostgreSQLC
 object PostgresEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
 
   val container = new PostgreSQLContainer("postgres:17")
-  container.withInitScript("sql/02_m3_kb.sql")
+//  container.withInitScript("sql/02_m3_kb.sql")
   container.withReuse(true)
   container.start()
 

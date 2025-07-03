@@ -10,6 +10,7 @@ package org.mbari.oni
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.{Vertx, VertxOptions}
 import io.vertx.ext.web.Router
+import org.mbari.oni.config.AppConfig
 import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
 import sttp.tapir.server.vertx.VertxFutureServerInterpreter.VertxFutureToScalaFuture

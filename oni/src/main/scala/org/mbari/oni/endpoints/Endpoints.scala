@@ -13,14 +13,15 @@ import org.mbari.oni.etc.circe.CirceCodecs
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.{AppConfig, ConceptNotFoundException}
+import org.mbari.oni.ConceptNotFoundException
+import org.mbari.oni.config.AppConfig
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.shared.Identity
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
-import sttp.tapir.{Endpoint, *}
+import sttp.tapir.*
 
 import java.net.{URI, URL}
 import java.time.Instant
