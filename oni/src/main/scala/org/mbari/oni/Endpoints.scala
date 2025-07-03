@@ -9,7 +9,22 @@ package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.config.AppConfig
-import org.mbari.oni.endpoints.{AuthorizationEndpoints, ConceptEndpoints, ConceptNameEndpoints, HealthEndpoints, HistoryEndpoints, LinkEndpoints, LinkRealizationEndpoints, LinkTemplateEndpoints, MediaEndpoints, PhylogenyEndpoints, PrefNodeEndpoints, RawEndpoints, ReferenceEndpoints, UserAccountEndpoints}
+import org.mbari.oni.endpoints.{
+    AuthorizationEndpoints,
+    ConceptEndpoints,
+    ConceptNameEndpoints,
+    HealthEndpoints,
+    HistoryEndpoints,
+    LinkEndpoints,
+    LinkRealizationEndpoints,
+    LinkTemplateEndpoints,
+    MediaEndpoints,
+    PhylogenyEndpoints,
+    PrefNodeEndpoints,
+    RawEndpoints,
+    ReferenceEndpoints,
+    UserAccountEndpoints
+}
 import org.mbari.oni.etc.jwt.JwtService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics

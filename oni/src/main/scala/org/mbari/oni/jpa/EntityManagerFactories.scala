@@ -82,8 +82,8 @@ object EntityManagerFactories:
         // Flyway migration here. Need to initialize the database before we
         // can create an EntityManagerFactory
         val dbConfig = DatabaseConfig("WARNING", driverName, url, username, password)
-        FlywayMigrator.migrate(dbConfig) match {
-            case Left(e) =>
+        FlywayMigrator.migrate(dbConfig) match
+            case Left(e)      =>
                 log.atError.withCause(e).log(s"Failed to migrate database at $url")
                 throw e
             case Right(value) =>
@@ -94,9 +94,6 @@ object EntityManagerFactories:
                     "jakarta.persistence.jdbc.driver"   -> driverName
                 )
                 apply(map ++ properties)
-        }
-
-
 
     def apply(configNode: String): EntityManagerFactory =
         val driver   = config.getString(configNode + ".driver")

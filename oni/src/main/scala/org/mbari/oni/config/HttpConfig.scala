@@ -8,8 +8,8 @@
 package org.mbari.oni.config
 
 case class HttpConfig(
-                         port: Int,
-                         stopTimeout: Int,
-                         connectorIdleTimeout: Int,
-                         contextPath: String
-                     )
+    port: Int,
+    stopTimeout: Int,
+    connectorIdleTimeout: Int,
+    contextPath: String
+)

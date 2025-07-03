@@ -8,9 +8,7 @@
 package org.mbari.oni.config
 
 import com.typesafe.config.ConfigFactory
-import com.zaxxer.hikari.HikariDataSource
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.etc.flyway.FlywayMigrator
 import org.mbari.oni.jpa.EntityManagerFactories
 
 /**
@@ -55,8 +53,5 @@ object AppConfig:
         password = Config.getString("database.password")
     )
 
-    lazy val DefaultEntityManagerFactory: EntityManagerFactory = {
+    lazy val DefaultEntityManagerFactory: EntityManagerFactory =
         EntityManagerFactories("database")
-    }
-
-
