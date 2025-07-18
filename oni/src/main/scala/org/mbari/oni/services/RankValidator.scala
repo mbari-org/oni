@@ -8,6 +8,7 @@
 package org.mbari.oni.services
 
 import org.mbari.oni.domain.{ConceptCreate, ConceptUpdate}
+import org.mbari.oni.jpa.entities.ConceptEntity
 
 object RankValidator:
 
@@ -68,8 +69,11 @@ object RankValidator:
         s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
     }
 
-    def validate(rank: String): Boolean =
+    def validate(rank: String): Boolean = {
+        if (rank == null || rank.isEmpty) then
+            return true
         ValidRanks.contains(rank)
+    }
 
     def validate(rankLevel: Option[String] = None, rankName: Option[String] = None): Boolean =
         val rank = s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
@@ -80,6 +84,12 @@ object RankValidator:
 
     def validate(conceptUpdate: ConceptUpdate): Boolean =
         validate(conceptUpdate.rankLevel, conceptUpdate.rankName)
+
+    def throwExceptionIfInvalid(rank: String): Unit =
+        if !validate(rank) then
+            throw new IllegalArgumentException(
+                s"Invalid rank ($rank). Should be one of ${RankValidator.ValidRanks.mkString(", ")}"
+            )
 
     def throwExceptionIfInvalid(conceptCreate: ConceptCreate): Unit =
         if !validate(conceptCreate) then

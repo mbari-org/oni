@@ -52,9 +52,7 @@ object TestEntityFactory:
             for _ <- 0 until numberChildren do
                 val entity = buildNode(maxBreadth)
                 if entity.getRankLevel != null then // Add a numbert depth to the rank level
-                    // entity.setRankLevel(s"$depth--${entity.getRankLevel}")
                     entity.setRankLevel(entity.getRankLevel)
-//                println(s"------- Adding " + entity.getPrimaryConceptName.getName + " to " + parent.getPrimaryConceptName.getName)
                 parent.addChildConcept(entity)
                 buildTree(entity, depth - 1, maxBreadth)
 

@@ -16,19 +16,11 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{
-    ConceptCreate,
-    ConceptNameCreate,
-    ConceptNameTypes,
-    ConceptUpdate,
-    LinkCreate,
-    MediaCreate,
-    UserAccountRoles
-}
+import org.mbari.oni.domain.{ConceptCreate, ConceptNameCreate, ConceptNameTypes, ConceptUpdate, LinkCreate, MediaCreate, UserAccountRoles}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.jpa.entities.HistoryEntity
+import org.mbari.oni.jpa.entities.{HistoryEntity, TestEntityFactory}
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
@@ -736,4 +728,54 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
         attempt match
             case Right(_) => // Succeed
             case Left(e)  => fail(e.getMessage)
+    }
+
+
+    test("approveReplaceRank") {
+        val root     = initShallowTree(2)
+        val child = root.getChildConcepts.iterator().next()
+        val rank = TestEntityFactory.randomRankLevelAndName()
+        val conceptUpdate = ConceptUpdate( rankLevel = rank._1, rankName = rank._2)
+        val conceptService = ConceptService(entityManagerFactory)
+        val attempt = for
+            _  <- runWithUserAuth(user => conceptService.update(child.getName, conceptUpdate, user.username))
+            concept <- conceptService.findByName(root.getName)
+            historyOpt <- historyService
+                .findByConceptName(root.getName)
+                .map(_.find(x => x.field == HistoryEntity.FIELD_CONCEPT_RANK && x.action == HistoryEntity.ACTION_REPLACE))
+            history <- historyOpt.toRight(new Exception("History not found"))
+            approvedHistory <- runWithUserAuth(user => historyActionService.approve(history.id.get, user.username))
+        yield
+            assert(approvedHistory.approved)
+            conceptService.findByName(root.getName) match
+                case Right(concept) =>
+                    assert(concept.rankLevel == rank._1)
+                    assert(concept.rankName == rank._2)
+                case Left(_)        => fail("Concept should exist after approval")
+
+    }
+
+    test("rejectReplaceRank") {
+        val root = initShallowTree(2)
+        val child = root.getChildConcepts.iterator().next()
+        val originalRank = child.getRankLevel -> child.getRankName
+        val rank = TestEntityFactory.randomRankLevelAndName()
+        val conceptUpdate = ConceptUpdate(rankLevel = rank._1, rankName = rank._2)
+        val conceptService = ConceptService(entityManagerFactory)
+        val attempt = for
+            _ <- runWithUserAuth(user => conceptService.update(child.getName, conceptUpdate, user.username))
+            concept <- conceptService.findByName(root.getName)
+            historyOpt <- historyService
+                .findByConceptName(root.getName)
+                .map(_.find(x => x.field == HistoryEntity.FIELD_CONCEPT_RANK && x.action == HistoryEntity.ACTION_REPLACE))
+            history <- historyOpt.toRight(new Exception("History not found"))
+            rejectedHistory <- runWithUserAuth(user => historyActionService.reject(history.id.get, user.username))
+        yield
+            assert(!rejectedHistory.approved)
+            conceptService.findByName(root.getName) match
+                case Right(concept) =>
+                    assert(Option(originalRank._1) == rank._1)
+                    assert(Option(originalRank._2) == rank._2)
+                case Left(_) => fail("Concept should exist after approval")
+
     }

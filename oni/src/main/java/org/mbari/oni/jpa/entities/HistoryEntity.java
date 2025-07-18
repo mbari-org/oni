@@ -101,8 +101,9 @@ public class HistoryEntity implements Serializable, IPersistentObject {
     public static final String FIELD_CONCEPT_NODCCODE = "NodcCode";
     public static final String FIELD_CONCEPT_ORIGINATOR = "Originator";
     public static final String FIELD_CONCEPT_PARENT = "Concept.parent";
-    public static final String FIELD_CONCEPT_RANKLEVEL = "RankLevel";
-    public static final String FIELD_CONCEPT_RANKNAME = "RankName";
+    public static final String FIELD_CONCEPT_RANK = "Rank";
+//    public static final String FIELD_CONCEPT_RANKLEVEL = "RankLevel";
+//    public static final String FIELD_CONCEPT_RANKNAME = "RankName";
     public static final String FIELD_CONCEPT_REFERENCE = "Reference";
     public static final String FIELD_CONCEPT_STRUCTURETYPE = "StructureType";
     public static final String FIELD_LINKREALIZATION = "LinkRealization";

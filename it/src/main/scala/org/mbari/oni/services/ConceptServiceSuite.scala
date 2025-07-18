@@ -274,7 +274,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                 historyService.findByConceptName(child.name) match
                     case Left(e)      => fail("Failed to find history")
                     case Right(found) =>
-                        assertEquals(found.size, 2)
+                        assertEquals(found.size, 1)
 
     }
 
