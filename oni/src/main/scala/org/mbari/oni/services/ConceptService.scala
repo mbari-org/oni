@@ -588,15 +588,22 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             val concept         = conceptMetadata.getConcept
             val oldRank         = history.getOldValue
             val parts = oldRank.split(" ")
-            if parts.length != 2 then
-                throw new IllegalArgumentException(s"Invalid rank format: '$oldRank'. Expected format: 'level name'")
-            val rankLevel = parts(0).trim
-            val rankName  = parts(1).trim
-            if rankLevel.isEmpty || rankLevel.isBlank then concept.setRankLevel(null)
-            else concept.setRankLevel(rankLevel)
-            if rankName.isEmpty || rankLevel.isBlank then concept.setRankName(null)
-            else concept.setRankName(rankName)
-            Right(true)
+            if parts.length == 1 then
+                val rankName = parts(0).trim
+                if rankName.isEmpty || rankName.isBlank then concept.setRankName(null)
+                else concept.setRankName(rankName)
+                concept.setRankLevel(null)
+                Right(true)
+            else if parts.length == 2 then
+                val rankLevel = parts(0).trim
+                val rankName  = parts(1).trim
+                if rankLevel.isEmpty || rankLevel.isBlank then concept.setRankLevel(null)
+                else concept.setRankLevel(rankLevel)
+                if rankName.isEmpty || rankLevel.isBlank then concept.setRankName(null)
+                else concept.setRankName(rankName)
+                Right(true)
+            else
+                Left(HistoryIsInvalid(s"History does not contain a valid rank: $oldRank"))
         else Left(HistoryIsInvalid("History is not a replace rank history"))
 
 //    def inTxnRejectReplaceRankLevel(
