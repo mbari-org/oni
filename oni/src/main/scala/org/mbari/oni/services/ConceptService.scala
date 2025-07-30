@@ -338,9 +338,10 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 case (Some(level), None) =>
                     if (level != conceptEntity.getRankLevel) then {
                         val correctedLevel = if level.isBlank then null else level
+                        val oldRankLevel = Option(conceptEntity.getRankLevel).getOrElse("")
                         conceptEntity.setRankLevel(correctedLevel)
                         Some(HistoryEntityFactory.replaceRank(userEntity,
-                            conceptEntity.getRankLevel,
+                            oldRankLevel,
                             conceptEntity.getRankName,
                             level,
                             conceptEntity.getRankName))
@@ -350,10 +351,11 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 case (None, Some(name)) =>
                     if (name != conceptEntity.getRankName) then {
                         val correctedName = if name.isBlank then null else name
+                        val oldRankName = Option(conceptEntity.getRankName).getOrElse("")
                         conceptEntity.setRankName(correctedName)
                         Some(HistoryEntityFactory.replaceRank(userEntity,
                             conceptEntity.getRankLevel,
-                            conceptEntity.getRankName,
+                            oldRankName,
                             conceptEntity.getRankLevel,
                             name))
                     }
@@ -362,11 +364,13 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                     if (level != conceptEntity.getRankLevel || name != conceptEntity.getRankName) then {
                         val correctedLevel = if level.isBlank then null else level
                         val correctedName  = if name.isBlank then null else name
+                        val oldRankLevel = Option(conceptEntity.getRankLevel).getOrElse("")
+                        val oldRankName = Option(conceptEntity.getRankName).getOrElse("")
                         conceptEntity.setRankLevel(correctedLevel)
                         conceptEntity.setRankName(correctedName)
                         Some(HistoryEntityFactory.replaceRank(userEntity,
-                            conceptEntity.getRankLevel,
-                            conceptEntity.getRankName,
+                            oldRankLevel,
+                            oldRankName,
                             level,
                             name))
                     }

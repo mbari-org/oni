@@ -98,7 +98,7 @@ public class HistoryEntityFactory {
     }
 
     public static HistoryEntity replaceRank(UserAccountEntity userAccount, String oldRankName, String oldRankLevel, String newRankName, String newRankLevel) {
-        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_RANK, oldRankName + " " + oldRankLevel, newRankName + " " + newRankLevel);
+        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_RANK, (oldRankName + " " + oldRankLevel).trim(), (newRankName + " " + newRankLevel).trim());
     }
 
 //    public static HistoryEntity replaceRankName(UserAccountEntity userAccount, String oldRankName, String newRankName) {
