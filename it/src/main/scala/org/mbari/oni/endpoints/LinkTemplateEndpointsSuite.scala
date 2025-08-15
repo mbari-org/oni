@@ -49,7 +49,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             .flatMap(_.getConceptMetadata.getLinkTemplates.asScala)
             .toSeq
             .map(ExtendedLink.from)
-            .sortBy(_.linkName)
+            .sortBy(_.stringValue)
 
     test("countLinkTemplatesByConceptName") {
         val links       = createLinkTemplates()
@@ -210,7 +210,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 assertEquals(response.code, StatusCode.Ok)
                 val xs       = checkResponse[Page[Seq[ExtendedLink]]](response.body)
                 val obtained = xs.content
-                val expected = links.sortBy(_.linkName.toLowerCase())
+                val expected = links.sortBy(_.stringValue)
                 println("EXPECTED: " + expected)
                 println("OBTAINED: " + obtained)
                 assertEquals(obtained.size, expected.size)

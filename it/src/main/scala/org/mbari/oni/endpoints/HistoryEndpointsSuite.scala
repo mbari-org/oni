@@ -16,13 +16,13 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{Count, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, Count, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.services.{HistoryService, LinkTemplateService, UserAuthMixin}
+import org.mbari.oni.services.{ConceptService, ConceptNameService, HistoryService, LinkTemplateService, UserAuthMixin}
 import sttp.model.StatusCode
 
 trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
@@ -31,6 +31,8 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     lazy val fastPhylogenyService        = new FastPhylogenyService(entityManagerFactory)
     lazy val linkTemplateService         = LinkTemplateService(entityManagerFactory)
     lazy val historyService              = new HistoryService(entityManagerFactory)
+    // lazy val conceptService              = new ConceptService(entityManagerFactory)
+    lazy val conceptNameService          = new ConceptNameService(entityManagerFactory)
     lazy val endpoints: HistoryEndpoints = HistoryEndpoints(entityManagerFactory, fastPhylogenyService)
     private val password                 = "foofoofoo"
 
@@ -212,4 +214,93 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 historyService.findById(history.id.get) match
                     case Left(e)  => fail(e.getMessage)
                     case Right(h) => assert(!h.approved)
+    }
+
+    test("approve primary concept name change") {
+        val root = initShallowTree(4)
+        val concept = root.getChildConcepts.iterator().next()
+        val create = ConceptNameCreate(concept.getName, Strings.random(15), ConceptNameTypes.PRIMARY.getType)
+        val attempt1 = runWithUserAuth(
+            user => conceptNameService.addName(create, user.username),
+            role = UserAccountRoles.MAINTENANCE.getRoleName
+        )
+        attempt1 match
+            case Right(rawConcept) =>
+                assertEquals(rawConcept.primaryName, create.newName)
+            case Left(error)       =>
+                fail(error.toString)
+
+
+        val histories = historyService.findByConceptName(create.newName) match
+            case Left(e)  => fail(e.getMessage)
+            case Right(h) => h
+        
+        assertEquals(histories.size, 1)
+        val history = histories.head
+        val attempt2 = testWithUserAuth(
+            user =>
+                runPut(
+                    endpoints.approveEndpointImpl,
+                    s"http://test.com/v1/history/approve/${history.id.get}",
+                    "", // empty body
+                    response => assertEquals(response.code, StatusCode.Ok),
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
+
+        attempt2 match
+            case Left(e)  => fail(e.getMessage)
+            case Right(_) =>
+                historyService.findById(history.id.get) match
+                    case Left(e)  => fail(e.getMessage)
+                    case Right(h) =>
+                        assert(h.approved)
+                        val updatedConcept = conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
+                        assertEquals(updatedConcept.name, create.newName)
+    }
+
+    test("reject primary concept name change") {
+        val root = initShallowTree(4)
+        val concept = root.getChildConcepts.iterator().next()
+        val create = ConceptNameCreate(concept.getName, Strings.random(15), ConceptNameTypes.PRIMARY.getType)
+        val attempt1 = runWithUserAuth(
+            user => conceptNameService.addName(create, user.username),
+            role = UserAccountRoles.MAINTENANCE.getRoleName
+        )
+        attempt1 match
+            case Right(rawConcept) =>
+                assertEquals(rawConcept.primaryName, create.newName)
+            case Left(error)       =>
+                fail(error.toString)
+
+
+        val histories = historyService.findByConceptName(create.newName) match
+            case Left(e)  => fail(e.getMessage)
+            case Right(h) => h
+        
+        assertEquals(histories.size, 1)
+        // println(s"histories: ${histories}")
+        val history = histories.head
+        val attempt2 = testWithUserAuth(
+            user =>
+                runPut(
+                    endpoints.rejectEndpointImpl,
+                    s"http://test.com/v1/history/reject/${history.id.get}",
+                    "", // empty body
+                    response => assertEquals(response.code, StatusCode.Ok),
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
+
+        attempt2 match
+            case Left(e)  => fail(e.getMessage)
+            case Right(_) =>
+                historyService.findById(history.id.get) match
+                    case Left(e)  => fail(e.getMessage)
+                    case Right(h) =>
+                        assert(h.approved == false)
+                        val updatedConcept = conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
+                        assertEquals(updatedConcept.name, create.newName)
     }

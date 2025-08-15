@@ -35,6 +35,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 .asScala
                 .toSeq
                 .map(ExtendedLink.from)
+                .sortBy(_.stringValue)
         )
 
     def findById(id: Long): Either[Throwable, ExtendedLink] =
@@ -69,6 +70,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                         .asScala
                         .map(ExtendedLink.from)
                         .toSeq
+                        .sortBy(_.stringValue)
                 case None          => throw ConceptNameNotFound(conceptName)
         )
 
@@ -112,6 +114,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 .toList
                 .asScala
                 .toSeq
+                .sortBy(_.stringValue)
         )
 
     def create(link: LinkCreate, userName: String): Either[Throwable, ExtendedLink] =
