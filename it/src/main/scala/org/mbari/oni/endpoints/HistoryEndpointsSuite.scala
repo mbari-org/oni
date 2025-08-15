@@ -263,6 +263,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     test("reject primary concept name change") {
         val root = initShallowTree(4)
         val concept = root.getChildConcepts.iterator().next()
+        val originalName = concept.getName
         val create = ConceptNameCreate(concept.getName, Strings.random(15), ConceptNameTypes.PRIMARY.getType)
         val attempt1 = runWithUserAuth(
             user => conceptNameService.addName(create, user.username),
@@ -300,7 +301,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 historyService.findById(history.id.get) match
                     case Left(e)  => fail(e.getMessage)
                     case Right(h) =>
-                        assert(h.approved == false)
+                        assert(!h.approved)
                         val updatedConcept = conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
-                        assertEquals(updatedConcept.name, create.newName)
+                        assertEquals(updatedConcept.name, originalName)
     }
