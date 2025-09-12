@@ -8,7 +8,16 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{BadRequest, ErrorMsg, NotFound, Reference, ReferenceQuery, ReferenceUpdate, ServerError}
+import org.mbari.oni.domain.{
+    BadRequest,
+    ErrorMsg,
+    NotFound,
+    Page,
+    Reference,
+    ReferenceQuery,
+    ReferenceUpdate,
+    ServerError
+}
 import org.mbari.oni.endpoints.ReferenceEndpoints.DefaultLimit
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -18,7 +27,6 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
-import org.mbari.oni.domain.Page
 
 class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
     jwtService: JwtService,

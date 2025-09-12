@@ -192,11 +192,11 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
 
                         // Find the old primary name
                         Option(concept.getConceptName(historyEntity.getOldValue))
-                            .foreach(oldPrimaryName => {
+                            .foreach(oldPrimaryName =>
                                 concept.removeConceptName(oldPrimaryName)
                                 entityManager.remove(oldPrimaryName)
                                 entityManager.flush()
-                            })
+                            )
                         // set the concept name to the old primary name
                         conceptName.setName(historyEntity.getOldValue)
                     else

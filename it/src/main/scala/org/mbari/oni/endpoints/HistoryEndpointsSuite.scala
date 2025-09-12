@@ -16,13 +16,21 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, Count, ExtendedHistory, LinkCreate, Page, UserAccountRoles}
+import org.mbari.oni.domain.{
+    ConceptNameCreate,
+    ConceptNameTypes,
+    Count,
+    ExtendedHistory,
+    LinkCreate,
+    Page,
+    UserAccountRoles
+}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.services.{ConceptService, ConceptNameService, HistoryService, LinkTemplateService, UserAuthMixin}
+import org.mbari.oni.services.{ConceptNameService, HistoryService, LinkTemplateService, UserAuthMixin}
 import sttp.model.StatusCode
 
 trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
@@ -217,9 +225,9 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     }
 
     test("approve primary concept name change") {
-        val root = initShallowTree(4)
-        val concept = root.getChildConcepts.iterator().next()
-        val create = ConceptNameCreate(concept.getName, Strings.random(15), ConceptNameTypes.PRIMARY.getType)
+        val root     = initShallowTree(4)
+        val concept  = root.getChildConcepts.iterator().next()
+        val create   = ConceptNameCreate(concept.getName, Strings.random(15), ConceptNameTypes.PRIMARY.getType)
         val attempt1 = runWithUserAuth(
             user => conceptNameService.addName(create, user.username),
             role = UserAccountRoles.MAINTENANCE.getRoleName
@@ -230,13 +238,12 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
             case Left(error)       =>
                 fail(error.toString)
 
-
         val histories = historyService.findByConceptName(create.newName) match
             case Left(e)  => fail(e.getMessage)
             case Right(h) => h
-        
+
         assertEquals(histories.size, 1)
-        val history = histories.head
+        val history  = histories.head
         val attempt2 = testWithUserAuth(
             user =>
                 runPut(
@@ -256,16 +263,17 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                     case Left(e)  => fail(e.getMessage)
                     case Right(h) =>
                         assert(h.approved)
-                        val updatedConcept = conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
+                        val updatedConcept =
+                            conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
                         assertEquals(updatedConcept.name, create.newName)
     }
 
     test("reject primary concept name change") {
-        val root = initShallowTree(4)
-        val concept = root.getChildConcepts.iterator().next()
+        val root         = initShallowTree(4)
+        val concept      = root.getChildConcepts.iterator().next()
         val originalName = concept.getName
-        val create = ConceptNameCreate(concept.getName, Strings.random(15), ConceptNameTypes.PRIMARY.getType)
-        val attempt1 = runWithUserAuth(
+        val create       = ConceptNameCreate(concept.getName, Strings.random(15), ConceptNameTypes.PRIMARY.getType)
+        val attempt1     = runWithUserAuth(
             user => conceptNameService.addName(create, user.username),
             role = UserAccountRoles.MAINTENANCE.getRoleName
         )
@@ -275,14 +283,13 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
             case Left(error)       =>
                 fail(error.toString)
 
-
         val histories = historyService.findByConceptName(create.newName) match
             case Left(e)  => fail(e.getMessage)
             case Right(h) => h
-        
+
         assertEquals(histories.size, 1)
         // println(s"histories: ${histories}")
-        val history = histories.head
+        val history  = histories.head
         val attempt2 = testWithUserAuth(
             user =>
                 runPut(
@@ -302,6 +309,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                     case Left(e)  => fail(e.getMessage)
                     case Right(h) =>
                         assert(!h.approved)
-                        val updatedConcept = conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
+                        val updatedConcept =
+                            conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
                         assertEquals(updatedConcept.name, originalName)
     }

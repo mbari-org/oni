@@ -10,11 +10,11 @@ package org.mbari.oni
 import io.vertx.core.http.HttpServerOptions
 import io.vertx.core.{Vertx, VertxOptions}
 import io.vertx.ext.web.Router
+import org.mbari.oni.etc.flyway.FlywayMigration
 import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
 import sttp.tapir.server.vertx.VertxFutureServerInterpreter.VertxFutureToScalaFuture
 import sttp.tapir.server.vertx.{VertxFutureServerInterpreter, VertxFutureServerOptions}
-import org.mbari.oni.etc.flyway.FlywayMigration
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -45,13 +45,12 @@ object Main:
         val log  = System.getLogger(getClass.getName)
         val port = sys.env.get("HTTP_PORT").flatMap(_.toIntOption).getOrElse(8080)
         log.atInfo.log(s"Starting ${AppConfig.Name} v${AppConfig.Version} on port $port")
-        
+
         FlywayMigration.migrate(AppConfig.DefaultDatabaseConfig) match
             case true  => log.atDebug.log("Database migration complete")
             case false =>
                 log.atError.log("Database migration failed. Exiting.")
                 System.exit(1)
-        
 
         val serverOptions = VertxFutureServerOptions
             .customiseInterceptors

@@ -16,10 +16,9 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{Concept, ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
 import org.mbari.oni.jpa.DatabaseFunSuite
 import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 
 import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters.*
@@ -247,8 +246,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
     test("update") {
 
-        val root = TestEntityFactory.buildRoot(2, 0)
-        val child = root.getChildConcepts.iterator().next()
+        val root    = TestEntityFactory.buildRoot(2, 0)
+        val child   = root.getChildConcepts.iterator().next()
         val oldRank = (Option(child.getRankLevel).getOrElse("") + " " + Option(child.getRankName).getOrElse("")).trim
 
         val attempt = runWithUserAuth(user =>
@@ -267,7 +266,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         )
 
         attempt match
-            case Left(e)      =>
+            case Left(e)             =>
                 fail("Failed to update")
             case Right(updatedChild) =>
                 assertEquals(updatedChild.rank, Some("subgenus"))

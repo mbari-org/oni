@@ -7,9 +7,10 @@
 
 package org.mbari.oni.etc.flyway
 
-import org.mbari.oni.DatabaseConfig
 import org.flywaydb.core.Flyway
+import org.mbari.oni.DatabaseConfig
 import org.mbari.oni.etc.jdk.Loggers.given
+
 import scala.util.Try
 
 object FlywayMigration:
@@ -29,9 +30,9 @@ object FlywayMigration:
 
             val result = flyway.migrate()
             result.migrationsExecuted match
-                case 0 =>  log.atInfo.log("No database migrations were necessary")
-                case n if n > 0  => log.atInfo.log(s"Successfully applied $n database migrations")
-                case _           => log.atWarn.log("Database migration result was unexpected")
+                case 0          => log.atInfo.log("No database migrations were necessary")
+                case n if n > 0 => log.atInfo.log(s"Successfully applied $n database migrations")
+                case _          => log.atWarn.log("Database migration result was unexpected")
 
             log.atInfo
                 .log(

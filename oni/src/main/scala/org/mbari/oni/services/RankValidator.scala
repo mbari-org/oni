@@ -8,7 +8,6 @@
 package org.mbari.oni.services
 
 import org.mbari.oni.domain.{ConceptCreate, ConceptUpdate}
-import org.mbari.oni.jpa.entities.ConceptEntity
 
 object RankValidator:
 
@@ -69,11 +68,9 @@ object RankValidator:
         s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
     }
 
-    def validate(rank: String): Boolean = {
-        if (rank == null || rank.isEmpty) then
-            return true
+    def validate(rank: String): Boolean =
+        if rank == null || rank.isEmpty then return true
         ValidRanks.contains(rank)
-    }
 
     def validate(rankLevel: Option[String] = None, rankName: Option[String] = None): Boolean =
         val rank = s"${rankLevel.getOrElse("")}${rankName.getOrElse("")}".toLowerCase
