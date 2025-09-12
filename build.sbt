@@ -85,6 +85,7 @@ lazy val oni = project
         commonsCodec,
         // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to
         // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
+        flywayCore,
         hibernateCore,
         hibernateJCache,
 //        hibernateEnvers,

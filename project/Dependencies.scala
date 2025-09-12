@@ -16,6 +16,7 @@ object Dependencies {
     lazy val circeGeneric            = "io.circe"                      %% "circe-generic"              % circeVersion
     lazy val circeParser             = "io.circe"                      %% "circe-parser"               % circeVersion
     lazy val commonsCodec            = "commons-codec"                  % "commons-codec"              % "1.19.0"
+    lazy val flywayCore              = "org.flywaydb"                   % "flyway-core"                % "11.12.0"
     lazy val gson                    = "com.google.code.gson"           % "gson"                       % "2.13.2"
     val hibernateVersion             = "7.1.0.Final"
     lazy val hibernateCore           = "org.hibernate.orm"              % "hibernate-core"             % hibernateVersion
