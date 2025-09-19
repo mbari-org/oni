@@ -17,15 +17,32 @@ object FlywayMigration:
 
     private val log = System.getLogger(getClass.getName)
 
+    /**
+     * Run Flyway database migrations. It will baseline the database if no metadata table exists.
+     * @param databaseConfig The database configuration
+     * @return true if migrations were successful, false otherwise. 
+     *      The app should exit if false is returned.
+     */
     def migrate(databaseConfig: DatabaseConfig): Boolean =
 
         Try {
 
-            log.atInfo.log(s"Starting database migrations on ${databaseConfig.url}")
+            val location = if databaseConfig.driver.contains("postgres") then
+                "classpath:db/migration/postgresql"
+            else if databaseConfig.driver.contains("sqlserver") then
+                "classpath:db/migration/sqlserver"
+            else
+                throw new IllegalArgumentException(
+                    s"Unsupported database driver: ${databaseConfig.driver}. Only Postgres and SQL Server are supported."
+                )
+
+            log.atDebug.log(s"Starting database migrations on ${databaseConfig.url}")
             val flyway = Flyway
                 .configure()
+                .table("schema_history_oni")
+                .locations(location) // migration scripts location
                 .dataSource(databaseConfig.url, databaseConfig.user, databaseConfig.password)
-                .baselineOnMigrate(true) // <-- this makes Flyway baseline if no metadata table exists
+                .baselineOnMigrate(true) // this makes Flyway baseline if no metadata table exists
                 .load()
 
             val result = flyway.migrate()
