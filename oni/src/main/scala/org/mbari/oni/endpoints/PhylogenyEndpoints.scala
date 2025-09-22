@@ -42,7 +42,7 @@ class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory)(using execu
         .get
         .in(base / "down" / path[String]("name"))
         .out(jsonBody[SerdeConcept])
-        .description("Find the branch from the root down to a given concept")
+        .description("Find the branch from the given concept down to the leaves")
         .tag(tag)
 
     val downEndpointImpl: ServerEndpoint[Any, Future] = downEndpoint.serverLogic { name =>
