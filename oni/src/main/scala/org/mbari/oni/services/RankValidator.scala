@@ -69,6 +69,7 @@ object RankValidator:
     }
 
     def validate(rank: String): Boolean =
+        if rank == null || rank.isEmpty then return true
         ValidRanks.contains(rank)
 
     def validate(rankLevel: Option[String] = None, rankName: Option[String] = None): Boolean =
@@ -80,6 +81,12 @@ object RankValidator:
 
     def validate(conceptUpdate: ConceptUpdate): Boolean =
         validate(conceptUpdate.rankLevel, conceptUpdate.rankName)
+
+    def throwExceptionIfInvalid(rank: String): Unit =
+        if !validate(rank) then
+            throw new IllegalArgumentException(
+                s"Invalid rank ($rank). Should be one of ${RankValidator.ValidRanks.mkString(", ")}"
+            )
 
     def throwExceptionIfInvalid(conceptCreate: ConceptCreate): Unit =
         if !validate(conceptCreate) then

@@ -8,6 +8,7 @@
 package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.{LinkRealizationEntity, LinkTemplateEntity}
+
 import java.time.Instant
 
 case class ExtendedLink(
@@ -21,7 +22,10 @@ case class ExtendedLink(
     def toLink: Link =
         Link(linkName, toConcept, linkValue, id)
 
-    def stringValue: String =
+    val shortStringValue: String =
+        s"$linkName${ILink.DELIMITER}$toConcept${ILink.DELIMITER}$linkValue"
+
+    val stringValue: String =
         s"$concept${ILink.DELIMITER}$linkName${ILink.DELIMITER}$toConcept${ILink.DELIMITER}$linkValue"
 
 object ExtendedLink:

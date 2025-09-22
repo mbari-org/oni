@@ -35,6 +35,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 .asScala
                 .toSeq
                 .map(ExtendedLink.from)
+                .sortBy(_.shortStringValue)
         )
 
     def findById(id: Long): Either[Throwable, ExtendedLink] =
@@ -57,34 +58,38 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                         .asScala
                         .map(ExtendedLink.from)
                         .toSeq
+                        .sortBy(_.shortStringValue)
                 case None          => throw ConceptNameNotFound(conceptName)
         )
 
     def findByPrototype(link: Link): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.transaction(entityManager =>
-            val repo = new LinkRealizationRepository(entityManager)
-            val conceptRepo = new ConceptRepository(entityManager)
+            val repo              = new LinkRealizationRepository(entityManager)
+            val conceptRepo       = new ConceptRepository(entityManager)
             val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match
                 case Some(concept) => concept.getPrimaryConceptName().getName()
                 case None          => link.toConcept
             repo.findAllByLinkName(link.linkName)
                 .stream()
-                .filter(lr => lr.getLinkValue == link.linkValue && (lr.getToConcept == link.toConcept || lr.getToConcept == resolvedToConcept))
+                .filter(lr =>
+                    lr.getLinkValue == link.linkValue && (lr.getToConcept == link.toConcept || lr.getToConcept == resolvedToConcept)
+                )
                 .map(ExtendedLink.from)
                 .toList
                 .asScala
                 .toSeq
+                .sortBy(_.shortStringValue)
         )
 
     def create(link: LinkCreate, userName: String): Either[Throwable, ExtendedLink] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
             entityManagerFactory.transaction(entityManager =>
-                val repo        = new LinkRealizationRepository(entityManager)
-                val conceptRepo = new ConceptRepository(entityManager)
+                val repo              = new LinkRealizationRepository(entityManager)
+                val conceptRepo       = new ConceptRepository(entityManager)
                 val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match
-                            case Some(concept) => concept.getPrimaryConceptName().getName()
-                            case None          => link.toConcept
-                val resolvedLink = link.copy(toConcept = resolvedToConcept)
+                    case Some(concept) => concept.getPrimaryConceptName().getName()
+                    case None          => link.toConcept
+                val resolvedLink      = link.copy(toConcept = resolvedToConcept)
                 conceptRepo.findByName(link.concept).toScala match
                     case Some(concept) =>
                         val linkRealization = resolvedLink.toLink.toLinkRealizationEntity
@@ -109,12 +114,12 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
     def updateById(id: Long, linkUpdate: LinkUpdate, userName: String): Either[Throwable, ExtendedLink] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, ExtendedLink] =
             entityManagerFactory.transaction(entityManager =>
-                val repo = new LinkRealizationRepository(entityManager)
+                val repo        = new LinkRealizationRepository(entityManager)
                 val conceptRepo = new ConceptRepository(entityManager)
                 repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
                     case Some(linkRealization) =>
-                        val before = Link.from(linkRealization)
-                        val resolvedName = conceptRepo.findByName(linkRealization.getToConcept).toScala match
+                        val before             = Link.from(linkRealization)
+                        val resolvedName       = conceptRepo.findByName(linkRealization.getToConcept).toScala match
                             case Some(concept) => concept.getPrimaryConceptName().getName()
                             case None          => linkUpdate.toConcept.getOrElse(linkRealization.getToConcept)
                         val resolvedLinkUpdate = linkUpdate.copy(toConcept = Some(resolvedName))

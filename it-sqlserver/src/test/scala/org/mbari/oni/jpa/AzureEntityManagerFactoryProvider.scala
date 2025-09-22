@@ -17,6 +17,7 @@
 package org.mbari.oni.jpa
 
 import jakarta.persistence.EntityManagerFactory
+import org.flywaydb.core.Flyway
 import org.mbari.oni.etc.jdbc.{Resources, Scripts}
 import org.mbari.oni.etc.jdk.Files
 import org.mbari.oni.etc.tc.AzureSqlEdgeContainerProvider
@@ -26,46 +27,49 @@ import org.mbari.oni.etc.jdk.Loggers.given
 import org.testcontainers.containers.MSSQLServerContainer
 import org.testcontainers.utility.DockerImageName
 
-object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider {
+object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider:
 
-  // val container = new AzureSqlEdgeContainerProvider().newInstance()
-  private final val log = System.getLogger(getClass.getName)
+    // val container = new AzureSqlEdgeContainerProvider().newInstance()
+    final private val log = System.getLogger(getClass.getName)
 
-  // The image name must match the one in src/test/resources/container-license-acceptance.txt
-  val container = new MSSQLServerContainer(DockerImageName.parse("mcr.microsoft.com/mssql/server:2022-latest"))
-  container.acceptLicense()
+    // The image name must match the one in src/test/resources/container-license-acceptance.txt
+    val container = new MSSQLServerContainer(DockerImageName.parse("mcr.microsoft.com/mssql/server:2022-latest"))
+    container.acceptLicense()
+    container.withReuse(true)
+    container.start()
 
-  container.withInitScript("sql/init_min.sql")
-  container.withReuse(true)
-  container.start()
+    // Run the flyway migrations from oni/src/main/resources/db/migrations/sqlserver
+    Flyway
+        .configure()
+        .dataSource(container.getJdbcUrl, container.getUsername, container.getPassword)
+        .locations("classpath:db/migrations/sqlserver")
+        .load()
+        .migrate()
 
-  // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
-  // I'm using a shutdown hook to close the container at the end of the tests.
-  //  override def afterAll(): Unit  = container.stop()
-  Runtime.getRuntime.addShutdownHook(new Thread(() => container.stop()))
+    // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
+    // I'm using a shutdown hook to close the container at the end of the tests.
+    //  override def afterAll(): Unit  = container.stop()
+    Runtime.getRuntime.addShutdownHook(new Thread(() => container.stop()))
 
-  val testProps: Map[String, String] =
-      Map(
-        "hibernate.dialect" -> "org.hibernate.dialect.SQLServerDialect",
-        "hibernate.hbm2ddl.auto" -> "validate",
-        "hibernate.hikari.idleTimeout" -> "1000",
-        "hibernate.hikari.maxLifetime" -> "3000",
-        "jakarta.persistence.schema-generation.scripts.action" -> "drop-and-create",
-        "jakarta.persistence.schema-generation.scripts.create-target" -> "target/test-database-create.ddl",
-        "jakarta.persistence.schema-generation.scripts.drop-target"   -> "target/test-database-drop.ddl"
-      )
+    val testProps: Map[String, String] =
+        Map(
+            "hibernate.dialect"                                           -> "org.hibernate.dialect.SQLServerDialect",
+            "hibernate.hbm2ddl.auto"                                      -> "validate",
+            "hibernate.hikari.idleTimeout"                                -> "1000",
+            "hibernate.hikari.maxLifetime"                                -> "3000",
+            "jakarta.persistence.schema-generation.scripts.action"        -> "drop-and-create",
+            "jakarta.persistence.schema-generation.scripts.create-target" -> "target/test-database-create.ddl",
+            "jakarta.persistence.schema-generation.scripts.drop-target"   -> "target/test-database-drop.ddl"
+        )
 
-  lazy val entityManagerFactory: EntityManagerFactory =
-    val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
-    Class.forName(driver)
-    log.atInfo.log(s"Creating entity manager factory using ${container.getJdbcUrl}")
-    EntityManagerFactories(
-      container.getJdbcUrl,
-      container.getUsername,
-      container.getPassword,
-      container.getDriverClassName,
-      testProps
-    )
-
-
-}
+    lazy val entityManagerFactory: EntityManagerFactory =
+        val driver = "com.microsoft.sqlserver.jdbc.SQLServerDriver"
+        Class.forName(driver)
+        log.atInfo.log(s"Creating entity manager factory using ${container.getJdbcUrl}")
+        EntityManagerFactories(
+            container.getJdbcUrl,
+            container.getUsername,
+            container.getPassword,
+            container.getDriverClassName,
+            testProps
+        )

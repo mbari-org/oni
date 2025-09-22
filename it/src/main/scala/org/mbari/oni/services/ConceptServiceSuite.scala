@@ -246,12 +246,13 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
     test("update") {
 
-        val root = TestEntityFactory.buildRoot(2, 0)
+        val root    = TestEntityFactory.buildRoot(2, 0)
+        val child   = root.getChildConcepts.iterator().next()
+        val oldRank = (Option(child.getRankLevel).getOrElse("") + " " + Option(child.getRankName).getOrElse("")).trim
 
         val attempt = runWithUserAuth(user =>
             for
                 rootEntity   <- conceptService.init(root)
-                child        <- Right(rootEntity.getChildConcepts.iterator().next())
                 updatedChild <- conceptService.update(
                                     child.getPrimaryConceptName.getName,
                                     ConceptUpdate(
@@ -265,16 +266,19 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         )
 
         attempt match
-            case Left(e)      =>
+            case Left(e)             =>
                 fail("Failed to update")
-            case Right(child) =>
-                assertEquals(child.rank, Some("subgenus"))
-                assertEquals(child.aphiaId, Some(1234L))
+            case Right(updatedChild) =>
+                assertEquals(updatedChild.rank, Some("subgenus"))
+                assertEquals(updatedChild.aphiaId, Some(1234L))
 
-                historyService.findByConceptName(child.name) match
+                historyService.findByConceptName(updatedChild.name) match
                     case Left(e)      => fail("Failed to find history")
                     case Right(found) =>
-                        assertEquals(found.size, 2)
+                        assertEquals(found.size, 1)
+                        assertEquals(found.head.oldValue.getOrElse(""), oldRank)
+                        assertEquals(found.head.newValue.getOrElse(""), "sub genus")
+//                        println(found.head.stringify)
 
     }
 
