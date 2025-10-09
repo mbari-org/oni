@@ -100,7 +100,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             media <- txn(user.toEntity)
         yield ()
 
-    def update(id: Long, mediaUpdate: MediaUpdate, userName: String) =
+    def update(id: Long, mediaUpdate: MediaUpdate, userName: String): Either[Throwable, Media] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, Media] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = MediaRepository(entityManager, fastPhylogenyService)
