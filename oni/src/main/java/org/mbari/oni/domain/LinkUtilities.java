@@ -39,7 +39,6 @@ public class LinkUtilities {
 
         return sb.toString();
     }
-
     /**
      * Return allImpl links in a collection that match a given {@link ILink}. This compares the linkName,
      * toConcept, and linkValue fields

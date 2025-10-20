@@ -17,7 +17,6 @@
 package org.mbari.oni.jpa
 
 import jakarta.persistence.EntityManagerFactory
-import org.flywaydb.core.Flyway
 import org.mbari.oni.etc.jdbc.{Resources, Scripts}
 import org.mbari.oni.etc.jdk.Files
 import org.mbari.oni.etc.tc.AzureSqlEdgeContainerProvider
@@ -37,14 +36,6 @@ object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider:
     container.acceptLicense()
     container.withReuse(true)
     container.start()
-
-    // Run the flyway migrations from oni/src/main/resources/db/migrations/sqlserver
-    Flyway
-        .configure()
-        .dataSource(container.getJdbcUrl, container.getUsername, container.getPassword)
-        .locations("classpath:db/migrations/sqlserver")
-        .load()
-        .migrate()
 
     // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
     // I'm using a shutdown hook to close the container at the end of the tests.

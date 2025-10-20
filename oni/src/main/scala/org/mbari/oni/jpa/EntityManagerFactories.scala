@@ -9,7 +9,8 @@ package org.mbari.oni.jpa
 
 import com.typesafe.config.ConfigFactory
 import jakarta.persistence.{EntityManager, EntityManagerFactory, Persistence}
-import org.mbari.oni.AppConfig
+import org.mbari.oni.config.{AppConfig, DatabaseConfig}
+import org.mbari.oni.etc.flyway.FlywayMigrator
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jpa.EntityManagers.*
 
@@ -77,13 +78,21 @@ object EntityManagerFactories:
         properties: Map[String, String] = Map.empty
     ): EntityManagerFactory =
 
-        val map = Map(
-            "jakarta.persistence.jdbc.url"      -> url,
-            "jakarta.persistence.jdbc.user"     -> username,
-            "jakarta.persistence.jdbc.password" -> password,
-            "jakarta.persistence.jdbc.driver"   -> driverName
-        )
-        apply(map ++ properties)
+        // Flyway migration here. Need to initialize the database before we
+        // can create an EntityManagerFactory
+        val dbConfig = DatabaseConfig("WARNING", driverName, url, username, password)
+        FlywayMigrator.migrate(dbConfig) match
+            case Left(ex)     =>
+                log.atError.withCause(ex).log(s"Failed to migrate database at $url")
+                throw new RuntimeException(s"Failed to migrate database: ${ex.getMessage}", ex)
+            case Right(value) =>
+                val map = Map(
+                    "jakarta.persistence.jdbc.url"      -> url,
+                    "jakarta.persistence.jdbc.user"     -> username,
+                    "jakarta.persistence.jdbc.password" -> password,
+                    "jakarta.persistence.jdbc.driver"   -> driverName
+                )
+                apply(map ++ properties)
 
     def apply(configNode: String): EntityManagerFactory =
         val driver   = config.getString(configNode + ".driver")

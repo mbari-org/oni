@@ -25,16 +25,10 @@ import org.testcontainers.containers.{JdbcDatabaseContainerProvider, PostgreSQLC
 object PostgresEntityManagerFactoryProvider extends EntityManagerFactoryProvider:
 
     val container = new PostgreSQLContainer("postgres:17")
+//  container.withInitScript("sql/02_m3_kb.sql")
     container.withReuse(true)
     container.start()
 
-    // Run the flyway migrations from oni/src/main/resources/db/migrations/postgres
-    Flyway
-        .configure()
-        .dataSource(container.getJdbcUrl, container.getUsername, container.getPassword)
-        .locations("classpath:db/migrations/postgres")
-        .load()
-        .migrate()
 
     // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
     // I'm using a shutdown hook to close the container at the end of the tests.

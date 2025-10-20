@@ -93,7 +93,7 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("update (twice)") {
-        val root = init(2, 0)
+        val root        = init(2, 0)
         assert(root != null)
         val mediaCreate = MediaCreate(
             conceptName = root.getName,
@@ -121,7 +121,7 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
             )
 
             attempt match
-                case Left(e) => fail(e.getMessage)
+                case Left(e)      => fail(e.getMessage)
                 case Right(media) =>
                     assertEquals(mediaUpdate.url.orNull, media.url)
                     assertEquals(mediaUpdate.caption, media.caption)
@@ -130,7 +130,6 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
                     assertEquals(t, media.mimeType)
                     assertEquals(mediaUpdate.isPrimary.getOrElse(false), media.isPrimary)
                     println(media)
-
 
     }
 

@@ -83,11 +83,14 @@ lazy val oni = project
         circeGeneric,
         circeParser,
         commonsCodec,
+        flywayCore,
+        flywayPostgres,
+        flywaySqlserver,
         // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to
         // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
         flywayCore,
-        flywayPostgresql,
-        flywaySqlServer,
+        flywayPostgres,
+        flywaySqlserver,
         hibernateCore,
         hibernateJCache,
 //        hibernateEnvers,
@@ -145,7 +148,7 @@ lazy val itPostgres = (project in file("it-postgres"))
     libraryDependencies ++= Seq(
       testcontainersPostgres,
       flywayCore,
-      flywayPostgresql
+      flywayPostgres
     )
   )
 
@@ -159,6 +162,6 @@ lazy val itSqlserver = (project in file("it-sqlserver"))
       slf4jJulBridge,
       testcontainersSqlserver,
       flywayCore,
-      flywaySqlServer,
+      flywaySqlserver,
     )
   )

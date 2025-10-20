@@ -8,6 +8,7 @@
 package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.config.AppConfig
 import org.mbari.oni.endpoints.{
     AuthorizationEndpoints,
     ConceptEndpoints,
