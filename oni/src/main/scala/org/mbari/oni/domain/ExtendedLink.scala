@@ -22,7 +22,10 @@ case class ExtendedLink(
     def toLink: Link =
         Link(linkName, toConcept, linkValue, id)
 
-    def stringValue: String =
+    val shortStringValue: String =
+        s"$linkName${ILink.DELIMITER}$toConcept${ILink.DELIMITER}$linkValue"
+
+    val stringValue: String =
         s"$concept${ILink.DELIMITER}$linkName${ILink.DELIMITER}$toConcept${ILink.DELIMITER}$linkValue"
 
 object ExtendedLink:

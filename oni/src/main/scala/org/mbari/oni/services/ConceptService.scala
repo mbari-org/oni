@@ -326,41 +326,97 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                                     parentEntity.addChildConcept(conceptEntity)
             )
 
-        // -- Helper function to update the rank level
-        def updateRankLevel(
+        def updateRank(
             userEntity: UserAccountEntity,
             conceptEntity: ConceptEntity,
-            rankLevel: Option[String]
+            rankLevel: Option[String],
+            rankName: Option[String]
         ): Unit =
-            rankLevel.foreach(v =>
-                if v != conceptEntity.getRankLevel then
-                    if v.isBlank then
-                        if userEntity.isAdministrator then conceptEntity.setRankLevel(null)
-                        else throw new IllegalArgumentException("Rank level can only be removed by an administrator")
-                    else
-                        val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
-                        conceptEntity.getConceptMetadata.addHistory(history)
-                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
-                        conceptEntity.setRankLevel(v)
+
+            val historyOpt = (rankLevel, rankName) match
+                case (None, None)        => None // No update
+                case (Some(level), None) =>
+                    if level != conceptEntity.getRankLevel then
+                        val correctedLevel = if level.isBlank then null else level
+                        val oldRankLevel   = Option(conceptEntity.getRankLevel).getOrElse("")
+                        conceptEntity.setRankLevel(correctedLevel)
+                        Some(
+                            HistoryEntityFactory.replaceRank(
+                                userEntity,
+                                oldRankLevel,
+                                conceptEntity.getRankName,
+                                level,
+                                conceptEntity.getRankName
+                            )
+                        )
+                    else None
+
+                case (None, Some(name))        =>
+                    if name != conceptEntity.getRankName then
+                        val correctedName = if name.isBlank then null else name
+                        val oldRankName   = Option(conceptEntity.getRankName).getOrElse("")
+                        conceptEntity.setRankName(correctedName)
+                        Some(
+                            HistoryEntityFactory.replaceRank(
+                                userEntity,
+                                conceptEntity.getRankLevel,
+                                oldRankName,
+                                conceptEntity.getRankLevel,
+                                name
+                            )
+                        )
+                    else None
+                case (Some(level), Some(name)) =>
+                    if level != conceptEntity.getRankLevel || name != conceptEntity.getRankName then
+                        val correctedLevel = if level.isBlank then null else level
+                        val correctedName  = if name.isBlank then null else name
+                        val oldRankLevel   = Option(conceptEntity.getRankLevel).getOrElse("")
+                        val oldRankName    = Option(conceptEntity.getRankName).getOrElse("")
+                        conceptEntity.setRankLevel(correctedLevel)
+                        conceptEntity.setRankName(correctedName)
+                        Some(HistoryEntityFactory.replaceRank(userEntity, oldRankLevel, oldRankName, level, name))
+                    else None
+
+            historyOpt.foreach(history =>
+                conceptEntity.getConceptMetadata.addHistory(history)
+                if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
             )
 
+        // -- Helper function to update the rank level
+//        def updateRankLevel(
+//            userEntity: UserAccountEntity,
+//            conceptEntity: ConceptEntity,
+//            rankLevel: Option[String]
+//        ): Unit =
+//            rankLevel.foreach(v =>
+//                if v != conceptEntity.getRankLevel then
+//                    if v.isBlank then
+//                        if userEntity.isAdministrator then conceptEntity.setRankLevel(null)
+//                        else throw new IllegalArgumentException("Rank level can only be removed by an administrator")
+//                    else
+//                        val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
+//                        conceptEntity.getConceptMetadata.addHistory(history)
+//                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
+//                        conceptEntity.setRankLevel(v)
+//            )
+
         // -- Helper function to update the rank name
-        def updateRankName(
-            userEntity: UserAccountEntity,
-            conceptEntity: ConceptEntity,
-            rankLevel: Option[String]
-        ): Unit =
-            rankLevel.foreach(v =>
-                if v != conceptEntity.getRankName then
-                    if v.isBlank then
-                        if userEntity.isAdministrator then conceptEntity.setRankName(null)
-                        else throw new IllegalArgumentException("Rank name can only be removed by an administrator")
-                    else
-                        val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
-                        conceptEntity.getConceptMetadata.addHistory(history)
-                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
-                        conceptEntity.setRankName(v)
-            )
+//        def updateRankName(
+//            userEntity: UserAccountEntity,
+//            conceptEntity: ConceptEntity,
+//            rankLevel: Option[String]
+//        ): Unit =
+//            rankLevel.foreach(v =>
+//                if v != conceptEntity.getRankName then
+//                    if v.isBlank then
+//                        if userEntity.isAdministrator then conceptEntity.setRankName(null)
+//                        else throw new IllegalArgumentException("Rank name can only be removed by an administrator")
+//                    else
+//                        val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
+//                        conceptEntity.getConceptMetadata.addHistory(history)
+//                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
+//                        conceptEntity.setRankName(v)
+//            )
 
         // -- Helper function to update the aphia id
         def updateAphiaId(conceptEntity: ConceptEntity, aphiaId: Option[Long])(using repo: ConceptRepository): Unit =
@@ -382,10 +438,9 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
                 repo.findByName(name).toScala match
                     case None                => throw ConceptNameNotFound(name)
                     case Some(conceptEntity) =>
-                        RankValidator.throwExceptionIfInvalid(conceptUpdate)
                         updateParent(userEntity, conceptEntity, conceptUpdate.parentName)
-                        updateRankLevel(userEntity, conceptEntity, conceptUpdate.rankLevel)
-                        updateRankName(userEntity, conceptEntity, conceptUpdate.rankName)
+                        updateRank(userEntity, conceptEntity, conceptUpdate.rankLevel, conceptUpdate.rankName)
+                        RankValidator.throwExceptionIfInvalid(conceptEntity.getRank)
                         updateAphiaId(conceptEntity, conceptUpdate.aphiaId)
                         ConceptMetadata.from(conceptEntity)
             )
@@ -521,34 +576,63 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
             Right(true)
         catch case e: Throwable => Left(e)
 
-    def inTxnRejectReplaceRankLevel(
+    def inTxnRejectReplaceRank(
         history: HistoryEntity,
         user: UserAccountEntity,
         entityManger: EntityManager
     ): Either[Throwable, Boolean] =
         if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
-            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKLEVEL)
+            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANK)
         then
             val conceptMetadata = history.getConceptMetadata
             val concept         = conceptMetadata.getConcept
-            val oldRankLevel    = history.getOldValue
-            if oldRankLevel.isEmpty || oldRankLevel.isBlank then concept.setRankLevel(null)
-            else concept.setRankLevel(oldRankLevel)
-            Right(true)
-        else Left(HistoryIsInvalid("History is not a replace rank level history"))
+            val oldRank         = history.getOldValue
+            val parts           = oldRank.split(" ")
+            if parts.length == 1 then
+                val rankName = parts(0).trim
+                if rankName.isEmpty || rankName.isBlank then concept.setRankName(null)
+                else concept.setRankName(rankName)
+                concept.setRankLevel(null)
+                Right(true)
+            else if parts.length == 2 then
+                val rankLevel = parts(0).trim
+                val rankName  = parts(1).trim
+                if rankLevel.isEmpty || rankLevel.isBlank then concept.setRankLevel(null)
+                else concept.setRankLevel(rankLevel)
+                if rankName.isEmpty || rankLevel.isBlank then concept.setRankName(null)
+                else concept.setRankName(rankName)
+                Right(true)
+            else Left(HistoryIsInvalid(s"History does not contain a valid rank: $oldRank"))
+        else Left(HistoryIsInvalid("History is not a replace rank history"))
 
-    def inTxnRejectReplaceRankName(
-        history: HistoryEntity,
-        user: UserAccountEntity,
-        entityManger: EntityManager
-    ): Either[Throwable, Boolean] =
-        if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
-            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKNAME)
-        then
-            val conceptMetadata = history.getConceptMetadata
-            val concept         = conceptMetadata.getConcept
-            val oldRankName     = history.getOldValue
-            if oldRankName.isEmpty || oldRankName.isBlank then concept.setRankName(null)
-            else concept.setRankName(oldRankName)
-            Right(true)
-        else Left(HistoryIsInvalid("History is not a replace rank name history"))
+//    def inTxnRejectReplaceRankLevel(
+//        history: HistoryEntity,
+//        user: UserAccountEntity,
+//        entityManger: EntityManager
+//    ): Either[Throwable, Boolean] =
+//        if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
+//            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKLEVEL)
+//        then
+//            val conceptMetadata = history.getConceptMetadata
+//            val concept         = conceptMetadata.getConcept
+//            val oldRankLevel    = history.getOldValue
+//            if oldRankLevel.isEmpty || oldRankLevel.isBlank then concept.setRankLevel(null)
+//            else concept.setRankLevel(oldRankLevel)
+//            Right(true)
+//        else Left(HistoryIsInvalid("History is not a replace rank level history"))
+//
+//    def inTxnRejectReplaceRankName(
+//        history: HistoryEntity,
+//        user: UserAccountEntity,
+//        entityManger: EntityManager
+//    ): Either[Throwable, Boolean] =
+//        if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
+//            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKNAME)
+//        then
+//            val conceptMetadata = history.getConceptMetadata
+//            val concept         = conceptMetadata.getConcept
+//            val oldRankName     = history.getOldValue
+//            if oldRankName.isEmpty || oldRankName.isBlank then concept.setRankName(null)
+//            else concept.setRankName(oldRankName)
+//            Right(true)
+//        else Left(HistoryIsInvalid("History is not a replace rank name history"))

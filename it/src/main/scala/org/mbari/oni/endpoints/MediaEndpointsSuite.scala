@@ -144,6 +144,54 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             case Right(value) => assert(true)
     }
 
+    test("updateMedia (multiple updates)") {
+        val media       = createMedia().head
+        val mediaUpdate = MediaUpdate(
+            url = Some(URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL),
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+
+        for 
+            i <- 1 to 21 
+        do // Update multiple times with different data
+            val credit = if i % 2 == 0 then Some(Strings.random(255)) else Some("")
+            val caption = if i % 3 == 0 then Some(Strings.random(1000)) else Some("")
+            val isPrimary = if i % 5 == 0 then Some(true) else Some(false)
+            val mediaUpdate = MediaUpdate(
+                url = Some(URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL),
+                caption = caption,
+                credit = credit,
+                mediaType = Some(MediaTypes.IMAGE.name),
+                isPrimary = isPrimary
+            )
+            val attempt     = testWithUserAuth(
+                user =>
+                    runPut(
+                        endpoints.updateMediaEndpointImpl,
+                        s"http://test.com/v1/media/${media.id.get}",
+                        mediaUpdate.stringify,
+                        response =>
+                            assertEquals(response.code, StatusCode.Ok)
+                            val obtained = checkResponse[Media](response.body)
+                            assertEquals(mediaUpdate.url.orNull, obtained.url)
+                            assertEquals(mediaUpdate.caption, obtained.caption)
+                            assertEquals(mediaUpdate.credit, obtained.credit)
+                            val t        = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
+                            assertEquals(t, obtained.mimeType)
+                            assertEquals(mediaUpdate.isPrimary.getOrElse(false), obtained.isPrimary)
+                        ,
+                        jwt = jwtService.login(user.username, password, user.toEntity)
+                    ),
+                password
+            )
+            attempt match
+                case Left(value)  => fail(value.toString)
+                case Right(value) => assert(true)
+    }
+
     test("deleteMedia") {
         val media   = createMedia().head
         val attempt = testWithUserAuth(

@@ -113,7 +113,7 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
                 assertEquals(response.code, StatusCode.Ok)
                 val xs       = checkResponse[Page[Seq[ExtendedLink]]](response.body)
                 val obtained = xs.content
-                val expected = links.sortBy(_.linkName.toLowerCase())
+                val expected = links.sortBy(_.shortStringValue)
                 assertEquals(obtained.size, expected.size)
                 assertEquals(obtained, expected)
         )

@@ -100,7 +100,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             media <- txn(user.toEntity)
         yield ()
 
-    def update(id: Long, mediaUpdate: MediaUpdate, userName: String) =
+    def update(id: Long, mediaUpdate: MediaUpdate, userName: String): Either[Throwable, Media] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, Media] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = MediaRepository(entityManager, fastPhylogenyService)
@@ -112,6 +112,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                         mediaUpdate.isPrimary.foreach(b => media.setPrimary(b.booleanValue()))
                         mediaUpdate.url.foreach(url => media.setUrl(url.toExternalForm))
                         mediaUpdate.mediaType.foreach(media.setType)
+                        repo.update(media)
                         Media.from(media)
             )
 

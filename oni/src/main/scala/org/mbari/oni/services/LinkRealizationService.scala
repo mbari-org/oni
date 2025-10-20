@@ -35,6 +35,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 .asScala
                 .toSeq
                 .map(ExtendedLink.from)
+                .sortBy(_.shortStringValue)
         )
 
     def findById(id: Long): Either[Throwable, ExtendedLink] =
@@ -57,6 +58,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                         .asScala
                         .map(ExtendedLink.from)
                         .toSeq
+                        .sortBy(_.shortStringValue)
                 case None          => throw ConceptNameNotFound(conceptName)
         )
 
@@ -76,6 +78,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 .toList
                 .asScala
                 .toSeq
+                .sortBy(_.shortStringValue)
         )
 
     def create(link: LinkCreate, userName: String): Either[Throwable, ExtendedLink] =

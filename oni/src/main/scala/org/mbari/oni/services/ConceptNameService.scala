@@ -187,9 +187,16 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                 case None              => Left(ConceptNameNotFound(historyEntity.getNewValue))
                 case Some(conceptName) =>
                     if conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType) then
+                        // 1. Remove the concept name from the concept
+                        // 2. Remove the concept name from the entity manager
+
                         // Find the old primary name
                         Option(concept.getConceptName(historyEntity.getOldValue))
-                            .foreach(oldPrimaryName => concept.removeConceptName(oldPrimaryName))
+                            .foreach(oldPrimaryName =>
+                                concept.removeConceptName(oldPrimaryName)
+                                entityManager.remove(oldPrimaryName)
+                                entityManager.flush()
+                            )
                         // set the concept name to the old primary name
                         conceptName.setName(historyEntity.getOldValue)
                     else

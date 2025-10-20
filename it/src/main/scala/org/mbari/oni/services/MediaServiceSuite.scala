@@ -92,6 +92,48 @@ trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
                 assertEquals(mediaUpdate.isPrimary.getOrElse(false), media.isPrimary)
     }
 
+    test("update (twice)") {
+        val root = init(2, 0)
+        assert(root != null)
+        val mediaCreate = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+
+        for _ <- 1 to 2 do // Update twice
+            val mediaUpdate = MediaUpdate(
+                url = Some(URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL),
+                caption = Some(Strings.random(1000)),
+                credit = Some(Strings.random(255)),
+                mediaType = Some(MediaTypes.IMAGE.name),
+                isPrimary = Some(true)
+            )
+
+            val attempt = runWithUserAuth(user =>
+                for
+                    m0 <- mediaService.create(mediaCreate, user.username)
+                    m1 <- mediaService.update(m0.id.getOrElse(0L), mediaUpdate, user.username)
+                yield m1
+            )
+
+            attempt match
+                case Left(e) => fail(e.getMessage)
+                case Right(media) =>
+                    assertEquals(mediaUpdate.url.orNull, media.url)
+                    assertEquals(mediaUpdate.caption, media.caption)
+                    assertEquals(mediaUpdate.credit, media.credit)
+                    val t = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), media.url.toExternalForm)
+                    assertEquals(t, media.mimeType)
+                    assertEquals(mediaUpdate.isPrimary.getOrElse(false), media.isPrimary)
+                    println(media)
+
+
+    }
+
     test("delete") {
         val root        = init(2, 0)
         assert(root != null)

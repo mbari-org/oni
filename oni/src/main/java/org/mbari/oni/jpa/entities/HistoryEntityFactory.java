@@ -97,13 +97,17 @@ public class HistoryEntityFactory {
         return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_ORIGINATOR, oldOrig, newOrig);
     }
 
-    public static HistoryEntity replaceRankName(UserAccountEntity userAccount, String oldRankName, String newRankName) {
-        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_RANKNAME, oldRankName, newRankName);
+    public static HistoryEntity replaceRank(UserAccountEntity userAccount, String oldRankName, String oldRankLevel, String newRankName, String newRankLevel) {
+        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_RANK, (oldRankName + " " + oldRankLevel).trim(), (newRankName + " " + newRankLevel).trim());
     }
 
-    public static HistoryEntity replaceRankLevel(UserAccountEntity userAccount, String oldRankLevel, String newRankLevel) {
-        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_RANKLEVEL, oldRankLevel, newRankLevel);
-    }
+//    public static HistoryEntity replaceRankName(UserAccountEntity userAccount, String oldRankName, String newRankName) {
+//        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_RANKNAME, oldRankName, newRankName);
+//    }
+//
+//    public static HistoryEntity replaceRankLevel(UserAccountEntity userAccount, String oldRankLevel, String newRankLevel) {
+//        return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_RANKLEVEL, oldRankLevel, newRankLevel);
+//    }
 
     public static HistoryEntity replaceStructureType(UserAccountEntity userAccount, String oldSt, String newSt) {
         return newHistory(userAccount, HistoryEntity.ACTION_REPLACE, HistoryEntity.FIELD_CONCEPT_STRUCTURETYPE, oldSt, newSt);
