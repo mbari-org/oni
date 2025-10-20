@@ -112,6 +112,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                         mediaUpdate.isPrimary.foreach(b => media.setPrimary(b.booleanValue()))
                         mediaUpdate.url.foreach(url => media.setUrl(url.toExternalForm))
                         mediaUpdate.mediaType.foreach(media.setType)
+                        repo.update(media)
                         Media.from(media)
             )
 
