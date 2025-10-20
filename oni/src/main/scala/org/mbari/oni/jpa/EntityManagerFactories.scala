@@ -83,9 +83,9 @@ object EntityManagerFactories:
         // can create an EntityManagerFactory
         val dbConfig = DatabaseConfig("WARNING", driverName, url, username, password)
         FlywayMigrator.migrate(dbConfig) match
-            case Left(e)      =>
-                log.atError.withCause(e).log(s"Failed to migrate database at $url")
-                throw e
+            case Left(ex)      =>
+                log.atError.withCause(ex).log(s"Failed to migrate database at $url")
+                throw new RuntimeException(s"Failed to migrate database: ${ex.getMessage}", ex)
             case Right(value) =>
                 val map = Map(
                     "jakarta.persistence.jdbc.url"      -> url,
