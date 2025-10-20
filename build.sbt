@@ -88,6 +88,9 @@ lazy val oni = project
         flywaySqlserver,
         // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to
         // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
+        flywayCore,
+        flywayPostgres,
+        flywaySqlserver,
         hibernateCore,
         hibernateJCache,
 //        hibernateEnvers,
@@ -143,7 +146,9 @@ lazy val itPostgres = (project in file("it-postgres"))
   )
   .settings(
     libraryDependencies ++= Seq(
-      testcontainersPostgres
+      testcontainersPostgres,
+      flywayCore,
+      flywayPostgres
     )
   )
 
@@ -155,6 +160,8 @@ lazy val itSqlserver = (project in file("it-sqlserver"))
   .settings(
     libraryDependencies ++= Seq(
       slf4jJulBridge,
-      testcontainersSqlserver
+      testcontainersSqlserver,
+      flywayCore,
+      flywaySqlserver,
     )
   )
