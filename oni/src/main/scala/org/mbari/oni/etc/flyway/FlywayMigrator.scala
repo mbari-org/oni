@@ -9,10 +9,10 @@ package org.mbari.oni.etc.flyway
 
 import org.flywaydb.core.Flyway
 import org.mbari.oni.config.DatabaseConfig
+import org.mbari.oni.etc.jdbc.Databases
 import org.mbari.oni.etc.jdk.Loggers.given
 
 import scala.util.Try
-import org.mbari.oni.etc.jdbc.Databases
 
 object FlywayMigrator:
 
@@ -20,9 +20,10 @@ object FlywayMigrator:
 
     /**
      * Run Flyway database migrations. It will baseline the database if no metadata table exists.
-     * @param databaseConfig The database configuration
-     * @return true if migrations were successful, false otherwise. 
-     *      The app should exit if false is returned.
+     * @param databaseConfig
+     *   The database configuration
+     * @return
+     *   true if migrations were successful, false otherwise. The app should exit if false is returned.
      */
     def migrate(databaseConfig: DatabaseConfig): Either[Throwable, Unit] =
 
@@ -34,14 +35,13 @@ object FlywayMigrator:
                 case Databases.DatabaseType.PostgreSQL => "classpath:/db/migrations/postgres"
                 case _                                 => throw new IllegalArgumentException(s"Unsupported database type: $databaseType")
 
-
             log.atDebug.log(s"Starting database migrations on ${databaseConfig.url}")
             val flyway = Flyway
                 .configure()
                 .table("schema_history_oni") // name of the metadata table
-                .locations(location) // migration scripts location
+                .locations(location)         // migration scripts location
                 .dataSource(databaseConfig.url, databaseConfig.user, databaseConfig.password)
-                .baselineOnMigrate(true) // this makes Flyway baseline if no metadata table exists
+                .baselineOnMigrate(true)     // this makes Flyway baseline if no metadata table exists
                 .load()
 
             val result = flyway.migrate()

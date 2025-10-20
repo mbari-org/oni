@@ -154,12 +154,11 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             isPrimary = Some(true)
         )
 
-        for 
-            i <- 1 to 21 
+        for i <- 1 to 21
         do // Update multiple times with different data
-            val credit = if i % 2 == 0 then Some(Strings.random(255)) else Some("")
-            val caption = if i % 3 == 0 then Some(Strings.random(1000)) else Some("")
-            val isPrimary = if i % 5 == 0 then Some(true) else Some(false)
+            val credit      = if i % 2 == 0 then Some(Strings.random(255)) else Some("")
+            val caption     = if i % 3 == 0 then Some(Strings.random(1000)) else Some("")
+            val isPrimary   = if i % 5 == 0 then Some(true) else Some(false)
             val mediaUpdate = MediaUpdate(
                 url = Some(URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL),
                 caption = caption,
@@ -179,7 +178,8 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
                             assertEquals(mediaUpdate.url.orNull, obtained.url)
                             assertEquals(mediaUpdate.caption, obtained.caption)
                             assertEquals(mediaUpdate.credit, obtained.credit)
-                            val t        = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
+                            val t        =
+                                Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
                             assertEquals(t, obtained.mimeType)
                             assertEquals(mediaUpdate.isPrimary.getOrElse(false), obtained.isPrimary)
                         ,

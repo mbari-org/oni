@@ -48,7 +48,6 @@ object EntityManagerFactories:
     )
 
     def apply(properties: Map[String, String]): EntityManagerFactory =
-
         val props = PRODUCTION_PROPS ++ properties
         if log.isLoggable(Level.INFO) then
             val props = properties
@@ -83,7 +82,7 @@ object EntityManagerFactories:
         // can create an EntityManagerFactory
         val dbConfig = DatabaseConfig("WARNING", driverName, url, username, password)
         FlywayMigrator.migrate(dbConfig) match
-            case Left(ex)      =>
+            case Left(ex)     =>
                 log.atError.withCause(ex).log(s"Failed to migrate database at $url")
                 throw new RuntimeException(s"Failed to migrate database: ${ex.getMessage}", ex)
             case Right(value) =>
