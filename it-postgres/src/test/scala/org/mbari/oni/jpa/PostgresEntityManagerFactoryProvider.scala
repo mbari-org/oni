@@ -20,11 +20,12 @@ import jakarta.persistence.EntityManagerFactory
 import org.flywaydb.core.Flyway
 import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.jpa.repositories.TestRepository
-import org.testcontainers.containers.{JdbcDatabaseContainerProvider, PostgreSQLContainer}
+import org.testcontainers.containers.JdbcDatabaseContainerProvider
+import org.testcontainers.postgresql.PostgreSQLContainer
 
 object PostgresEntityManagerFactoryProvider extends EntityManagerFactoryProvider:
 
-    val container = new PostgreSQLContainer("postgres:17")
+    val container = new PostgreSQLContainer("postgres:18")
 //  container.withInitScript("sql/02_m3_kb.sql")
     container.withReuse(true)
     container.start()

@@ -23,7 +23,7 @@ import org.mbari.oni.etc.tc.AzureSqlEdgeContainerProvider
 import org.mbari.oni.jpa.entities.ConceptEntity
 import org.mbari.oni.jpa.repositories.TestRepository
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.testcontainers.containers.MSSQLServerContainer
+import org.testcontainers.mssqlserver.MSSQLServerContainer
 import org.testcontainers.utility.DockerImageName
 
 object AzureEntityManagerFactoryProvider extends EntityManagerFactoryProvider:
