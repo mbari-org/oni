@@ -49,7 +49,7 @@ object Media:
             media.isPrimary,
             conceptName,
             Option(media.getId),
-            Option(media.getLastUpdatedTimestamp).map(_.toInstant)
+            Option(media.getLastUpdatedTimestamp)
         )
 
     def from(namedMedia: NamedMedia): Media =

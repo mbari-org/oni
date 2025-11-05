@@ -9,14 +9,13 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.IPersistentObject;
-import org.mbari.oni.jpa.TransactionLogger;
+import org.mbari.oni.jpa.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,7 +28,7 @@ import org.mbari.oni.jpa.TransactionLogger;
 @Table(name = "Media",
         indexes = {@Index(name = "idx_Media_FK1", columnList = "ConceptDelegateID_FK"),
                 @Index(name = "idx_Media_LUT", columnList = "LAST_UPDATED_TIME")})
-@EntityListeners({ TransactionLogger.class, KeyNullifier.class })
+@EntityListeners({ TransactionLogger.class, KeyNullifier.class})
 @NamedQueries( {
     @NamedQuery(name = "Media.findById", query = "SELECT v FROM Media v WHERE v.id = :id") ,
     @NamedQuery(name = "Media.findByUrl", query = "SELECT m FROM Media m WHERE m.url = :url") ,
@@ -43,7 +42,7 @@ import org.mbari.oni.jpa.TransactionLogger;
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class MediaEntity implements Serializable, IPersistentObject {
+public class MediaEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
     @Column(name = "Caption", length = 1000)
     String caption;
@@ -84,7 +83,7 @@ public class MediaEntity implements Serializable, IPersistentObject {
     /** Optimistic lock to prevent concurrent overwrites */
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
     @Column(name = "Url", length = 1024)
     String url;
@@ -175,8 +174,12 @@ public class MediaEntity implements Serializable, IPersistentObject {
         this.url = url;
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    public Instant getLastUpdatedTimestamp() {
         return updatedTime;
+    }
+
+    public void setLastUpdatedTimestamp(Instant ts) {
+    	this.updatedTime = ts;
     }
 
     public String stringValue() {

@@ -8,18 +8,11 @@
 package org.mbari.oni.jpa;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 
-/**
- * Created by IntelliJ IDEA.
- * User: brian
- * Date: Aug 6, 2009
- * Time: 4:05:30 PM
- * To change this template use File | Settings | File Templates.
- */
-public interface IPersistentObject {
+public interface IOptimisticLock {
 
-    Long getId();
+    Instant getLastUpdatedTimestamp();
 
-    void setId(Long id);
-    
+    void setLastUpdatedTimestamp(Instant ts);
 }

@@ -40,7 +40,7 @@ object ExtendedLink:
                     l.getToConcept,
                     l.getLinkValue,
                     Option(l.getId),
-                    Option(l.getLastUpdatedTimestamp).map(_.toInstant)
+                    Option(l.getLastUpdatedTimestamp)
                 )
             case l: LinkRealizationEntity =>
                 val concept = l.getConceptMetadata.getConcept.getPrimaryConceptName.getName
@@ -50,5 +50,5 @@ object ExtendedLink:
                     l.getToConcept,
                     l.getLinkValue,
                     Option(l.getId),
-                    Option(l.getLastUpdatedTimestamp).map(_.toInstant)
+                    Option(l.getLastUpdatedTimestamp)
                 )

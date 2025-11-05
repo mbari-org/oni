@@ -9,14 +9,14 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CurrentTimestamp;
 import org.mbari.oni.domain.ConceptNameTypes;
-import org.mbari.oni.jpa.IPersistentObject;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.TransactionLogger;
+import org.mbari.oni.jpa.*;
 
 /**
  *
@@ -26,7 +26,7 @@ import org.mbari.oni.jpa.TransactionLogger;
         indexes = {@Index(name = "idx_ConceptName_name", columnList = "ConceptName"),
                    @Index(name = "idx_ConceptName_FK1", columnList = "ConceptID_FK"),
                    @Index(name = "idx_ConceptName_LUT", columnList = "LAST_UPDATED_TIME")})
-@EntityListeners({ TransactionLogger.class, KeyNullifier.class })
+@EntityListeners({ TransactionLogger.class, KeyNullifier.class})
 @NamedNativeQueries({
     @NamedNativeQuery(name = "ConceptName.findAllNamesAsStrings",
             query = "SELECT ConceptName FROM ConceptName ORDER BY ConceptName"),
@@ -44,7 +44,7 @@ import org.mbari.oni.jpa.TransactionLogger;
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class ConceptNameEntity implements Serializable, IPersistentObject {
+public class ConceptNameEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
 
     @Column(name = "Author", length = 255)
@@ -98,7 +98,7 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
     /** Optimistic lock to prevent concurrent overwrites */
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
     public ConceptNameEntity() {
     }
@@ -186,6 +186,14 @@ public class ConceptNameEntity implements Serializable, IPersistentObject {
 
     public void setNameType(String nameType) {
         this.nameType = nameType;
+    }
+
+    public Instant getLastUpdatedTimestamp() {
+        return updatedTime;
+    }
+
+    public void setLastUpdatedTimestamp(Instant ts) {
+        this.updatedTime = ts;
     }
 
     public String stringValue() {

@@ -85,5 +85,5 @@ object Concept:
             c.getChildConcepts.asScala.map(from).toSeq.sortBy(_.name),
             c.getAphiaId.asLong,
             c.getId.asLong,
-            Option(c.getLastUpdatedTimestamp).map(_.toInstant)
+            Option(c.getLastUpdatedTimestamp)
         )

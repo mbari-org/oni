@@ -11,14 +11,14 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.Date;
 import java.util.TimeZone;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.IPersistentObject;
-import org.mbari.oni.jpa.TransactionLogger;
+import org.hibernate.annotations.CurrentTimestamp;
+import org.mbari.oni.jpa.*;
 
 
 /**
@@ -68,7 +68,7 @@ import org.mbari.oni.jpa.TransactionLogger;
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class HistoryEntity implements Serializable, IPersistentObject {
+public class HistoryEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
     /**
      * String representation of the add action.
@@ -123,7 +123,7 @@ public class HistoryEntity implements Serializable, IPersistentObject {
     @SuppressWarnings("unused")
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
     @Column(name = "ProcessedDTG")
     @Temporal(value = TemporalType.TIMESTAMP)
@@ -389,6 +389,14 @@ public class HistoryEntity implements Serializable, IPersistentObject {
 
     void setConceptMetadata(ConceptMetadataEntity conceptMetadata) {
         this.conceptMetadata = conceptMetadata;
+    }
+
+    public Instant getLastUpdatedTimestamp() {
+        return updatedTime;
+    }
+
+    public void setLastUpdatedTimestamp(Instant ts) {
+        this.updatedTime = ts;
     }
 
     @Override

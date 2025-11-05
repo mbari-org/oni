@@ -9,16 +9,14 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.mbari.oni.domain.ILink;
 import org.mbari.oni.domain.LinkUtilities;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.IPersistentObject;
-import org.mbari.oni.jpa.TransactionLogger;
-
+import org.mbari.oni.jpa.*;
 
 
 /**
@@ -59,7 +57,7 @@ import org.mbari.oni.jpa.TransactionLogger;
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class LinkRealizationEntity implements Serializable, ILink, IPersistentObject {
+public class LinkRealizationEntity implements Serializable, ILink, IPersistentObject, IOptimisticLock {
 
     @Transient
     private static final List<String> PROPS = List.of(ILink.PROP_LINKNAME,
@@ -76,7 +74,7 @@ public class LinkRealizationEntity implements Serializable, ILink, IPersistentOb
     /** Optimistic lock to prevent concurrent overwrites */
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
     @Column(name = "LinkName", length = 50)
     String linkName;
@@ -106,8 +104,12 @@ public class LinkRealizationEntity implements Serializable, ILink, IPersistentOb
         return (conceptMetadata == null) ? null : conceptMetadata.getConcept().getPrimaryConceptName().getName();
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    public Instant getLastUpdatedTimestamp() {
         return updatedTime;
+    }
+
+    public void setLastUpdatedTimestamp(Instant ts) {
+        this.updatedTime = ts;
     }
 
     public String stringValue() {
@@ -182,6 +184,5 @@ public class LinkRealizationEntity implements Serializable, ILink, IPersistentOb
     public void setConceptMetadata(ConceptMetadataEntity conceptMetadata) {
         this.conceptMetadata = conceptMetadata;
     }
-
 
 }

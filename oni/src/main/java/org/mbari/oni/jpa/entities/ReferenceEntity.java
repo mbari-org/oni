@@ -10,14 +10,12 @@ package org.mbari.oni.jpa.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
-import org.mbari.oni.jpa.IPersistentObject;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.TransactionLogger;
-import org.mbari.oni.jpa.URIConverter;
+import org.mbari.oni.jpa.*;
 
 import java.io.Serializable;
 import java.net.URI;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -27,7 +25,7 @@ import java.util.Set;
         indexes = {@Index(name = "idx_Reference_name", columnList = "ReferenceName"),
                 @Index(name = "idx_Reference_FK1", columnList = "ConceptDelegateID_FK"),
                 @Index(name = "idx_Reference_LUT", columnList = "LAST_UPDATED_TIME")})
-@EntityListeners({ TransactionLogger.class, KeyNullifier.class })
+@EntityListeners({ TransactionLogger.class, KeyNullifier.class})
 @NamedQueries( {
     @NamedQuery(name = "Reference.findAll", query = "SELECT r FROM Reference r ORDER BY r.citation ASC"),
     @NamedQuery(name = "Reference.findById", query = "SELECT r FROM Reference r WHERE r.id = :id") ,
@@ -38,7 +36,7 @@ import java.util.Set;
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class ReferenceEntity implements Serializable, IPersistentObject {
+public class ReferenceEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
     @Id
     @Column(
@@ -81,7 +79,7 @@ public class ReferenceEntity implements Serializable, IPersistentObject {
     @SuppressWarnings("unused")
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
     @Override
     public Long getId() {
@@ -116,8 +114,12 @@ public class ReferenceEntity implements Serializable, IPersistentObject {
         return conceptMetadatas;
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    public Instant getLastUpdatedTimestamp() {
         return updatedTime;
+    }
+
+    public void setLastUpdatedTimestamp(Instant ts) {
+        this.updatedTime = ts;
     }
 
     @Override

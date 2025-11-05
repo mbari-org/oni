@@ -9,14 +9,13 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 import org.mbari.oni.domain.UserAccountRoles;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.TransactionLogger;
-import org.mbari.oni.jpa.IPersistentObject;
+import org.mbari.oni.jpa.*;
 
 /**
  * Class description
@@ -45,7 +44,7 @@ import org.mbari.oni.jpa.IPersistentObject;
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class UserAccountEntity implements Serializable, IPersistentObject {
+public class UserAccountEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
     @Column(name = "Affiliation", length = 512)
     String affiliation;
@@ -93,7 +92,7 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
     /** Optimistic lock to prevent concurrent overwrites */
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
     @Column(
         name = "UserName",
         nullable = false,
@@ -212,8 +211,12 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         this.userName = userName;
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    public Instant getLastUpdatedTimestamp() {
         return updatedTime;
+    }
+
+    public void setLastUpdatedTimestamp(Instant ts) {
+    	this.updatedTime = ts;
     }
 
     @Override
