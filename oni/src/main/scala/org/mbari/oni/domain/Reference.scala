@@ -41,5 +41,5 @@ object Reference:
             doi = Option(entity.getDoi),
             concepts = concepts,
             id = Option(entity.getId),
-            lastUpdated = Option(entity.getLastUpdatedTimestamp).map(_.toInstant)
+            lastUpdated = Option(entity.getLastUpdatedTimestamp)
         )

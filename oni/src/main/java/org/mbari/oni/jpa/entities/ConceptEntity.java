@@ -9,15 +9,15 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 
 import jakarta.persistence.*;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CurrentTimestamp;
 import org.mbari.oni.domain.ConceptNameTypes;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.TransactionLogger;
-import org.mbari.oni.jpa.IPersistentObject;
+import org.mbari.oni.jpa.*;
 
 /**
  *
@@ -27,7 +27,7 @@ import org.mbari.oni.jpa.IPersistentObject;
 @Table(name = "Concept",
     indexes = {@Index(name = "idx_Concept_FK1", columnList = "ParentConceptID_FK"),
                @Index(name = "idx_Concept_LUT", columnList = "LAST_UPDATED_TIME")})
-@EntityListeners({ TransactionLogger.class, KeyNullifier.class})
+@EntityListeners({ TransactionLogger.class, KeyNullifier.class })
 @NamedQueries( {
     @NamedQuery(name = "Concept.eagerFindById", query = "SELECT c FROM Concept c JOIN FETCH c.conceptMetadata m WHERE c.id = :id"),
     @NamedQuery(name = "Concept.findAll", query = "SELECT c FROM Concept c"),
@@ -43,7 +43,7 @@ import org.mbari.oni.jpa.IPersistentObject;
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class ConceptEntity implements Serializable, IPersistentObject {
+public class ConceptEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
 
 //    @SerializedName("children")
@@ -116,7 +116,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
     /** Optimistic lock to prevent concurrent overwrites */
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
 
     public ConceptEntity() {
@@ -201,6 +201,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         return conceptNames;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -358,6 +359,7 @@ public class ConceptEntity implements Serializable, IPersistentObject {
         }
     }
 
+    @Override
     public void setId(Long id) {
         this.id = id;
     }
@@ -382,10 +384,15 @@ public class ConceptEntity implements Serializable, IPersistentObject {
     	return getId();
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    @Override
+    public Instant getLastUpdatedTimestamp() {
         return updatedTime;
     }
 
+    @Override
+    public void setLastUpdatedTimestamp(Instant updatedTime) {
+        this.updatedTime = updatedTime;
+    }
 
     @Override
     public String toString() {

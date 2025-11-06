@@ -9,43 +9,41 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.jasypt.util.password.BasicPasswordEncryptor;
 import org.mbari.oni.domain.UserAccountRoles;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.TransactionLogger;
-import org.mbari.oni.jpa.IPersistentObject;
+import org.mbari.oni.jpa.*;
 
 /**
  * Class description
  *
- *
- * @version        $date$, 2009.11.10 at 11:55:32 PST
- * @author         Brian Schlining [brian@mbari.org]
+ * @author Brian Schlining [brian@mbari.org]
+ * @version $date$, 2009.11.10 at 11:55:32 PST
  */
 @Entity(name = "UserAccount")
 @Table(name = "UserAccount")
-@EntityListeners({ TransactionLogger.class, KeyNullifier.class })
-@NamedQueries( {
+@EntityListeners({TransactionLogger.class, KeyNullifier.class})
+@NamedQueries({
 
-    @NamedQuery(name = "UserAccount.findById", query = "SELECT v FROM UserAccount v WHERE v.id = :id") ,
-    @NamedQuery(name = "UserAccount.findByUserName",
-                query = "SELECT v FROM UserAccount v WHERE v.userName = :userName") ,
-    @NamedQuery(name = "UserAccount.findByFirstName",
-                query = "SELECT c FROM UserAccount c WHERE c.firstName = :firstName") ,
-    @NamedQuery(name = "UserAccount.findByLastName",
-                query = "SELECT c FROM UserAccount c WHERE c.lastName = :lastName") ,
-    @NamedQuery(name = "UserAccount.findByAffiliation",
-                query = "SELECT c FROM UserAccount c WHERE c.affiliation LIKE :affiliation") ,
-    @NamedQuery(name = "UserAccount.findByRole", query = "SELECT c FROM UserAccount c WHERE c.role LIKE :role") ,
-    @NamedQuery(name = "UserAccount.findAll", query = "SELECT c FROM UserAccount c")
+        @NamedQuery(name = "UserAccount.findById", query = "SELECT v FROM UserAccount v WHERE v.id = :id"),
+        @NamedQuery(name = "UserAccount.findByUserName",
+                query = "SELECT v FROM UserAccount v WHERE v.userName = :userName"),
+        @NamedQuery(name = "UserAccount.findByFirstName",
+                query = "SELECT c FROM UserAccount c WHERE c.firstName = :firstName"),
+        @NamedQuery(name = "UserAccount.findByLastName",
+                query = "SELECT c FROM UserAccount c WHERE c.lastName = :lastName"),
+        @NamedQuery(name = "UserAccount.findByAffiliation",
+                query = "SELECT c FROM UserAccount c WHERE c.affiliation LIKE :affiliation"),
+        @NamedQuery(name = "UserAccount.findByRole", query = "SELECT c FROM UserAccount c WHERE c.role LIKE :role"),
+        @NamedQuery(name = "UserAccount.findAll", query = "SELECT c FROM UserAccount c")
 
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class UserAccountEntity implements Serializable, IPersistentObject {
+public class UserAccountEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
     @Column(name = "Affiliation", length = 512)
     String affiliation;
@@ -58,18 +56,18 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
 
     @Id
     @Column(
-        name = "id",
-        nullable = false,
-        updatable = false
+            name = "id",
+            nullable = false,
+            updatable = false
     )
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "UserAccount_Gen")
     @TableGenerator(
-        name = "UserAccount_Gen",
-        table = "UniqueID",
-        pkColumnName = "TableName",
-        valueColumnName = "NextID",
-        pkColumnValue = "UserName",
-        allocationSize = 1
+            name = "UserAccount_Gen",
+            table = "UniqueID",
+            pkColumnName = "TableName",
+            valueColumnName = "NextID",
+            pkColumnValue = "UserName",
+            allocationSize = 1
     )
     Long id;
 
@@ -77,28 +75,30 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
     String lastName;
 
     @Column(
-        name = "Password",
-        nullable = false,
-        length = 50
+            name = "Password",
+            nullable = false,
+            length = 50
     )
     String encryptedPassword;
-    
+
     @Column(
-        name = "Role",
-        nullable = false,
-        length = 10
+            name = "Role",
+            nullable = false,
+            length = 10
     )
     String role;
 
-    /** Optimistic lock to prevent concurrent overwrites */
+    /**
+     * Optimistic lock to prevent concurrent overwrites
+     */
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
     @Column(
-        name = "UserName",
-        nullable = false,
-        unique = true,
-        length = 50
+            name = "UserName",
+            nullable = false,
+            unique = true,
+            length = 50
     )
     String userName;
 
@@ -136,6 +136,7 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         return firstName;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -187,9 +188,9 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
-    
+
     public void setId(Long id) {
-    	this.id = id;
+        this.id = id;
     }
 
     public void setLastName(String lastName) {
@@ -212,8 +213,14 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         this.userName = userName;
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    @Override
+    public Instant getLastUpdatedTimestamp() {
         return updatedTime;
+    }
+
+    @Override
+    public void setLastUpdatedTimestamp(Instant ts) {
+        this.updatedTime = ts;
     }
 
     @Override
@@ -223,9 +230,9 @@ public class UserAccountEntity implements Serializable, IPersistentObject {
         sb.append("userName=").append(userName).append(")");
         return sb.toString();
     }
-    
+
     public Object getPrimaryKey() {
-    	return getId();
+        return getId();
     }
 
 }

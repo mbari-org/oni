@@ -9,14 +9,13 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.IPersistentObject;
-import org.mbari.oni.jpa.TransactionLogger;
+import org.mbari.oni.jpa.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,21 +28,21 @@ import org.mbari.oni.jpa.TransactionLogger;
 @Table(name = "Media",
         indexes = {@Index(name = "idx_Media_FK1", columnList = "ConceptDelegateID_FK"),
                 @Index(name = "idx_Media_LUT", columnList = "LAST_UPDATED_TIME")})
-@EntityListeners({ TransactionLogger.class, KeyNullifier.class })
-@NamedQueries( {
-    @NamedQuery(name = "Media.findById", query = "SELECT v FROM Media v WHERE v.id = :id") ,
-    @NamedQuery(name = "Media.findByUrl", query = "SELECT m FROM Media m WHERE m.url = :url") ,
-    @NamedQuery(name = "Media.findByType", query = "SELECT m FROM Media m WHERE m.type = :type") ,
-    @NamedQuery(name = "Media.findByPrimaryMedia",
-                query = "SELECT m FROM Media m WHERE m.primaryMedia = :primaryMedia") ,
-    @NamedQuery(name = "Media.findByCredit", query = "SELECT m FROM Media m WHERE m.credit = :credit") ,
-    @NamedQuery(name = "Media.findByCaption", query = "SELECT m FROM Media m WHERE m.caption = :caption"),
-    @NamedQuery(name = "Media.findByConceptName",
-                query = "SELECT m FROM Media m JOIN m.conceptMetadata cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name") ,
+@EntityListeners({TransactionLogger.class, KeyNullifier.class})
+@NamedQueries({
+        @NamedQuery(name = "Media.findById", query = "SELECT v FROM Media v WHERE v.id = :id"),
+        @NamedQuery(name = "Media.findByUrl", query = "SELECT m FROM Media m WHERE m.url = :url"),
+        @NamedQuery(name = "Media.findByType", query = "SELECT m FROM Media m WHERE m.type = :type"),
+        @NamedQuery(name = "Media.findByPrimaryMedia",
+                query = "SELECT m FROM Media m WHERE m.primaryMedia = :primaryMedia"),
+        @NamedQuery(name = "Media.findByCredit", query = "SELECT m FROM Media m WHERE m.credit = :credit"),
+        @NamedQuery(name = "Media.findByCaption", query = "SELECT m FROM Media m WHERE m.caption = :caption"),
+        @NamedQuery(name = "Media.findByConceptName",
+                query = "SELECT m FROM Media m JOIN m.conceptMetadata cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name"),
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class MediaEntity implements Serializable, IPersistentObject {
+public class MediaEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
     @Column(name = "Caption", length = 1000)
     String caption;
@@ -60,18 +59,18 @@ public class MediaEntity implements Serializable, IPersistentObject {
 
     @Id
     @Column(
-        name = "id",
-        nullable = false,
-        updatable = false
+            name = "id",
+            nullable = false,
+            updatable = false
     )
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "Media_Gen")
     @TableGenerator(
-        name = "Media_Gen",
-        table = "UniqueID",
-        pkColumnName = "TableName",
-        valueColumnName = "NextID",
-        pkColumnValue = "Media",
-        allocationSize = 1
+            name = "Media_Gen",
+            table = "UniqueID",
+            pkColumnName = "TableName",
+            valueColumnName = "NextID",
+            pkColumnValue = "Media",
+            allocationSize = 1
     )
     Long id;
 
@@ -81,10 +80,12 @@ public class MediaEntity implements Serializable, IPersistentObject {
     @Column(name = "MediaType", length = 5)
     String type;
 
-    /** Optimistic lock to prevent concurrent overwrites */
+    /**
+     * Optimistic lock to prevent concurrent overwrites
+     */
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
     @Column(name = "Url", length = 1024)
     String url;
@@ -130,9 +131,9 @@ public class MediaEntity implements Serializable, IPersistentObject {
     public String getUrl() {
         return url;
     }
-    
+
     public Object getPrimaryKey() {
-    	return getId();
+        return getId();
     }
 
     @Override
@@ -158,9 +159,9 @@ public class MediaEntity implements Serializable, IPersistentObject {
     public void setCredit(String credit) {
         this.credit = credit;
     }
-    
+
     public void setId(Long id) {
-    	this.id = id;
+        this.id = id;
     }
 
     public void setPrimary(Boolean primary) {
@@ -175,12 +176,16 @@ public class MediaEntity implements Serializable, IPersistentObject {
         this.url = url;
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    public Instant getLastUpdatedTimestamp() {
         return updatedTime;
     }
 
+    public void setLastUpdatedTimestamp(Instant ts) {
+        this.updatedTime = ts;
+    }
+
     public String stringValue() {
-        return url; 
+        return url;
     }
 
     @Override

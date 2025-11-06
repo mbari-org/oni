@@ -9,15 +9,15 @@ package org.mbari.oni.jpa.entities;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 
 import jakarta.persistence.*;
 
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CurrentTimestamp;
 import org.mbari.oni.domain.MediaTypes;
-import org.mbari.oni.jpa.KeyNullifier;
-import org.mbari.oni.jpa.TransactionLogger;
-import org.mbari.oni.jpa.IPersistentObject;
+import org.mbari.oni.jpa.*;
 
 /**
  * <pre>
@@ -54,7 +54,7 @@ import org.mbari.oni.jpa.IPersistentObject;
         query = "SELECT v FROM ConceptMetadata v WHERE v.id = :id")})
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class ConceptMetadataEntity implements Serializable, IPersistentObject {
+public class ConceptMetadataEntity implements Serializable, IPersistentObject, IOptimisticLock {
 
     @OneToOne(
         optional = false, 
@@ -133,7 +133,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
     @SuppressWarnings("unused")
     @Version
     @Column(name = "LAST_UPDATED_TIME")
-    private Timestamp updatedTime;
+    private Instant updatedTime;
 
     public void addHistory(HistoryEntity history) {
         if (getHistories().add(history)) {
@@ -180,6 +180,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
         return histories;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -300,8 +301,19 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject {
         this.concept = concept;
     }
 
+    @Override
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public void setLastUpdatedTimestamp(Instant ts) {
+        this.updatedTime = ts;
+    }
+
+    @Override
+    public Instant getLastUpdatedTimestamp() {
+        return updatedTime;
     }
 
     @Override
