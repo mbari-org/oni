@@ -23,48 +23,48 @@ import org.mbari.oni.jpa.*;
 
 /**
  * CREATE TABLE HISTORY (
- *   ID                  	BIGINT NOT NULL,
- *   CONCEPTDELEGATEID_FK	BIGINT,
- *   APPROVALDTG         	TIMESTAMP,
- *   CREATIONDTG         	TIMESTAMP,
- *   CREATORNAME         	VARCHAR(50),
- *   APPROVERNAME        	VARCHAR(50),
- *   FIELD               	VARCHAR(50),
- *   OLDVALUE            	VARCHAR(2048),
- *   NEWVALUE            	VARCHAR(2048),
- *   ACTION              	VARCHAR(16),
- *   COMMENT             	VARCHAR(2048),
- *   REJECTED            	SMALLINT NOT NULL,
- *   CONSTRAINT PK_HISTORY PRIMARY KEY(ID)
+ * ID                  	BIGINT NOT NULL,
+ * CONCEPTDELEGATEID_FK	BIGINT,
+ * APPROVALDTG         	TIMESTAMP,
+ * CREATIONDTG         	TIMESTAMP,
+ * CREATORNAME         	VARCHAR(50),
+ * APPROVERNAME        	VARCHAR(50),
+ * FIELD               	VARCHAR(50),
+ * OLDVALUE            	VARCHAR(2048),
+ * NEWVALUE            	VARCHAR(2048),
+ * ACTION              	VARCHAR(16),
+ * COMMENT             	VARCHAR(2048),
+ * REJECTED            	SMALLINT NOT NULL,
+ * CONSTRAINT PK_HISTORY PRIMARY KEY(ID)
  * )
  * GO
  * CREATE INDEX IDX_CONCEPTDELEGATE2
- *   ON HISTORY(CONCEPTDELEGATEID_FK)
+ * ON HISTORY(CONCEPTDELEGATEID_FK)
  * GO
  */
 @Entity(name = "History")
 @Table(name = "History",
         indexes = {@Index(name = "idx_History_FK1", columnList = "ConceptDelegateID_FK"),
-                   @Index(name = "idx_History_LUT", columnList = "LAST_UPDATED_TIME")})
+                @Index(name = "idx_History_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
-@NamedQueries( {
-    @NamedQuery(name = "History.countApproved",  query = "SELECT COUNT(h) FROM History h WHERE h.approved = 1"),
-    @NamedQuery(name = "History.countPending",  query = "SELECT COUNT(h) FROM History h WHERE h.processedDate IS NULL"),
-    @NamedQuery(name = "History.findAll",  query = "SELECT h FROM History h ORDER BY h.creationDate"),
-    @NamedQuery(name = "History.findById", query = "SELECT v FROM History v WHERE v.id = :id"),
-    @NamedQuery(name = "History.findByProcessedDate", query = "SELECT h FROM History h WHERE h.processedDate = :processedDate"),
-    @NamedQuery(name = "History.findByCreationDate", query = "SELECT h FROM History h WHERE h.creationDate = :creationDate"),
-    @NamedQuery(name = "History.findByCreatorName", query = "SELECT h FROM History h WHERE h.creatorName = :creatorName ORDER BY h.creationDate"),
-    @NamedQuery(name = "History.findByProcessorName", query = "SELECT h FROM History h WHERE h.processorName = :processorName ORDER BY h.creationDate") ,
-    @NamedQuery(name = "History.findByField", query = "SELECT h FROM History h WHERE h.field = :field ORDER BY h.creationDate") ,
-    @NamedQuery(name = "History.findByOldValue", query = "SELECT h FROM History h WHERE h.oldValue = :oldValue ORDER BY h.creationDate") ,
-    @NamedQuery(name = "History.findByNewValue", query = "SELECT h FROM History h WHERE h.newValue = :newValue ORDER BY h.creationDate") ,
-    @NamedQuery(name = "History.findByAction", query = "SELECT h FROM History h WHERE h.action = :action ORDER BY h.creationDate") ,
-    //@NamedQuery(name = "History.findByComment", query = "SELECT h FROM History h WHERE h.comment = :comment") ,
-    @NamedQuery(name = "History.findByApproved", query = "SELECT h FROM History h WHERE h.approved = :approved ORDER BY h.creationDate"), 
-    @NamedQuery(name = "History.findPendingApproval", query = "SELECT h FROM History h WHERE h.processedDate IS NULL ORDER BY h.creationDate"),
-    @NamedQuery(name = "History.findApproved", query = "SELECT h FROM History h WHERE h.processedDate IS NOT NULL ORDER BY h.creationDate"),
-    @NamedQuery(name = "History.findByConceptName", query = "SELECT h FROM History h WHERE h.conceptMetadata.id IN (SELECT cn.concept.conceptMetadata.id FROM ConceptName cn WHERE cn.name = :name) ORDER BY h.creationDate"),
+@NamedQueries({
+        @NamedQuery(name = "History.countApproved", query = "SELECT COUNT(h) FROM History h WHERE h.approved = 1"),
+        @NamedQuery(name = "History.countPending", query = "SELECT COUNT(h) FROM History h WHERE h.processedDate IS NULL"),
+        @NamedQuery(name = "History.findAll", query = "SELECT h FROM History h ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findById", query = "SELECT v FROM History v WHERE v.id = :id"),
+        @NamedQuery(name = "History.findByProcessedDate", query = "SELECT h FROM History h WHERE h.processedDate = :processedDate"),
+        @NamedQuery(name = "History.findByCreationDate", query = "SELECT h FROM History h WHERE h.creationDate = :creationDate"),
+        @NamedQuery(name = "History.findByCreatorName", query = "SELECT h FROM History h WHERE h.creatorName = :creatorName ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findByProcessorName", query = "SELECT h FROM History h WHERE h.processorName = :processorName ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findByField", query = "SELECT h FROM History h WHERE h.field = :field ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findByOldValue", query = "SELECT h FROM History h WHERE h.oldValue = :oldValue ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findByNewValue", query = "SELECT h FROM History h WHERE h.newValue = :newValue ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findByAction", query = "SELECT h FROM History h WHERE h.action = :action ORDER BY h.creationDate"),
+        //@NamedQuery(name = "History.findByComment", query = "SELECT h FROM History h WHERE h.comment = :comment") ,
+        @NamedQuery(name = "History.findByApproved", query = "SELECT h FROM History h WHERE h.approved = :approved ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findPendingApproval", query = "SELECT h FROM History h WHERE h.processedDate IS NULL ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findApproved", query = "SELECT h FROM History h WHERE h.processedDate IS NOT NULL ORDER BY h.creationDate"),
+        @NamedQuery(name = "History.findByConceptName", query = "SELECT h FROM History h WHERE h.conceptMetadata.id IN (SELECT cn.concept.conceptMetadata.id FROM ConceptName cn WHERE cn.name = :name) ORDER BY h.creationDate"),
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -93,7 +93,7 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
     /**
      * Field description
      */
-    public static final  String FIELD_CONCEPT = "Concept";
+    public static final String FIELD_CONCEPT = "Concept";
     public static final String FIELD_CONCEPTNAME = "ConceptName";
     public static final String FIELD_CONCEPTNAME_AUTHOR = "ConceptName.author";
     public static final String FIELD_CONCEPTNAME_PRIMARY = "Concept.primaryConceptName";
@@ -102,7 +102,7 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
     public static final String FIELD_CONCEPT_ORIGINATOR = "Originator";
     public static final String FIELD_CONCEPT_PARENT = "Concept.parent";
     public static final String FIELD_CONCEPT_RANK = "Rank";
-//    public static final String FIELD_CONCEPT_RANKLEVEL = "RankLevel";
+    //    public static final String FIELD_CONCEPT_RANKLEVEL = "RankLevel";
 //    public static final String FIELD_CONCEPT_RANKNAME = "RankName";
     public static final String FIELD_CONCEPT_REFERENCE = "Reference";
     public static final String FIELD_CONCEPT_STRUCTURETYPE = "StructureType";
@@ -112,14 +112,16 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
     public static final String FIELD_SECTIONINFO = "SectionInfo";
 
     @Id
-    @Column(name = "id", nullable = false, updatable=false)
+    @Column(name = "id", nullable = false, updatable = false)
     @GeneratedValue(strategy = GenerationType.TABLE, generator = "History_Gen")
     @TableGenerator(name = "History_Gen", table = "UniqueID",
             pkColumnName = "TableName", valueColumnName = "NextID",
             pkColumnValue = "History", allocationSize = 1)
     Long id;
 
-    /** Optimistic lock to prevent concurrent overwrites */
+    /**
+     * Optimistic lock to prevent concurrent overwrites
+     */
     @SuppressWarnings("unused")
     @Version
     @Column(name = "LAST_UPDATED_TIME")
@@ -182,7 +184,7 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
         setProcessorName(approverName);
         setProcessedDate(new Date());
     }
-    
+
 
     public boolean isAdd() {
         return ACTION_ADD.equalsIgnoreCase(action);
@@ -220,19 +222,14 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
         final String oldVal = (oldValue == null) ? "" : oldValue;
         if (ACTION_ADD.equals(action)) {
             sb.append(" '").append(newVal).append("'");
-        }
-        else if (ACTION_DELETE.equals(action)) {
+        } else if (ACTION_DELETE.equals(action)) {
             sb.append(" '").append(oldVal).append("'");
-        }
-        else if (ACTION_REPLACE.equals(action)) {
+        } else if (ACTION_REPLACE.equals(action)) {
             sb.append(" '").append(oldVal).append("' with '").append(newVal).append("'");
         }
         return sb.toString();
     }
 
-
-
-    
 
     @Override
     public int hashCode() {
@@ -263,38 +260,32 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
         if (action == null) {
             if (other.action != null)
                 return false;
-        }
-        else if (!action.equals(other.action))
+        } else if (!action.equals(other.action))
             return false;
         if (creationDate == null) {
             if (other.creationDate != null)
                 return false;
-        }
-        else if (!creationDate.equals(other.creationDate))
+        } else if (!creationDate.equals(other.creationDate))
             return false;
         if (creatorName == null) {
             if (other.creatorName != null)
                 return false;
-        }
-        else if (!creatorName.equals(other.creatorName))
+        } else if (!creatorName.equals(other.creatorName))
             return false;
         if (field == null) {
             if (other.field != null)
                 return false;
-        }
-        else if (!field.equals(other.field))
+        } else if (!field.equals(other.field))
             return false;
         if (newValue == null) {
             if (other.newValue != null)
                 return false;
-        }
-        else if (!newValue.equals(other.newValue))
+        } else if (!newValue.equals(other.newValue))
             return false;
         if (oldValue == null) {
             if (other.oldValue != null)
                 return false;
-        }
-        else if (!oldValue.equals(other.oldValue))
+        } else if (!oldValue.equals(other.oldValue))
             return false;
         return true;
     }
@@ -324,15 +315,16 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
     }
 
     public String getCreatorName() {
-       return creatorName;
+        return creatorName;
     }
 
     public String getField() {
         return field;
     }
-    
+
+    @Override
     public void setId(Long id) {
-    	this.id = id;
+        this.id = id;
     }
 
     public String getNewValue() {
@@ -342,9 +334,9 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
     public String getOldValue() {
         return oldValue;
     }
-    
+
     public Object getPrimaryKey() {
-    	return getId();
+        return getId();
     }
 
     public void setAction(String action) {
@@ -380,9 +372,10 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
     }
 
     public void setOldValue(String oldValue) {
-       this.oldValue = oldValue;
+        this.oldValue = oldValue;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -391,10 +384,12 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
         this.conceptMetadata = conceptMetadata;
     }
 
+    @Override
     public Instant getLastUpdatedTimestamp() {
         return updatedTime;
     }
 
+    @Override
     public void setLastUpdatedTimestamp(Instant ts) {
         this.updatedTime = ts;
     }
@@ -410,14 +405,6 @@ public class HistoryEntity implements Serializable, IPersistentObject, IOptimist
                 .append(", approved=").append(approved).append(")");
         return builder.toString();
     }
-
-  
-    
-    
-    
-
-    
-
 
 
 }

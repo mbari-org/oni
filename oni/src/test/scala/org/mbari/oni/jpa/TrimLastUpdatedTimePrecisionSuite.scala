@@ -15,7 +15,7 @@ import java.time.Instant
 class TrimLastUpdatedTimePrecisionSuite extends munit.FunSuite {
 
     test("roundToMillis") {
-        val ts = Instant.ofEpochSecond(1762296371348L) // 2023-10-05 15:33:54.567123456
+        val ts = Instant.ofEpochSecond(1696519434567L) // 2023-10-05 15:33:54.567123456
         val ts1 = roundToMillis(ts)
         assertEquals(ts1.toEpochMilli, ts.toEpochMilli)
     }

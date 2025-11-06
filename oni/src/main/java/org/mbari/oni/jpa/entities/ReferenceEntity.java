@@ -25,14 +25,14 @@ import java.util.Set;
         indexes = {@Index(name = "idx_Reference_name", columnList = "ReferenceName"),
                 @Index(name = "idx_Reference_FK1", columnList = "ConceptDelegateID_FK"),
                 @Index(name = "idx_Reference_LUT", columnList = "LAST_UPDATED_TIME")})
-@EntityListeners({ TransactionLogger.class, KeyNullifier.class})
-@NamedQueries( {
-    @NamedQuery(name = "Reference.findAll", query = "SELECT r FROM Reference r ORDER BY r.citation ASC"),
-    @NamedQuery(name = "Reference.findById", query = "SELECT r FROM Reference r WHERE r.id = :id") ,
-    @NamedQuery(name = "Reference.findByGlob", query = "SELECT r FROM Reference r WHERE r.citation LIKE :glob ORDER BY r.citation ASC"),
-    @NamedQuery(name = "Reference.findByDoi", query = "SELECT r FROM Reference r WHERE r.doi = :doi") ,
-    @NamedQuery(name = "Reference.findByConceptName",
-                query = "SELECT r FROM Reference r JOIN r.conceptMetadatas cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name") ,
+@EntityListeners({TransactionLogger.class, KeyNullifier.class})
+@NamedQueries({
+        @NamedQuery(name = "Reference.findAll", query = "SELECT r FROM Reference r ORDER BY r.citation ASC"),
+        @NamedQuery(name = "Reference.findById", query = "SELECT r FROM Reference r WHERE r.id = :id"),
+        @NamedQuery(name = "Reference.findByGlob", query = "SELECT r FROM Reference r WHERE r.citation LIKE :glob ORDER BY r.citation ASC"),
+        @NamedQuery(name = "Reference.findByDoi", query = "SELECT r FROM Reference r WHERE r.doi = :doi"),
+        @NamedQuery(name = "Reference.findByConceptName",
+                query = "SELECT r FROM Reference r JOIN r.conceptMetadatas cm JOIN cm.concept c JOIN c.conceptNames cn WHERE cn.name = :name"),
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
@@ -114,10 +114,12 @@ public class ReferenceEntity implements Serializable, IPersistentObject, IOptimi
         return conceptMetadatas;
     }
 
+    @Override
     public Instant getLastUpdatedTimestamp() {
         return updatedTime;
     }
 
+    @Override
     public void setLastUpdatedTimestamp(Instant ts) {
         this.updatedTime = ts;
     }

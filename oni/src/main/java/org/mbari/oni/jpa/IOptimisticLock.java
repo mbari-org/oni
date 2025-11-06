@@ -7,7 +7,6 @@
 
 package org.mbari.oni.jpa;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 
 public interface IOptimisticLock {

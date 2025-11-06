@@ -201,6 +201,7 @@ public class ConceptEntity implements Serializable, IPersistentObject, IOptimist
         return conceptNames;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -358,6 +359,7 @@ public class ConceptEntity implements Serializable, IPersistentObject, IOptimist
         }
     }
 
+    @Override
     public void setId(Long id) {
         this.id = id;
     }
@@ -382,10 +384,12 @@ public class ConceptEntity implements Serializable, IPersistentObject, IOptimist
     	return getId();
     }
 
+    @Override
     public Instant getLastUpdatedTimestamp() {
         return updatedTime;
     }
 
+    @Override
     public void setLastUpdatedTimestamp(Instant updatedTime) {
         this.updatedTime = updatedTime;
     }

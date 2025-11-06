@@ -140,6 +140,7 @@ public class ConceptNameEntity implements Serializable, IPersistentObject, IOpti
         return concept;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -171,7 +172,8 @@ public class ConceptNameEntity implements Serializable, IPersistentObject, IOpti
     public void setConcept(ConceptEntity concept) {
         this.concept = concept;
     }
-    
+
+    @Override
     public void setId(Long id) {
     	this.id = id;
     }
@@ -188,10 +190,12 @@ public class ConceptNameEntity implements Serializable, IPersistentObject, IOpti
         this.nameType = nameType;
     }
 
+    @Override
     public Instant getLastUpdatedTimestamp() {
         return updatedTime;
     }
 
+    @Override
     public void setLastUpdatedTimestamp(Instant ts) {
         this.updatedTime = ts;
     }

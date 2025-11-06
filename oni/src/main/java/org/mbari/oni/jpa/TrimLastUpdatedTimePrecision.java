@@ -11,7 +11,6 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreRemove;
 import jakarta.persistence.PreUpdate;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 
 public class TrimLastUpdatedTimePrecision {

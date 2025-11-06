@@ -7,8 +7,6 @@
 
 package org.mbari.oni.jpa;
 
-import java.sql.Timestamp;
-
 /**
  * Created by IntelliJ IDEA.
  * User: brian

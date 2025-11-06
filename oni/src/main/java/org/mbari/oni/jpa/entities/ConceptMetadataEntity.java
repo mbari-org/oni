@@ -180,6 +180,7 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject, I
         return histories;
     }
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -300,14 +301,17 @@ public class ConceptMetadataEntity implements Serializable, IPersistentObject, I
         this.concept = concept;
     }
 
+    @Override
     public void setId(Long id) {
         this.id = id;
     }
 
+    @Override
     public void setLastUpdatedTimestamp(Instant ts) {
         this.updatedTime = ts;
     }
 
+    @Override
     public Instant getLastUpdatedTimestamp() {
         return updatedTime;
     }
