@@ -22,7 +22,7 @@ public class TrimLastUpdatedTimePrecision {
         if (object instanceof IOptimisticLock entity) {
             var ts = entity.getLastUpdatedTimestamp();
             if (ts != null) {
-                // THis is actually dropping the nanos component
+                // This is actually dropping the nanos component
                 var roundedTs = roundToMillis(ts);
                 entity.setLastUpdatedTimestamp(roundedTs);
             }
