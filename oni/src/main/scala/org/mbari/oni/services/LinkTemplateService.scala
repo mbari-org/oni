@@ -172,6 +172,10 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                             linkTemplate
                         )
                         linkTemplate.getConceptMetadata.addHistory(history)
+
+                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
+                        entityManager.flush()
+
                         ExtendedLink.from(linkTemplate)
                     case None               => throw LinkTemplateIdNotFound(id)
             )
