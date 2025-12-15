@@ -796,3 +796,122 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
                 case Left(_)        => fail("Concept should exist after approval")
 
     }
+
+    test("approveReplaceLinkRealization") {
+        val root           = init(1, 0)
+        val add            = LinkCreate(
+            root.getName,
+            Strings.random(10),
+            Strings.random(10),
+            Strings.random(10)
+        )
+        val service        = LinkRealizationService(entityManagerFactory)
+        val conceptService = ConceptService(entityManagerFactory)
+        val attempt        = for
+            _               <- runWithUserAuth(
+                                   user => service.create(add, user.username),
+                                   role = UserAccountRoles.MAINTENANCE.getRoleName
+                               )
+            history         <- historyService.findByConceptName(root.getName).map(_.head)
+            approvedHistory <- runWithUserAuth(user => historyActionService.approve(history.id.get, user.username))
+        yield
+            assert(approvedHistory.approved)
+            conceptService.findByName(root.getName) match
+                case Right(concept) =>
+                    assert(concept.linkRealizations.exists(_.linkName == add.linkName))
+                case Left(_)        => fail("Concept should exist after approval")
+
+        attempt match
+            case Right(_) => // Succeed
+            case Left(e)  => fail(e.getMessage)
+    }
+
+    test("rejectReplaceLinkRealization") {
+        val root           = init(1, 0)
+        val add            = LinkCreate(
+            root.getName,
+            Strings.random(10),
+            Strings.random(10),
+            Strings.random(10)
+        )
+        val service        = LinkRealizationService(entityManagerFactory)
+        val conceptService = ConceptService(entityManagerFactory)
+        val attempt        = for
+            _               <- runWithUserAuth(
+                                   user => service.create(add, user.username),
+                                   role = UserAccountRoles.MAINTENANCE.getRoleName
+                               )
+            history         <- historyService.findByConceptName(root.getName).map(_.head)
+            approvedHistory <- runWithUserAuth(user => historyActionService.reject(history.id.get, user.username))
+        yield
+            assert(!approvedHistory.approved)
+            conceptService.findByName(root.getName) match
+                case Right(concept) =>
+                    assert(!concept.linkRealizations.exists(_.linkName == add.linkName))
+                case Left(_)        => fail("Concept should exist after approval")
+
+        attempt match
+            case Right(_) => // Succeed
+            case Left(e)  =>
+                fail(e.getMessage)
+    }
+
+
+    test("approveReplaceLinkTemplate") {
+        val root           = init(1, 0)
+        val add            = LinkCreate(
+            root.getName,
+            Strings.random(10),
+            Strings.random(10),
+            Strings.random(10)
+        )
+        val service        = LinkTemplateService(entityManagerFactory)
+        val conceptService = ConceptService(entityManagerFactory)
+        val attempt        = for
+            _               <- runWithUserAuth(
+                                   user => service.create(add, user.username),
+                                   role = UserAccountRoles.MAINTENANCE.getRoleName
+                               )
+            history         <- historyService.findByConceptName(root.getName).map(_.head)
+            approvedHistory <- runWithUserAuth(user => historyActionService.approve(history.id.get, user.username))
+        yield
+            assert(approvedHistory.approved)
+            service.findByConcept(root.getName) match
+                case Right(templates) =>
+                    assert(templates.exists(_.linkName == add.linkName))
+                case Left(_)          => fail("Link template should exist after approval")
+
+        attempt match
+            case Right(_) => // Succeed
+            case Left(e)  => fail(e.getMessage)
+    }
+
+    test("rejectReplaceLinkTemplate") {
+        val root           = init(1, 0)
+        val add            = LinkCreate(
+            root.getName,
+            Strings.random(10),
+            Strings.random(10),
+            Strings.random(10)
+        )
+        val service        = LinkTemplateService(entityManagerFactory)
+        val conceptService = ConceptService(entityManagerFactory)
+        val attempt        = for
+            _               <- runWithUserAuth(
+                                   user => service.create(add, user.username),
+                                   role = UserAccountRoles.MAINTENANCE.getRoleName
+                               )
+            history         <- historyService.findByConceptName(root.getName).map(_.head)
+            approvedHistory <- runWithUserAuth(user => historyActionService.reject(history.id.get, user.username))
+        yield
+            assert(!approvedHistory.approved)
+            service.findByConcept(root.getName) match
+                case Right(templates) =>
+                    assert(!templates.exists(_.linkName == add.linkName))
+                case Left(_)          => fail("Link template should exist after approval")
+
+        attempt match
+            case Right(_) => // Succeed
+            case Left(e)  =>
+                fail(e.getMessage)
+    }

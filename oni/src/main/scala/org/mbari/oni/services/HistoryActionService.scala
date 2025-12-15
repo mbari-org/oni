@@ -105,6 +105,8 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory, fastPhylo
                 historyEntity.getField match
                     case HistoryEntity.FIELD_CONCEPT_PARENT => okHistoryAction
                     case HistoryEntity.FIELD_CONCEPT_RANK   => okHistoryAction
+                    case HistoryEntity.FIELD_LINKREALIZATION => okHistoryAction
+                    case HistoryEntity.FIELD_LINKTEMPLATE    => okHistoryAction
 //                    case HistoryEntity.FIELD_CONCEPT_RANKLEVEL => okHistoryAction
 //                    case HistoryEntity.FIELD_CONCEPT_RANKNAME  => okHistoryAction
                     case _                                  => notOkHistoryAction

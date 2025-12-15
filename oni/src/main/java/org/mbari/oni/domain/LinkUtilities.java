@@ -8,8 +8,11 @@
 package org.mbari.oni.domain;
 
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
+
 
 /**
  *
@@ -51,6 +54,23 @@ public class LinkUtilities {
         return links.stream()
                 .filter(input -> COMPARATOR.compare(input, templateLink) == 0)
                 .toList();
+    }
+
+/**
+     * Parse a String representation of a link into a LinkNode
+     * @param stringValue A String in the format produced by ILink.stringValue()
+     * @return A LinkNode
+     */
+    public static LinkNode parseLinkNode(String stringValue) {
+        List<String> tokens = Arrays.stream(stringValue.split(ILink.DELIMITER_REGEXP)).map(String::trim).toList();
+        if (tokens.size() < 3 || tokens.size() > 4) {
+            throw new IllegalArgumentException("Invalid link string value: " + stringValue);
+        }
+        var n = tokens.size() == 3 ? 0 : 1;
+        String linkName = tokens.get(n);
+        String toConcept = tokens.get(n + 1);
+        String linkValue = tokens.get(n + 2);
+        return new LinkNode(linkName, toConcept, linkValue);
     }
 }
 
