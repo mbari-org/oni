@@ -8,7 +8,7 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkUpdate}
+import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkUpdate, LinkUtilities}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
@@ -202,3 +202,31 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
             case Some(lr) =>
                 conceptMetadata.removeLinkRealization(lr)
                 Right(true)
+
+    def inTxRejectReplace(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        val conceptMetadata = history.getConceptMetadata
+        val concept         = conceptMetadata.getConcept
+        val opt             = conceptMetadata
+            .getLinkRealizations
+            .stream()
+            .filter(lr => lr.stringValue() == history.getNewValue)
+            .findFirst()
+            .toScala
+
+        opt match
+            case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
+            case Some(lr) =>
+                // Revert to old value
+                val linkNode = LinkUtilities.parseLinkNode(history.getOldValue)
+                lr.setLinkName(linkNode.linkName())
+                lr.setLinkValue(linkNode.linkValue())
+                lr.setToConcept(linkNode.toConcept())
+                entityManger.flush()
+                Right(true)
+
+
+

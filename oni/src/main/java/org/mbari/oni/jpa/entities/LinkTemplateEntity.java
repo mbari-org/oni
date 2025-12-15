@@ -10,6 +10,7 @@ package org.mbari.oni.jpa.entities;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.Optional;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -213,7 +214,7 @@ public class LinkTemplateEntity implements Serializable, ILink, IPersistentObjec
 		return "LinkTemplateEntity ([id=" + id + "] linkName=" + linkName
 				+ ", toConcept=" + toConcept + ", linkValue=" + linkValue + ")";
 	}
-    
+
     
     
 

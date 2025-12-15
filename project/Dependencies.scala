@@ -9,13 +9,13 @@ object Dependencies {
     lazy val circeCore               = "io.circe"                      %% "circe-core"                 % circeVersion
     lazy val circeGeneric            = "io.circe"                      %% "circe-generic"              % circeVersion
     lazy val circeParser             = "io.circe"                      %% "circe-parser"               % circeVersion
-    lazy val commonsCodec            = "commons-codec"                  % "commons-codec"              % "1.19.0"
-    val flywayVersion                = "11.15.0"
+    lazy val commonsCodec            = "commons-codec"                  % "commons-codec"              % "1.20.0"
+    val flywayVersion                = "11.19.0"
     lazy val flywayCore              = "org.flywaydb"                   % "flyway-core"                % flywayVersion
     lazy val flywaySqlserver         = "org.flywaydb"                   % "flyway-sqlserver"           % flywayVersion
     lazy val flywayPostgres          = "org.flywaydb"                   % "flyway-database-postgresql" % flywayVersion
     lazy val gson                    = "com.google.code.gson"           % "gson"                       % "2.13.2"
-    val hibernateVersion             = "7.1.6.Final"
+    val hibernateVersion             = "7.2.0.Final"
     lazy val hibernateCore           = "org.hibernate.orm"              % "hibernate-core"             % hibernateVersion
     lazy val hibernateJCache         = "org.hibernate"                  % "hibernate-jcache"           % hibernateVersion
     lazy val hibernateEnvers         = "org.hibernate.orm"              % "hibernate-envers"           % hibernateVersion
@@ -32,7 +32,7 @@ object Dependencies {
     val slf4jVersion                 = "2.0.17"
     lazy val slf4jJulBridge          = "org.slf4j"                      % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem             = "org.slf4j"                      % "slf4j-jdk-platform-logging" % slf4jVersion
-    private val tapirVersion         = "1.12.2"
+    private val tapirVersion         = "1.13.3"
     lazy val tapirCirce              = "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"           % tapirVersion
     lazy val tapirHelidon            = "com.softwaremill.sttp.tapir"   %% "tapir-nima-server"          % tapirVersion
     lazy val tapirPrometheus         = "com.softwaremill.sttp.tapir"   %% "tapir-prometheus-metrics"   % tapirVersion
@@ -40,7 +40,7 @@ object Dependencies {
     lazy val tapirSwagger            = "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui-bundle"    % tapirVersion
     lazy val tapirVertex             = "com.softwaremill.sttp.tapir"   %% "tapir-vertx-server"         % tapirVersion
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"                      % "3.11.0"
-    val testcontainersVersion        = "2.0.1"
+    val testcontainersVersion        = "2.0.2"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers"             % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "testcontainers-jdbc"        % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "testcontainers-mssqlserver" % testcontainersVersion

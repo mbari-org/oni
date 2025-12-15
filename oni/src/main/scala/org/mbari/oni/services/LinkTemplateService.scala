@@ -8,7 +8,7 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkRenameToConceptResponse, LinkUpdate}
+import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkRenameToConceptResponse, LinkUpdate, LinkUtilities}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkTemplateEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
@@ -264,3 +264,30 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
             case Some(lr) =>
                 conceptMetadata.removeLinkTemplate(lr)
                 Right(true)
+
+
+    def inTxRejectReplace(
+        history: HistoryEntity,
+        user: UserAccountEntity,
+        entityManger: EntityManager
+    ): Either[Throwable, Boolean] =
+        val conceptMetadata = history.getConceptMetadata
+        val concept         = conceptMetadata.getConcept
+        val opt             = conceptMetadata
+            .getLinkTemplates
+            .stream()
+            .filter(lr => lr.stringValue() == history.getNewValue)
+            .findFirst()
+            .toScala
+
+        opt match
+            case None     => Left(ItemNotFound(s"${concept.getName}${ILink.DELIMITER}${history.getNewValue}"))
+            case Some(lr) =>
+                // Revert to old value
+                val linkNode = LinkUtilities.parseLinkNode(history.getOldValue)
+                lr.setLinkName(linkNode.linkName())
+                lr.setLinkValue(linkNode.linkValue())
+                lr.setToConcept(linkNode.toConcept())
+                entityManger.flush()
+                Right(true)
+    
