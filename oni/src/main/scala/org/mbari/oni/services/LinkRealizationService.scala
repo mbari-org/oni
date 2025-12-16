@@ -203,7 +203,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 conceptMetadata.removeLinkRealization(lr)
                 Right(true)
 
-    def inTxRejectReplace(
+    def inTxnRejectReplace(
         history: HistoryEntity,
         user: UserAccountEntity,
         entityManger: EntityManager

@@ -266,7 +266,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 Right(true)
 
 
-    def inTxRejectReplace(
+    def inTxnRejectReplace(
         history: HistoryEntity,
         user: UserAccountEntity,
         entityManger: EntityManager

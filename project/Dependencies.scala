@@ -24,7 +24,7 @@ object Dependencies {
     lazy val jansi                   = "org.fusesource.jansi"           % "jansi"                      % "2.4.2"
     lazy val jaspyt                  = "org.jasypt"                     % "jasypt"                     % "1.9.3"
     lazy val junit                   = "junit"                          % "junit"                      % "4.13.2"
-    lazy val logback                 = "ch.qos.logback"                 % "logback-classic"            % "1.5.20"
+    lazy val logback                 = "ch.qos.logback"                 % "logback-classic"            % "1.5.22"
     lazy val mssqlserver             = "com.microsoft.sqlserver"        % "mssql-jdbc"                 % "13.2.1.jre11"
     lazy val munit                   = "org.scalameta"                 %% "munit"                      % "1.2.1"
     lazy val oracle                  = "com.oracle.ojdbc"               % "ojdbc8"                     % "19.3.0.0"
@@ -40,7 +40,7 @@ object Dependencies {
     lazy val tapirSwagger            = "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui-bundle"    % tapirVersion
     lazy val tapirVertex             = "com.softwaremill.sttp.tapir"   %% "tapir-vertx-server"         % tapirVersion
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"                      % "3.11.0"
-    val testcontainersVersion        = "2.0.2"
+    val testcontainersVersion        = "2.0.3"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers"             % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "testcontainers-jdbc"        % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "testcontainers-mssqlserver" % testcontainersVersion
