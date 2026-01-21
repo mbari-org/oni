@@ -65,16 +65,6 @@ lazy val oni = project
         """call :add_java "-Dconfig.file=%APP_HOME%\conf\application.conf"""",
         """call :add_java "-Dlogback.configurationFile=%APP_HOME%\conf\logback.xml""""
     ),
-    // sbt-header
-    headerLicense := Some(
-      HeaderLicense.Custom(
-        """Copyright (c) Monterey Bay Aquarium Research Institute 2024
-        |
-        |oni code is non-public software. Unauthorized copying of this file,
-        |via any medium is strictly prohibited. Proprietary and confidential.
-        |""".stripMargin
-      )
-    ),
     libraryDependencies ++= Seq(
         auth0,
         caffeine,
