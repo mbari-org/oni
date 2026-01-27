@@ -112,11 +112,13 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory, fastPhylo
                     case _                                   => notOkHistoryAction
             case HistoryEntity.ACTION_REPLACE =>
                 historyEntity.getField match
-                    case HistoryEntity.FIELD_CONCEPT_PARENT  => okHistoryAction
-                    case HistoryEntity.FIELD_CONCEPT_RANK    => okHistoryAction
-                    case HistoryEntity.FIELD_LINKREALIZATION => okHistoryAction
-                    case HistoryEntity.FIELD_LINKTEMPLATE    => okHistoryAction
-                    case _                                   => notOkHistoryAction
+                    case HistoryEntity.FIELD_CONCEPT_PARENT      => okHistoryAction
+                    case HistoryEntity.FIELD_CONCEPT_RANK        => okHistoryAction
+                    case HistoryEntity.FIELD_CONCEPTNAME         => okHistoryAction
+                    case HistoryEntity.FIELD_CONCEPTNAME_PRIMARY => okHistoryAction
+                    case HistoryEntity.FIELD_LINKREALIZATION     => okHistoryAction
+                    case HistoryEntity.FIELD_LINKTEMPLATE        => okHistoryAction
+                    case _                                       => notOkHistoryAction
 
     private def lookupRejectHistoryAction(historyEntity: HistoryEntity): HistoryAction =
         historyEntity.getAction match
@@ -131,8 +133,10 @@ class HistoryActionService(entityManagerFactory: EntityManagerFactory, fastPhylo
             case HistoryEntity.ACTION_DELETE  => okHistoryAction
             case HistoryEntity.ACTION_REPLACE =>
                 historyEntity.getField match
-                    case HistoryEntity.FIELD_CONCEPT_PARENT  => conceptService.inTxnRejectReplaceParent
-                    case HistoryEntity.FIELD_CONCEPT_RANK    => conceptService.inTxnRejectReplaceRank
-                    case HistoryEntity.FIELD_LINKREALIZATION => linkRealizationService.inTxnRejectReplace
-                    case HistoryEntity.FIELD_LINKTEMPLATE    => linkTemplateService.inTxnRejectReplace
-                    case _                                   => notOkHistoryAction
+                    case HistoryEntity.FIELD_CONCEPT_PARENT      => conceptService.inTxnRejectReplaceParent
+                    case HistoryEntity.FIELD_CONCEPT_RANK        => conceptService.inTxnRejectReplaceRank
+                    case HistoryEntity.FIELD_CONCEPTNAME         => conceptNameService.inTxnRejectReplace
+                    case HistoryEntity.FIELD_CONCEPTNAME_PRIMARY => conceptNameService.inTxnRejectReplace
+                    case HistoryEntity.FIELD_LINKREALIZATION     => linkRealizationService.inTxnRejectReplace
+                    case HistoryEntity.FIELD_LINKTEMPLATE        => linkTemplateService.inTxnRejectReplace
+                    case _                                       => notOkHistoryAction

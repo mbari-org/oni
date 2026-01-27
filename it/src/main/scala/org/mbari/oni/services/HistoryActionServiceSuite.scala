@@ -20,6 +20,7 @@ import org.mbari.oni.domain.{
     ConceptCreate,
     ConceptNameCreate,
     ConceptNameTypes,
+    ConceptNameUpdate,
     ConceptUpdate,
     LinkCreate,
     MediaCreate,
@@ -914,4 +915,120 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
             case Right(_) => // Succeed
             case Left(e)  =>
                 fail(e.getMessage)
+    }
+
+    test("approveReplaceConceptName") {
+        // This test mimics the workflow:
+        // 1. Admin creates an alias on a concept (auto-approved)
+        // 2. Maint user modifies the alias (creates pending history)
+        // 3. Admin approves the pending history item
+        val root               = init(1, 0)
+        val originalAlias      = Strings.random(10)
+        val modifiedAlias      = Strings.random(10)
+        val conceptNameService = ConceptNameService(entityManagerFactory)
+        val conceptService     = ConceptService(entityManagerFactory)
+
+        // Step 1: Admin creates an alias (auto-approved)
+        val addName = ConceptNameCreate(root.getName, originalAlias, ConceptNameTypes.COMMON.getType)
+
+        val attempt = for
+            // Admin adds a name (auto-approved)
+            _               <- runWithUserAuth(user => conceptNameService.addName(addName, user.username))
+            // Verify the name exists
+            _               <- conceptService.findByName(originalAlias)
+            // Step 2: Maint user modifies the alias (creates pending history)
+            _               <- runWithUserAuth(
+                                   user =>
+                                       conceptNameService.updateName(
+                                           originalAlias,
+                                           ConceptNameUpdate(newName = Some(modifiedAlias)),
+                                           user.username
+                                       ),
+                                   role = UserAccountRoles.MAINTENANCE.getRoleName
+                               )
+            // Step 3: Find the pending history item for the replace action
+            historyOpt      <- historyService
+                                   .findByConceptName(root.getName)
+                                   .map(
+                                       _.find(x =>
+                                           x.field == HistoryEntity.FIELD_CONCEPTNAME &&
+                                               x.action == HistoryEntity.ACTION_REPLACE &&
+                                               x.newValue.contains(modifiedAlias)
+                                       )
+                                   )
+            history         <- historyOpt.toRight(new Exception("History not found"))
+            // Admin approves the pending history item
+            approvedHistory <- runWithUserAuth(user => historyActionService.approve(history.id.get, user.username))
+        yield
+            assert(approvedHistory.approved)
+            // Verify the modified name exists
+            conceptService.findByName(modifiedAlias) match
+                case Right(_) => // Succeed
+                case Left(_)  => fail("Modified concept name should exist after approval")
+            // Verify the original name no longer exists
+            conceptService.findByName(originalAlias) match
+                case Right(_) => fail("Original concept name should not exist after approval")
+                case Left(_)  => // Succeed
+
+        attempt match
+            case Right(_) => // Succeed
+            case Left(e)  => fail(e.getMessage)
+    }
+
+    test("rejectReplaceConceptName") {
+        // This test mimics the workflow:
+        // 1. Admin creates an alias on a concept (auto-approved)
+        // 2. Maint user modifies the alias (creates pending history)
+        // 3. Admin rejects the pending history item
+        val root               = init(1, 0)
+        val originalAlias      = Strings.random(10)
+        val modifiedAlias      = Strings.random(10)
+        val conceptNameService = ConceptNameService(entityManagerFactory)
+        val conceptService     = ConceptService(entityManagerFactory)
+
+        // Step 1: Admin creates an alias (auto-approved)
+        val addName = ConceptNameCreate(root.getName, originalAlias, ConceptNameTypes.COMMON.getType)
+
+        val attempt = for
+            // Admin adds a name (auto-approved)
+            _               <- runWithUserAuth(user => conceptNameService.addName(addName, user.username))
+            // Verify the name exists
+            _               <- conceptService.findByName(originalAlias)
+            // Step 2: Maint user modifies the alias (creates pending history)
+            _               <- runWithUserAuth(
+                                   user =>
+                                       conceptNameService.updateName(
+                                           originalAlias,
+                                           ConceptNameUpdate(newName = Some(modifiedAlias)),
+                                           user.username
+                                       ),
+                                   role = UserAccountRoles.MAINTENANCE.getRoleName
+                               )
+            // Step 3: Find the pending history item for the replace action
+            historyOpt      <- historyService
+                                   .findByConceptName(root.getName)
+                                   .map(
+                                       _.find(x =>
+                                           x.field == HistoryEntity.FIELD_CONCEPTNAME &&
+                                               x.action == HistoryEntity.ACTION_REPLACE &&
+                                               x.newValue.contains(modifiedAlias)
+                                       )
+                                   )
+            history         <- historyOpt.toRight(new Exception("History not found"))
+            // Admin rejects the pending history item
+            rejectedHistory <- runWithUserAuth(user => historyActionService.reject(history.id.get, user.username))
+        yield
+            assert(!rejectedHistory.approved)
+            // Verify the original name still exists after rejection
+            conceptService.findByName(originalAlias) match
+                case Right(_) => // Succeed
+                case Left(_)  => fail("Original concept name should still exist after rejection")
+            // Verify the modified name does not exist
+            conceptService.findByName(modifiedAlias) match
+                case Right(_) => fail("Modified concept name should not exist after rejection")
+                case Left(_)  => // Succeed
+
+        attempt match
+            case Right(_) => // Succeed
+            case Left(e)  => fail(e.getMessage)
     }

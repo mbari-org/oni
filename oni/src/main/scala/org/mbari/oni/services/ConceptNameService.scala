@@ -227,3 +227,16 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                 concept.removeConceptName(conceptName)
                 repo.delete(conceptName)
                 Right(true)
+
+
+    def inTxnRejectReplace(
+        historyEntity: HistoryEntity,
+        userEntity: UserAccountEntity,
+        entityManager: EntityManager
+    ): Either[Throwable, Boolean] =
+        val concept = historyEntity.getConceptMetadata.getConcept
+        Option(concept.getConceptName(historyEntity.getNewValue)) match
+            case None              => Left(ConceptNameNotFound(historyEntity.getNewValue))
+            case Some(conceptName) =>
+                conceptName.setName(historyEntity.getOldValue)
+                Right(true)
