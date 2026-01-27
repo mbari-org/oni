@@ -16,7 +16,7 @@
 
 package org.mbari.oni.etc.jpa
 
-import jakarta.persistence.EntityManager
+import jakarta.persistence.{EntityManager, FlushModeType}
 import org.mbari.oni.MissingRootConcept
 import org.mbari.oni.etc.jdk.Loggers.given
 
@@ -49,3 +49,36 @@ object EntityManagers:
 //                            "A JPA transaction was still active after commit. This is likely due to an exception during the transaction. Rolling back"
 //                        )
                     transaction.rollback()
+
+        /**
+         * Synchronous version of runReadOnlyTransaction. Sets flush mode to COMMIT (no auto-flush) and rolls back the
+         * transaction instead of committing to ensure no changes are persisted. Also sets read-only hints at the
+         * Hibernate session level.
+         *
+         * Note: We only use Hibernate's session-level read-only mode, not JDBC connection.setReadOnly(),
+         * because PostgreSQL does not allow changing the read-only property in the middle of a transaction,
+         * and the connection pool may have already started implicit transaction state.
+         */
+        def runReadOnlyTransaction[R](fn: EntityManager => R): Either[Throwable, R] =
+            val originalFlushMode = entityManager.getFlushMode
+            val transaction       = entityManager.getTransaction
+
+            // Get underlying Hibernate session and set read-only hints at session level only
+            val session = entityManager.unwrap(classOf[org.hibernate.Session])
+            session.setDefaultReadOnly(true)
+
+            transaction.begin()
+            try
+                entityManager.setFlushMode(FlushModeType.COMMIT)
+                val n = fn.apply(entityManager)
+                // Rollback instead of commit to ensure no changes are persisted
+                transaction.rollback()
+                Right(n)
+            catch
+                case NonFatal(e) =>
+                    log.atError.withCause(e).log("Error running read-only transaction")
+                    Left(e)
+            finally
+                entityManager.setFlushMode(originalFlushMode)
+                session.setDefaultReadOnly(false)
+                if transaction.isActive then transaction.rollback()

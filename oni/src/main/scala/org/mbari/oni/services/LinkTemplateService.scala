@@ -32,13 +32,13 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
     private val userAccountService = UserAccountService(entityManagerFactory)
 
     def countAll(): Either[Throwable, Long] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
             repo.countAll()
         )
 
     def findAll(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
             repo.findAll(limit, offset)
                 .asScala
@@ -48,7 +48,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findById(id: Long): Either[Throwable, ExtendedLink] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
             repo.findByPrimaryKey(classOf[LinkTemplateEntity], id).toScala match
                 case Some(linkTemplate) => ExtendedLink.from(linkTemplate)
@@ -56,7 +56,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         )
 
     def countByConcept(conceptName: String): Either[Throwable, Long] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new ConceptRepository(entityManager)
             repo.findByName(conceptName).toScala match
                 case Some(concept) =>
@@ -69,7 +69,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByConcept(conceptName: String): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new ConceptRepository(entityManager)
             repo.findByName(conceptName).toScala match
                 case Some(concept) =>
@@ -84,7 +84,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         )
 
     def countByToConcept(toConcept: String): Either[Throwable, Long] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo         = new LinkTemplateRepository(entityManager)
             val conceptRepo  = new ConceptRepository(entityManager)
             val resolvedName = conceptRepo.findByName(toConcept).toScala match
@@ -97,7 +97,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByToConcept(toConcept: String): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo         = new LinkTemplateRepository(entityManager)
             val conceptRepo  = new ConceptRepository(entityManager)
             val resolvedName = conceptRepo.findByName(toConcept).toScala match
@@ -111,7 +111,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByPrototype(link: Link): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo              = new LinkTemplateRepository(entityManager)
             val conceptRepo       = new ConceptRepository(entityManager)
             val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match

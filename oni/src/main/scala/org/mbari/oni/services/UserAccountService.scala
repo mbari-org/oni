@@ -31,7 +31,7 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
     private val log = System.getLogger(getClass.getName)
 
     def findAll(): Either[Throwable, Seq[UserAccount]] =
-        val attempt = entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
             repo.findAll()
         )
@@ -42,14 +42,14 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByUserName(name: String): Either[Throwable, Option[UserAccount]] =
-        val attempt = entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
             repo.findByUserName(name)
         )
         attempt.map(_.map(UserAccount.from).toScala)
 
     def findAllByRole(role: String): Either[Throwable, Seq[UserAccount]] =
-        val attempt = entityManagerFactory.transaction(entityManager =>
+        val attempt = entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
             repo.findAllByRole(role)
         )

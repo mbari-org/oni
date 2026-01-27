@@ -42,13 +42,13 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
     private val userAccountService = UserAccountService(entityManagerFactory)
 
     def findAllNames(limit: Int, offset: Int): Either[Throwable, Seq[String]] =
-        entityManagerFactory.transaction(entityManger =>
+        entityManagerFactory.readOnlyTransaction(entityManger =>
             val repo = new ConceptNameRepository(entityManger)
             repo.findAllNamesAsStrings().asScala.toSeq
         )
 
     def findByName(name: String): Either[Throwable, RawConcept] =
-        entityManagerFactory.transaction(entityManger =>
+        entityManagerFactory.readOnlyTransaction(entityManger =>
             val repo = new ConceptNameRepository(entityManger)
             repo.findByName(name).toScala match
                 case None         => throw ConceptNameNotFound(name)

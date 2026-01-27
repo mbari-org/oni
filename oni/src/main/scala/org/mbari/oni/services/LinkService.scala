@@ -28,7 +28,7 @@ import scala.jdk.OptionConverters.*
 class LinkService(entityManagerFactory: EntityManagerFactory):
 
     def findAllLinkTemplates(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[Link]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkTemplateRepository(entityManager)
             repo.findAll(limit, offset)
                 .asScala
@@ -37,7 +37,7 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findAllLinkTemplatesForConcept(conceptName: String): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo        = new LinkTemplateRepository(entityManager)
             val conceptRepo = new ConceptRepository(entityManager)
             conceptRepo.findByName(conceptName).toScala match
@@ -58,7 +58,7 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
      * @return
      */
     def findLinkTemplatesByNameForConcept(conceptName: String, linkName: String): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo        = new LinkTemplateRepository(entityManager)
             val conceptRepo = new ConceptRepository(entityManager)
             conceptRepo.findByName(conceptName).toScala match
@@ -71,7 +71,7 @@ class LinkService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findLinkRealizationsByLinkName(linkName: String): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkRealizationRepository(entityManager)
             repo.findAllByLinkName(linkName)
                 .asScala

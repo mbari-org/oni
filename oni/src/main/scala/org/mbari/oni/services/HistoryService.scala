@@ -30,19 +30,19 @@ import scala.util.Try
 class HistoryService(entityManagerFactory: EntityManagerFactory):
 
     def countApproved(): Either[Throwable, Long] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
             repo.countApprovedHistories()
         )
 
     def countPending(): Either[Throwable, Long] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
             repo.countPendingHistories()
         )
 
     def findAllPending(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedHistory]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
             repo.findPendingHistories(limit, offset)
                 .asScala
@@ -54,7 +54,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findAllApproved(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedHistory]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
             repo.findApprovedHistories(limit, offset)
                 .asScala
@@ -69,7 +69,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findById(id: Long): Either[Throwable, ExtendedHistory] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
             val opt  = repo
                 .findByPrimaryKey(classOf[HistoryEntity], id)
@@ -82,7 +82,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByConceptName(conceptName: String): Either[Throwable, Seq[ExtendedHistory]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
             repo.findByConceptName(conceptName)
                 .asScala

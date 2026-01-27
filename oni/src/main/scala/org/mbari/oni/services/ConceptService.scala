@@ -120,7 +120,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         handleByConceptNameQuery(name, c => c.getChildConcepts.asScala.map(ConceptMetadata.from).toSet)
 
     def findRoot(): Either[Throwable, ConceptMetadata] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new ConceptRepository(entityManager)
             repo.findRoot().toScala match
                 case None    => throw MissingRootConcept
@@ -128,7 +128,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByGlob(glob: String): Either[Throwable, Set[ConceptMetadata]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new ConceptRepository(entityManager)
             repo.findAllByNameContaining(glob)
                 .asScala
@@ -141,7 +141,7 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
         handleByConceptNameQuery(name, fn)
 
     def tree(): Either[Throwable, RawConcept] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new ConceptRepository(entityManager)
             val root = repo.findRoot().toScala match
                 case None    => throw MissingRootConcept
@@ -216,7 +216,12 @@ class ConceptService(entityManagerFactory: EntityManagerFactory):
     private def handleByConceptNameQuery[T](name: String, fn: ConceptEntity => T): Either[Throwable, T] =
         // Convert the (ConceptEntity) => T function to a (ConceptEntity, ConceptRepository) => T function
         val fn2 = (c: ConceptEntity, _: ConceptRepository) => fn(c)
-        handleByConceptName(name, fn2)
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo = new ConceptRepository(entityManager)
+            repo.findByName(name).toScala match
+                case None    => throw ConceptNameNotFound(name)
+                case Some(c) => fn2(c, repo)
+        )
 
     /**
      * Create a concept, including history tracking based on the user who created the concept. The history is added to

@@ -32,13 +32,13 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
     private val userAccountService = UserAccountService(entityManagerFactory)
 
     def countAll(): Either[Throwable, Long] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkRealizationRepository(entityManager)
             repo.countAll()
         )
 
     def findAll(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkRealizationRepository(entityManager)
             repo.findAll(limit, offset)
                 .asScala
@@ -48,7 +48,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findById(id: Long): Either[Throwable, ExtendedLink] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = new LinkRealizationRepository(entityManager)
             repo.findByPrimaryKey(classOf[LinkRealizationEntity], id).toScala match
                 case Some(linkRealization) => ExtendedLink.from(linkRealization)
@@ -56,7 +56,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByConcept(conceptName: String): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo        = new LinkRealizationRepository(entityManager)
             val conceptRepo = new ConceptRepository(entityManager)
             conceptRepo.findByName(conceptName).toScala match
@@ -72,7 +72,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByPrototype(link: Link): Either[Throwable, Seq[ExtendedLink]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo              = new LinkRealizationRepository(entityManager)
             val conceptRepo       = new ConceptRepository(entityManager)
             val resolvedToConcept = conceptRepo.findByName(link.toConcept).toScala match

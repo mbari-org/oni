@@ -30,7 +30,7 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
     private val log = System.getLogger(getClass.getName)
 
     def findById(id: Long): Either[Throwable, Option[Reference]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
             repo.findById(id)
                 .map(Reference.from)
@@ -38,7 +38,7 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findAll(limit: Int, offset: Int): Either[Throwable, Seq[Reference]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
             repo.findAll(limit, offset)
                 .asScala
@@ -47,7 +47,7 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByCitationGlob(glob: String, limit: Int, offset: Int): Either[Throwable, Seq[Reference]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
             repo.findByGlob(glob, limit, offset)
                 .asScala
@@ -56,7 +56,7 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
         )
 
     def findByDoi(doi: URI): Either[Throwable, Option[Reference]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = ReferenceRepository(entityManager)
             repo.findByDoi(doi)
                 .map(Reference.from)

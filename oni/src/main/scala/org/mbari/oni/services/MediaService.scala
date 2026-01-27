@@ -33,7 +33,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
     private val userAccountService = UserAccountService(entityManagerFactory)
 
     def findById(id: Long): Either[Throwable, Option[Media]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = MediaRepository(entityManager, fastPhylogenyService)
             repo.findByPrimaryKey(classOf[MediaEntity], id)
                 .map(Media.from)
@@ -41,7 +41,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
         )
 
     def findRepresentativeMedia(concept: String, count: Int): Either[Throwable, Seq[Media]] =
-        entityManagerFactory.transaction(entityManager =>
+        entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = MediaRepository(entityManager, fastPhylogenyService)
             repo.findRepresentativeMedia(concept, count)
                 .asScala
