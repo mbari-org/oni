@@ -208,3 +208,173 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             case Left(value)  => fail(value.toString)
             case Right(value) => assert(true)
     }
+
+    test("createMedia (second primary replaces first)") {
+        val root = init(3, 0)
+        assert(root != null)
+
+        // Create first media as primary
+        val mediaCreate1 = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some("First image"),
+            credit = Some("Test credit 1"),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+
+        // Create second media as primary
+        val mediaCreate2 = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some("Second image"),
+            credit = Some("Test credit 2"),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+
+        var firstMediaId: Long  = -1
+        var secondMediaId: Long = -1
+
+        val attempt = testWithUserAuth(
+            user =>
+                val jwt = jwtService.login(user.username, password, user.toEntity)
+
+                // Create first media
+                runPost(
+                    endpoints.createMediaEndpointImpl,
+                    "http://test.com/v1/media",
+                    mediaCreate1.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(true, obtained.isPrimary, "First media should be primary after creation")
+                        firstMediaId = obtained.id.get
+                    ,
+                    jwt = jwt
+                )
+
+                // Create second media (should replace first as primary)
+                runPost(
+                    endpoints.createMediaEndpointImpl,
+                    "http://test.com/v1/media",
+                    mediaCreate2.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(true, obtained.isPrimary, "Second media should be primary after creation")
+                        secondMediaId = obtained.id.get
+                    ,
+                    jwt = jwt
+                )
+
+                // Fetch first media and verify it's no longer primary
+                runGet(
+                    endpoints.findMediaByIdEndpointImpl,
+                    s"http://test.com/v1/media/$firstMediaId",
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(false, obtained.isPrimary, "First media should no longer be primary")
+                )
+
+                // Fetch second media and verify it's still primary
+                runGet(
+                    endpoints.findMediaByIdEndpointImpl,
+                    s"http://test.com/v1/media/$secondMediaId",
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(true, obtained.isPrimary, "Second media should still be primary")
+                )
+            ,
+            password
+        )
+        attempt match
+            case Left(value)  => fail(value.toString)
+            case Right(value) => assert(true)
+    }
+
+    test("deleteMedia (promotes next media to primary)") {
+        val root = init(4, 0)
+        assert(root != null)
+
+        // Create first media as primary
+        val mediaCreate1 = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some("First image - primary"),
+            credit = Some("Test credit 1"),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(true)
+        )
+
+        // Create second media as non-primary
+        val mediaCreate2 = MediaCreate(
+            conceptName = root.getName,
+            url = URI.create(s"http://www.mbari.org/${Strings.random(10)}.png").toURL,
+            caption = Some("Second image - not primary"),
+            credit = Some("Test credit 2"),
+            mediaType = Some(MediaTypes.IMAGE.name),
+            isPrimary = Some(false)
+        )
+
+        var firstMediaId: Long  = -1
+        var secondMediaId: Long = -1
+
+        val attempt = testWithUserAuth(
+            user =>
+                val jwt = jwtService.login(user.username, password, user.toEntity)
+
+                // Create first media as primary
+                runPost(
+                    endpoints.createMediaEndpointImpl,
+                    "http://test.com/v1/media",
+                    mediaCreate1.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(true, obtained.isPrimary, "First media should be primary after creation")
+                        firstMediaId = obtained.id.get
+                    ,
+                    jwt = jwt
+                )
+
+                // Create second media as non-primary
+                runPost(
+                    endpoints.createMediaEndpointImpl,
+                    "http://test.com/v1/media",
+                    mediaCreate2.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(false, obtained.isPrimary, "Second media should not be primary after creation")
+                        secondMediaId = obtained.id.get
+                    ,
+                    jwt = jwt
+                )
+
+                // Delete the first (primary) media
+                runDelete(
+                    endpoints.deleteMediaEndpointImpl,
+                    s"http://test.com/v1/media/$firstMediaId",
+                    response => assertEquals(response.code, StatusCode.Ok),
+                    jwt = jwt
+                )
+
+                // Fetch second media and verify it has been promoted to primary
+                runGet(
+                    endpoints.findMediaByIdEndpointImpl,
+                    s"http://test.com/v1/media/$secondMediaId",
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(true, obtained.isPrimary, "Second media should be promoted to primary after first is deleted")
+                )
+            ,
+            password
+        )
+        attempt match
+            case Left(value)  => fail(value.toString)
+            case Right(value) => assert(true)
+    }

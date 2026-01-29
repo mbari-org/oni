@@ -32,6 +32,60 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
     private val log                = System.getLogger(getClass.getName)
     private val userAccountService = UserAccountService(entityManagerFactory)
 
+    /**
+     * Clear primary flag on all media of the given type for a concept, except the specified media entity.
+     * @param conceptMetadata The concept metadata containing the media
+     * @param mediaType The type of media (Image, Video, Icon)
+     * @param exceptMedia The media entity to exclude from clearing (can be null)
+     */
+    private def clearPrimaryForType(
+        conceptMetadata: org.mbari.oni.jpa.entities.ConceptMetadataEntity,
+        mediaType: String,
+        exceptMedia: MediaEntity
+    ): Unit =
+        conceptMetadata.getMedias
+            .stream()
+            .filter(m => m.getType == mediaType && m.getUrl != exceptMedia.getUrl && m.isPrimary)
+            .forEach(m => m.setPrimary(false))
+
+    /**
+     * Check if this is the only media of its type on the concept.
+     * @param conceptMetadata The concept metadata containing the media
+     * @param mediaType The type of media to check
+     * @return true if there is exactly one media of this type
+     */
+    private def isOnlyMediaOfType(
+        conceptMetadata: org.mbari.oni.jpa.entities.ConceptMetadataEntity,
+        mediaType: String
+    ): Boolean =
+        conceptMetadata.getMedias
+            .stream()
+            .filter(m => m.getType == mediaType)
+            .count() == 1
+
+    /**
+     * Find the most recently added media of the given type on the concept.
+     * Uses the last updated timestamp as a proxy for creation time.
+     * @param conceptMetadata The concept metadata containing the media
+     * @param mediaType The type of media to find
+     * @param exceptMedia The media entity to exclude from the search
+     * @return The most recently added media of the given type, or None if not found
+     */
+    private def findMostRecentMediaOfType(
+        conceptMetadata: org.mbari.oni.jpa.entities.ConceptMetadataEntity,
+        mediaType: String,
+        exceptMedia: MediaEntity
+    ): Option[MediaEntity] =
+        import java.util.Comparator
+        conceptMetadata.getMedias
+            .stream()
+            .filter(m => m.getType == mediaType && m != exceptMedia)
+            .max(Comparator.comparing[MediaEntity, java.time.Instant](
+                m => Option(m.getLastUpdatedTimestamp).getOrElse(java.time.Instant.EPOCH),
+                Comparator.naturalOrder()
+            ))
+            .toScala
+
     def findById(id: Long): Either[Throwable, Option[Media]] =
         entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = MediaRepository(entityManager, fastPhylogenyService)
@@ -70,12 +124,23 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                                 s"Media with URL '${url}' already exists for concept '${mediaCreate.conceptName}'"
                             )
 
-                        val entity  = mediaCreate.toEntity
-                        concept.getConceptMetadata.addMedia(entity)
+                        val entity          = mediaCreate.toEntity
+                        val conceptMetadata = concept.getConceptMetadata
+                        conceptMetadata.addMedia(entity)
                         repo.create(entity)
+
+                        // Handle primary media logic
+                        val mediaType = entity.getType
+                        if entity.isPrimary then
+                            // If explicitly set as primary, clear other primaries of same type
+                            clearPrimaryForType(conceptMetadata, mediaType, entity)
+                        else if isOnlyMediaOfType(conceptMetadata, mediaType) then
+                            // If this is the only media of its type, make it primary
+                            entity.setPrimary(true)
+
                         // Add history
                         val history = HistoryEntityFactory.add(userEntity, entity)
-                        concept.getConceptMetadata.addHistory(history)
+                        conceptMetadata.addHistory(history)
                         if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
 
                         Media.from(entity)
@@ -100,8 +165,15 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                         if userEntity.isAdministrator then
                             history.approveBy(userEntity.getUserName)
                             val conceptMetadata = media.getConceptMetadata
+                            val wasPrimary      = media.isPrimary
+                            val mediaType       = media.getType
                             conceptMetadata.removeMedia(media)
                             repo.delete(media)
+
+                            // If deleted media was primary, promote the most recent media of the same type
+                            if wasPrimary then
+                                findMostRecentMediaOfType(conceptMetadata, mediaType, media)
+                                    .foreach(_.setPrimary(true))
             )
 
         for
@@ -118,9 +190,16 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                     case Some(media) =>
                         mediaUpdate.caption.foreach(media.setCaption)
                         mediaUpdate.credit.foreach(media.setCredit)
-                        mediaUpdate.isPrimary.foreach(b => media.setPrimary(b.booleanValue()))
                         mediaUpdate.url.foreach(url => media.setUrl(url.toExternalForm))
                         mediaUpdate.mediaType.foreach(media.setType)
+
+                        // Handle primary media logic - if setting as primary, clear other primaries of same type
+                        mediaUpdate.isPrimary.foreach { isPrimary =>
+                            media.setPrimary(isPrimary)
+                            if isPrimary then
+                                clearPrimaryForType(media.getConceptMetadata, media.getType, media)
+                        }
+
                         repo.update(media)
                         Media.from(media)
             )
@@ -148,8 +227,16 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             case None    =>
                 Left(ItemNotFound(s"${concept.getName} does not have a media with URL of ${history.getNewValue}"))
             case Some(m) =>
+                val wasPrimary = m.isPrimary
+                val mediaType  = m.getType
                 conceptMetadata.removeMedia(m)
                 entityManger.remove(m)
+
+                // If deleted media was primary, promote the most recent media of the same type
+                if wasPrimary then
+                    findMostRecentMediaOfType(conceptMetadata, mediaType, m)
+                        .foreach(_.setPrimary(true))
+
                 Right(true)
 
     def inTxnApproveDelete(
@@ -170,6 +257,14 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
             case None    =>
                 Left(ItemNotFound(s"${concept.getName} does not have a media with URL of ${history.getOldValue}"))
             case Some(m) =>
+                val wasPrimary = m.isPrimary
+                val mediaType  = m.getType
                 conceptMetadata.removeMedia(m)
                 entityManger.remove(m)
+
+                // If deleted media was primary, promote the most recent media of the same type
+                if wasPrimary then
+                    findMostRecentMediaOfType(conceptMetadata, mediaType, m)
+                        .foreach(_.setPrimary(true))
+                        
                 Right(true)
