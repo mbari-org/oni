@@ -1,6 +1,6 @@
 # oni - Organism Naming Infrastructure
 
-![Build](https://github.com/mbari-org/oni/actions/workflows/test.yml/badge.svg)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/mbari-org/oni) ![Build](https://github.com/mbari-org/oni/actions/workflows/test.yml/badge.svg)
 
 ![MBARI logo](oni/src/docs/_assets/images/logo-mbari-3b.png)
 
