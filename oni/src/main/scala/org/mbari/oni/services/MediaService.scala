@@ -79,7 +79,7 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
         import java.util.Comparator
         conceptMetadata.getMedias
             .stream()
-            .filter(m => m.getType == mediaType && m != exceptMedia)
+            .filter(m => m.getType == mediaType && m.getUrl != exceptMedia.getUrl)
             .max(Comparator.comparing[MediaEntity, java.time.Instant](
                 m => Option(m.getLastUpdatedTimestamp).getOrElse(java.time.Instant.EPOCH),
                 Comparator.naturalOrder()
