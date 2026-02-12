@@ -19,7 +19,7 @@ package org.mbari.oni.domain
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jpa.entities.MediaEntity
 
-import java.net.{URI, URL}
+import java.net.{URI, URL, URLConnection}
 import java.time.Instant
 import java.util.regex.Pattern
 import scala.util.{Success, Try}
@@ -72,12 +72,34 @@ object Media:
         )
 
     def resolveMimeType(t: String, url: String): String =
-        val ext       = url.split(Pattern.quote(".")).last.toLowerCase
-        val mediaType = Strings.initCap(t)
-        Try(MediaType.valueOf(mediaType)) match
-            case Success(MediaType.Image) => s"image/$ext"
-            case Success(MediaType.Video) =>
-                ext match
-                    case "mov" => "video/quicktime"
-                    case _     => s"video/$ext"
-            case _                        => "application/octet-stream"
+        URLConnection.guessContentTypeFromName(url) match
+            case null     =>
+                val ext       = url.split(Pattern.quote(".")).last.toLowerCase
+                val mediaType = Strings.initCap(t)
+                Try(MediaType.valueOf(mediaType)) match
+                    case Success(MediaType.Image) =>
+                        ext match
+                            case "jpg" => "image/jpeg"
+                            case _     => s"image/$ext"
+                    case Success(MediaType.Video) =>
+                        ext match
+                            case "mov" => "video/quicktime"
+                            case _     => s"video/$ext"
+                    case Success(MediaType.Icon)  => "image/x-icon"
+                    case _                        => "application/octet-stream"
+            case mimeType => mimeType
+
+    def resolveType(url: String): MediaType =
+        resolveMimeType("Image", url) match
+            case "application/octet-stream" => MediaType.Image
+            case mimeType                   =>
+                val parts = mimeType.split("/")
+                if parts.length == 2 then
+                    parts.headOption match
+                        case Some("image") =>
+                            parts.last match
+                                case "x-icon" => MediaType.Icon
+                                case _        => MediaType.Image
+                        case Some("video") => MediaType.Video
+                        case _             => MediaType.Image
+                else MediaType.Image

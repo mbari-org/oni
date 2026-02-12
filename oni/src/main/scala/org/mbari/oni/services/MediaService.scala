@@ -26,6 +26,7 @@ import org.mbari.oni.{ConceptNameNotFound, ItemNotFound}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
+import org.checkerframework.checker.units.qual.m
 
 class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService):
 
@@ -191,7 +192,15 @@ class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyServ
                         mediaUpdate.caption.foreach(media.setCaption)
                         mediaUpdate.credit.foreach(media.setCredit)
                         mediaUpdate.url.foreach(url => media.setUrl(url.toExternalForm))
-                        mediaUpdate.mediaType.foreach(media.setType)
+
+                        // If the url is changed, we may need to update the media type if it was not explicitly set in the update
+                        mediaUpdate.mediaType match
+                            case None => 
+                                val mediaType = Media.resolveType(media.getUrl.toString)
+                                media.setType(mediaType.toString)
+                            case Some(mt) =>
+                                media.setType(mt)
+                        
 
                         // Handle primary media logic - if setting as primary, clear other primaries of same type
                         mediaUpdate.isPrimary.foreach { isPrimary =>

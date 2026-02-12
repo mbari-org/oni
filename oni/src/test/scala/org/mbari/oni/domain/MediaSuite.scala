@@ -22,7 +22,7 @@ class MediaSuite extends munit.FunSuite {
 
     test("resolveMimeType (image)") {
         val a = Media.resolveMimeType("image", "http://foo.com/bar.jpg")
-        assertEquals(a, "image/jpg")
+        assertEquals(a, "image/jpeg")
 
         val b = Media.resolveMimeType("IMAGE", "http://foo.com/bax/bar.PNG")
         assertEquals(b, "image/png")
@@ -39,11 +39,38 @@ class MediaSuite extends munit.FunSuite {
     test("media URL with space") {
         val mediaEntity = new MediaEntity()
         mediaEntity.setUrl("http://foo.com/bar bax.jpg")
-        mediaEntity.setType("image/jpg")
+        mediaEntity.setType("image/jpeg")
         val media = Media.from(mediaEntity)
         assertEquals(media.url.toString, "http://foo.com/bar%20bax.jpg")
     }
 
+    test("resolveMedia with png") {
+        val url = "http://foo.com/bar.png"
+        Media.resolveType(url) match
+            case MediaType.Image => assert(true)
+            case other           => fail(s"Expected MediaType.Image, got $other")
+    }
+
+    test("resolveMedia with jpg") {
+        val url = "http://foo.com/bar.jpg"
+        Media.resolveType(url) match
+            case MediaType.Image => assert(true)
+            case other           => fail(s"Expected MediaType.Image, got $other")
+    }
+
+    test("resolveMedia with mp4") {
+        val url = "http://foo.com/bar.mp4"
+        Media.resolveType(url) match
+            case MediaType.Video => assert(true)
+            case other           => fail(s"Expected MediaType.Video, got $other")
+    }
+
+    test("resolveMedia with unknown type") {
+        val url = "http://foo.com/bar.unknown"
+        Media.resolveType(url) match
+            case MediaType.Image => assert(true) // Default to image
+            case other           => fail(s"Expected MediaType.Image, got $other")
+    }
 
 
 }

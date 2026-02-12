@@ -144,6 +144,40 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
             case Right(value) => assert(true)
     }
 
+    test("updateMedia (change url to different typewithout explicitly changing media type)") {
+        val media       = createMedia().head
+        val mediaUpdate = MediaUpdate(
+            url = Some(URI.create(s"http://www.mbari.org/${Strings.random(10)}.mp4").toURL),
+            caption = Some(Strings.random(1000)),
+            credit = Some(Strings.random(255)),
+            isPrimary = Some(true)
+        )
+        val attempt     = testWithUserAuth(
+            user =>
+                runPut(
+                    endpoints.updateMediaEndpointImpl,
+                    s"http://test.com/v1/media/${media.id.get}",
+                    mediaUpdate.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val obtained = checkResponse[Media](response.body)
+                        assertEquals(mediaUpdate.url.orNull, obtained.url)
+                        assertEquals(mediaUpdate.caption, obtained.caption)
+                            assertEquals(mediaUpdate.credit, obtained.credit)
+                        val expectedMediaType = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
+
+                        assertEquals(expectedMediaType, obtained.mimeType)
+                        assertEquals(mediaUpdate.isPrimary.getOrElse(false), obtained.isPrimary)
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                ),
+            password
+        )
+        attempt match
+            case Left(value)  => fail(value.toString)
+            case Right(value) => assert(true)
+    }
+
     test("updateMedia (multiple updates)") {
         val media       = createMedia().head
         val mediaUpdate = MediaUpdate(

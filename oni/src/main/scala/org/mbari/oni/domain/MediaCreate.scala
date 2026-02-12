@@ -20,12 +20,13 @@ import org.mbari.oni.jpa.entities.MediaEntity
 
 import java.net.URL
 
+
 case class MediaCreate(
     conceptName: String,
     url: URL,
     caption: Option[String] = None,
     credit: Option[String] = None,
-    mediaType: Option[String] = Some(MediaTypes.IMAGE.name),
+    mediaType: Option[String] = None,
     isPrimary: Option[Boolean] = None
 ):
 
@@ -34,6 +35,6 @@ case class MediaCreate(
         entity.setUrl(url.toExternalForm)
         entity.setCaption(caption.orNull)
         entity.setCredit(credit.orNull)
-        entity.setType(mediaType.getOrElse(MediaTypes.IMAGE.name))
+        entity.setType(mediaType.getOrElse(Media.resolveType(url.toString)).toString)
         entity.setPrimary(isPrimary.getOrElse(false))
         entity
