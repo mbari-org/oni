@@ -73,6 +73,36 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
+    test("pending (sort by concept desc)") {
+        init(3, 5)
+        runGet(
+            endpoints.pendingEndpointImpl,
+            "http://test.com/v1/history/pending?sort=concept,desc",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                assert(histories.content.nonEmpty)
+                val sorted = histories.content.sortBy(_.concept)(Ordering[String].reverse)
+                assertEquals(histories.content, sorted)
+        )
+    }
+
+    test("pending (sort by concept)") {
+        init(3, 5)
+        runGet(
+            endpoints.pendingEndpointImpl,
+            "http://test.com/v1/history/pending?sort=concept,asc",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                assert(histories.content.nonEmpty)
+                val sorted = histories.content.sortBy(_.concept)(Ordering[String])
+                assertEquals(histories.content, sorted)
+        )
+    }
+
+    
+
     test("pendingCount") {
         init(3, 5)
         runGet(
@@ -94,6 +124,20 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
+        )
+    }
+
+    test("approved (sort by processedTimestamp desc)") {
+        init(3, 5)
+        runGet(
+            endpoints.approvedEndpointsImpl,
+            "http://test.com/v1/history/approved?sort=processedTimestamp,desc",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                assert(histories.content.nonEmpty)
+                val sorted = histories.content.sortBy(_.processedTimestamp)(Ordering[Option[java.time.Instant]].reverse)
+                assertEquals(histories.content, sorted)
         )
     }
 

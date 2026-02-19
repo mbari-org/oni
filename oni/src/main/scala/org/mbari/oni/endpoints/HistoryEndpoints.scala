@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedHistory, Page, ServerError, Unauthorized}
+import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedHistory, Page, ServerError, Sort, Unauthorized}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
@@ -55,22 +55,27 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         }
     }
 
-    val pendingEndpoint: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
+    val pendingEndpoint: Endpoint[Unit, (Paging, Option[String]), ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
         .get
         .in(base / "pending")
         .in(paging)
+        .in(query[Option[String]]("sort").description("Sort by field and direction, e.g. 'creationTimestamp,asc' or 'concept,desc' or 'concept' (assumed ascending)"))
         .out(jsonBody[Page[Seq[ExtendedHistory]]])
         .name("pending")
         .description("Get all pending change requests")
         .tag(tag)
 
-    val pendingEndpointImpl: ServerEndpoint[Any, Future] = pendingEndpoint.serverLogic { paging =>
+    val pendingEndpointImpl: ServerEndpoint[Any, Future] = pendingEndpoint.serverLogic { (paging, sort) =>
         Future {
             val limit   = paging.limit.getOrElse(defaultLimit)
             val offset  = paging.offset.getOrElse(0)
+            val sorting = sort.flatMap(Sort.fromString)
             val attempt =
                 for pending <- service.findAllPending(limit, offset)
-                yield Page(pending, limit, offset)
+                yield 
+                    sorting match
+                            case Some(s) => Page(s.sort(pending), limit, offset)
+                            case None    => Page(pending, limit, offset)
             handleErrors(attempt)
         }
     }
@@ -91,22 +96,27 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         }
     }
 
-    val approvedEndpoints: Endpoint[Unit, Paging, ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
+    val approvedEndpoints: Endpoint[Unit, (Paging, Option[String]), ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
         .get
         .in(base / "approved")
         .in(paging)
+        .in(query[Option[String]]("sort").description("Sort by field and direction, e.g. 'processedTimestamp,asc' or 'concept,desc' or 'concept' (assumed ascending)"))
         .out(jsonBody[Page[Seq[ExtendedHistory]]])
         .name("approved")
         .description("Get all approved change requests")
         .tag(tag)
 
-    val approvedEndpointsImpl: ServerEndpoint[Any, Future] = approvedEndpoints.serverLogic { paging =>
+    val approvedEndpointsImpl: ServerEndpoint[Any, Future] = approvedEndpoints.serverLogic { (paging, sort) =>
         Future {
             val limit   = paging.limit.getOrElse(defaultLimit)
             val offset  = paging.offset.getOrElse(0)
+            val sorting    = sort.flatMap(Sort.fromString)
             val attempt =
                 for approved <- service.findAllApproved(limit, offset)
-                yield Page(approved, limit, offset)
+                yield 
+                        sorting match
+                            case Some(s) => Page(s.sort(approved), limit, offset)
+                            case None    => Page(approved, limit, offset)
             handleErrors(attempt)
         }
     }

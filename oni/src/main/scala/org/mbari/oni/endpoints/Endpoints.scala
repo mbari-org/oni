@@ -48,6 +48,7 @@ trait Endpoints:
     val log: System.Logger = System.getLogger(getClass.getName)
 
     // --- Schemas
+
     implicit lazy val sCount: Schema[Count]                                         = Schema.derived[Count]
     implicit lazy val sExtendedHistory: Schema[ExtendedHistory]                     = Schema.derived[ExtendedHistory]
     implicit lazy val sExtendedLink: Schema[ExtendedLink]                           = Schema.derived[ExtendedLink]
@@ -70,6 +71,7 @@ trait Endpoints:
     implicit lazy val sPrefNodeUpdate: Schema[PrefNodeUpdate]                       = Schema.derived[PrefNodeUpdate]
     implicit lazy val sReference: Schema[Reference]                                 = Schema.derived[Reference]
     implicit lazy val sReferenceUpdate: Schema[ReferenceUpdate]                     = Schema.derived[ReferenceUpdate]
+    implicit lazy val sSort: Schema[Sort]                                           = Schema.derived[Sort]
     implicit lazy val sConceptCreate: Schema[ConceptCreate]                         = Schema.derived[ConceptCreate]
     implicit lazy val sConceptDelete: Schema[ConceptDelete]                         = Schema.derived[ConceptDelete]
     implicit lazy val sConceptNameCreate: Schema[ConceptNameCreate]                 = Schema.derived[ConceptNameCreate]
