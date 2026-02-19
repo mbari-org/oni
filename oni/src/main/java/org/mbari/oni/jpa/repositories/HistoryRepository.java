@@ -19,6 +19,8 @@ package org.mbari.oni.jpa.repositories;
 import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.entities.HistoryEntity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
@@ -50,11 +52,11 @@ public class HistoryRepository extends Repository {
         return new HashSet<>(findByNamedQuery("History.findAll"));
     }
 
-    public Set<HistoryEntity> findPendingHistories(int limit, int offset) {
-        return new HashSet<>(findByNamedQuery("History.findPendingApproval", limit, offset));
+    public List<HistoryEntity> findPendingHistories(int limit, int offset) {
+        return new ArrayList<>(findByNamedQuery("History.findPendingApproval", limit, offset));
     }
 
-    public Set<HistoryEntity> findPendingHistories(int limit, int offset, String sort, boolean ascending) {
+    public List<HistoryEntity> findPendingHistories(int limit, int offset, String sort, boolean ascending) {
         var criteriaBuilder = entityManager.getCriteriaBuilder();
         var criteriaQuery = criteriaBuilder.createQuery(HistoryEntity.class);
         var root = criteriaQuery.from(HistoryEntity.class);
@@ -64,14 +66,14 @@ public class HistoryRepository extends Repository {
         var query = entityManager.createQuery(criteriaQuery);
         query.setFirstResult(offset);
         query.setMaxResults(limit);
-        return new HashSet<>(query.getResultList());
+        return new ArrayList<>(query.getResultList());
     }
 
-    public Set<HistoryEntity> findApprovedHistories(int limit, int offset) {
-        return new HashSet<>(findByNamedQuery("History.findByApproved", Map.of("approved", 1), limit, offset));
+    public List<HistoryEntity> findApprovedHistories(int limit, int offset) {
+        return new ArrayList<>(findByNamedQuery("History.findByApproved", Map.of("approved", 1), limit, offset));
     }
 
-    public Set<HistoryEntity> findApprovedHistories(int limit, int offset, String sort, boolean ascending) {
+    public List<HistoryEntity> findApprovedHistories(int limit, int offset, String sort, boolean ascending) {
         var criteriaBuilder = entityManager.getCriteriaBuilder();
         var criteriaQuery = criteriaBuilder.createQuery(HistoryEntity.class);
         var root = criteriaQuery.from(HistoryEntity.class);
@@ -81,7 +83,7 @@ public class HistoryRepository extends Repository {
         var query = entityManager.createQuery(criteriaQuery);
         query.setFirstResult(offset);
         query.setMaxResults(limit);
-        return new HashSet<>(query.getResultList());
+        return new ArrayList<>(query.getResultList());
     }
 
     public Set<HistoryEntity> findByConceptName(String name) {

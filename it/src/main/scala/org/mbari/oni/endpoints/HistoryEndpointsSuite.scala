@@ -73,33 +73,31 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
-    test("pending (sort by concept desc)") {
+    test("pending (sort by creatorName)") {
         init(3, 5)
         runGet(
             endpoints.pendingEndpointImpl,
-            "http://test.com/v1/history/pending?sort=concept,desc",
+            "http://test.com/v1/history/pending?sort=creatorName,desc",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
-                val sorted = histories.content.sortBy(_.concept)(Ordering[String].reverse)
+                val sorted = histories.content.sortBy(_.creatorName.toLowerCase)(Ordering[String]).reverse
+                assertEquals(histories.content, sorted)
+        )
+
+        runGet(
+            endpoints.pendingEndpointImpl,
+            "http://test.com/v1/history/pending?sort=creatorName,asc",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                assert(histories.content.nonEmpty)
+                val sorted = histories.content.sortBy(_.creatorName.toLowerCase)(Ordering[String])
                 assertEquals(histories.content, sorted)
         )
     }
 
-    test("pending (sort by concept)") {
-        init(3, 5)
-        runGet(
-            endpoints.pendingEndpointImpl,
-            "http://test.com/v1/history/pending?sort=concept,asc",
-            response =>
-                assertEquals(response.code, StatusCode.Ok)
-                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
-                assert(histories.content.nonEmpty)
-                val sorted = histories.content.sortBy(_.concept)(Ordering[String])
-                assertEquals(histories.content, sorted)
-        )
-    }
 
     
 
@@ -127,17 +125,31 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
-    test("approved (sort by processedTimestamp desc)") {
+
+    test("approved (sort by oldValue)") {
         init(3, 5)
         runGet(
             endpoints.approvedEndpointsImpl,
-            "http://test.com/v1/history/approved?sort=processedTimestamp,desc",
+            "http://test.com/v1/history/approved?sort=oldValue,desc",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
-                val sorted = histories.content.sortBy(_.processedTimestamp)(Ordering[Option[java.time.Instant]].reverse)
-                assertEquals(histories.content, sorted)
+                val obtained = histories.content.map(_.oldValue).flatten
+                val expected = obtained.sortBy(_.toLowerCase)(Ordering[String]).reverse
+                assertEquals(obtained, expected)
+        )
+
+        runGet(
+            endpoints.approvedEndpointsImpl,
+            "http://test.com/v1/history/approved?sort=oldValue,asc",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                assert(histories.content.nonEmpty)
+                val obtained = histories.content.map(_.oldValue).flatten
+                val expected = obtained.sortBy(_.toLowerCase)(Ordering[String])
+                assertEquals(obtained, expected)
         )
     }
 

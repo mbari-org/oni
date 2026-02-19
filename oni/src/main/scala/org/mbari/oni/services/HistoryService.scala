@@ -50,7 +50,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             val repo = HistoryRepository(entityManager)
 
             // Java entities
-            val entities: java.util.Set[HistoryEntity] = repo.findPendingHistories(limit, offset, sortColumn, direction)
+            val entities: java.util.List[HistoryEntity] = repo.findPendingHistories(limit, offset, sortColumn, direction)
 
             // Scala domain objects
             entities.asScala
@@ -73,7 +73,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             val repo = HistoryRepository(entityManager)
 
              // Java entities
-            val entities: java.util.Set[HistoryEntity] = repo.findApprovedHistories(limit, offset, sortColumn, direction)
+            val entities: java.util.List[HistoryEntity] = repo.findApprovedHistories(limit, offset, sortColumn, direction)
 
             // Scala domain objects
             entities.asScala

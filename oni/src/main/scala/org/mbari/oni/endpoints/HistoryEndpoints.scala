@@ -71,11 +71,8 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
             val offset  = paging.offset.getOrElse(0)
             val sorting = sort.flatMap(Sort.fromString)
             val attempt =
-                for pending <- service.findAllPending(limit, offset)
-                yield 
-                    sorting match
-                            case Some(s) => Page(s.sort(pending), limit, offset)
-                            case None    => Page(pending, limit, offset)
+                for pending <- service.findAllPending(limit, offset, sorting)
+                yield Page(pending, limit, offset)
             handleErrors(attempt)
         }
     }
@@ -110,13 +107,10 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         Future {
             val limit   = paging.limit.getOrElse(defaultLimit)
             val offset  = paging.offset.getOrElse(0)
-            val sorting    = sort.flatMap(Sort.fromString)
+            val sorting = sort.flatMap(Sort.fromString)
             val attempt =
-                for approved <- service.findAllApproved(limit, offset)
-                yield 
-                        sorting match
-                            case Some(s) => Page(s.sort(approved), limit, offset)
-                            case None    => Page(approved, limit, offset)
+                for approved <- service.findAllApproved(limit, offset, sorting)
+                yield Page(approved, limit, offset)
             handleErrors(attempt)
         }
     }
