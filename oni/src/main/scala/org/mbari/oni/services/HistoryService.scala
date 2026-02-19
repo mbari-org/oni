@@ -18,7 +18,7 @@ package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.ItemNotFound
-import org.mbari.oni.domain.ExtendedHistory
+import org.mbari.oni.domain.{ExtendedHistory, Sort}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.HistoryEntity
 import org.mbari.oni.jpa.repositories.HistoryRepository
@@ -41,31 +41,49 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             repo.countPendingHistories()
         )
 
-    def findAllPending(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedHistory]] =
-        entityManagerFactory.readOnlyTransaction(entityManager =>
-            val repo = HistoryRepository(entityManager)
-            repo.findPendingHistories(limit, offset)
-                .asScala
-                .toSeq
-                .map(h =>
-                    ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)
-                ) // TRY because of the potential for nulls
-                .sortBy(_.creationTimestamp)
-        )
+    def findAllPending(limit: Int = 100, offset: Int = 0, sort: Option[Sort] = None): Either[Throwable, Seq[ExtendedHistory]] =
+        val actualSort = HistoryService.normalizeSort(sort).getOrElse(Sort("creationDate", Sort.Direction.Ascending))
+        val sortColumn = actualSort.field
+        val direction  = actualSort.direction == Sort.Direction.Ascending
 
-    def findAllApproved(limit: Int = 100, offset: Int = 0): Either[Throwable, Seq[ExtendedHistory]] =
         entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
-            repo.findApprovedHistories(limit, offset)
-                .asScala
-                .toSeq
-                .map(h =>
-                    val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
-                    ExtendedHistory.from(concept, h)
-                    // Fix for https://github.com/mbari-org/kb/issues/12
-                    // Try(ExtendedHistory.from(h.getConceptMetadata.getConcept.getPrimaryConceptName.getName, h)).toOption
-                ) // TRY because of the potential for nulls during development
-                .sortBy(_.creationTimestamp)
+
+            // Java entities
+            val entities: java.util.Set[HistoryEntity] = repo.findPendingHistories(limit, offset, sortColumn, direction)
+
+            // Scala domain objects
+            entities.asScala
+                    .toSeq.
+                    map(h => 
+                        val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
+                        ExtendedHistory.from(concept, h)
+                    )
+
+        )
+            
+
+    def findAllApproved(limit: Int = 100, offset: Int = 0, sort: Option[Sort] = None): Either[Throwable, Seq[ExtendedHistory]] =
+
+        val actualSort = HistoryService.normalizeSort(sort).getOrElse(Sort("creationDate", Sort.Direction.Ascending))
+        val sortColumn = actualSort.field
+        val direction  = actualSort.direction == Sort.Direction.Ascending
+
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo = HistoryRepository(entityManager)
+
+             // Java entities
+            val entities: java.util.Set[HistoryEntity] = repo.findApprovedHistories(limit, offset, sortColumn, direction)
+
+            // Scala domain objects
+            entities.asScala
+                    .toSeq
+                    .map(h => 
+                        // Fix for https://github.com/mbari-org/kb/issues/12
+                        val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
+                        ExtendedHistory.from(concept, h)
+                    ) // TRY because of the potential for nulls during development
+
         )
 
     def findById(id: Long): Either[Throwable, ExtendedHistory] =
@@ -98,3 +116,25 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 case Some(history) => repo.delete(history)
                 case None          => throw ItemNotFound(s"History with id ${id} does not exist")
         )
+
+
+object HistoryService:
+
+    /**
+      * Normalize sort field names to match the database column names. This is necessary because the API may use different
+      * field names than the database, and we need to ensure that the sort field is correctly mapped to the database column. For example,
+      * the API may use "processedTimestamp" while the database column is "processedDate". This function will convert "processedTimestamp" to "processedDate"
+      * and "creationTimestamp" to "creationDate". If the field is not recognized, it will be returned as-is, which may result in a database error if it does not match a valid column.
+      * This function can be extended in the future to handle additional field name mappings as needed.
+      *
+      * @param field
+      * @return
+      */
+    def normalizeSortField(field: String): String =
+        field match
+            case "processedTimestamp" => "processedDate"
+            case "creationTimestamp" => "creationDate"
+            case other              => other
+
+    def normalizeSort(sort: Option[Sort]): Option[Sort] =
+        sort.map(s => s.copy(field = normalizeSortField(s.field)))

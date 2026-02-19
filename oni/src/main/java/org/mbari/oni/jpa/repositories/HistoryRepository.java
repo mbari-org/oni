@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
 
+
 /**
  * Created by IntelliJ IDEA.
  * User: brian
@@ -53,8 +54,34 @@ public class HistoryRepository extends Repository {
         return new HashSet<>(findByNamedQuery("History.findPendingApproval", limit, offset));
     }
 
+    public Set<HistoryEntity> findPendingHistories(int limit, int offset, String sort, boolean ascending) {
+        var criteriaBuilder = entityManager.getCriteriaBuilder();
+        var criteriaQuery = criteriaBuilder.createQuery(HistoryEntity.class);
+        var root = criteriaQuery.from(HistoryEntity.class);
+        criteriaQuery.select(root)
+            .where(criteriaBuilder.isNull(root.get("processedDate")))
+            .orderBy(ascending ? criteriaBuilder.asc(root.get(sort)) : criteriaBuilder.desc(root.get(sort)));
+        var query = entityManager.createQuery(criteriaQuery);
+        query.setFirstResult(offset);
+        query.setMaxResults(limit);
+        return new HashSet<>(query.getResultList());
+    }
+
     public Set<HistoryEntity> findApprovedHistories(int limit, int offset) {
         return new HashSet<>(findByNamedQuery("History.findByApproved", Map.of("approved", 1), limit, offset));
+    }
+
+    public Set<HistoryEntity> findApprovedHistories(int limit, int offset, String sort, boolean ascending) {
+        var criteriaBuilder = entityManager.getCriteriaBuilder();
+        var criteriaQuery = criteriaBuilder.createQuery(HistoryEntity.class);
+        var root = criteriaQuery.from(HistoryEntity.class);
+        criteriaQuery.select(root)
+            .where(criteriaBuilder.equal(root.get("approved"), 1))
+            .orderBy(ascending ? criteriaBuilder.asc(root.get(sort)) : criteriaBuilder.desc(root.get(sort)));
+        var query = entityManager.createQuery(criteriaQuery);
+        query.setFirstResult(offset);
+        query.setMaxResults(limit);
+        return new HashSet<>(query.getResultList());
     }
 
     public Set<HistoryEntity> findByConceptName(String name) {
