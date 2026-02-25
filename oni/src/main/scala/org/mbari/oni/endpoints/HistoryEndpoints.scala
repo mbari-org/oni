@@ -59,7 +59,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .get
         .in(base / "pending")
         .in(paging)
-        .in(query[Option[String]]("sort").description("Sort by field and direction, e.g. 'creationTimestamp,asc' or 'concept,desc' or 'concept' (assumed ascending)"))
+        .in(query[Option[String]]("sort").description("Sort by field and direction, e.g. 'creationTimestamp,asc' or 'processorTimestamp,desc' or 'processorName' (assumed ascending)"))
         .out(jsonBody[Page[Seq[ExtendedHistory]]])
         .name("pending")
         .description("Get all pending change requests")
