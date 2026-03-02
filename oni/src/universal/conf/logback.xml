@@ -32,6 +32,9 @@
 <!--  <logger name="org.hibernate.stat.internal.StatisticsImpl" level="DEBUG" />-->
 
   <!-- <logger name="org.hibernate.cache" level="debug" /> -->
+
+  <!-- Netty will emit warnings if a client disconnects abruptly. Setting to ERROR suppresses these warnings. -->
+  <logger name="io.netty.channel.DefaultChannelPipeline" level="ERROR" />
   <logger name="sun" level="WARN" />
 
   <root level="${LOGBACK_LEVEL}">

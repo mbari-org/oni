@@ -89,6 +89,26 @@ object Main:
             .getRoutes
             .forEach(r => log.atInfo.log(f"Adding route: ${r.methods()}%8s ${r.getPath}%s"))
 
+        router
+            .errorHandler(
+                500,
+                ctx =>
+                    Option(ctx.failure()) match
+                        case Some(_: IllegalArgumentException) =>
+                            // Client sent a malformed URL (e.g. invalid percent-encoding like %uf).
+                            // Log at WARN — this is a client error, not a server fault.
+                            // Avoid calling ctx.request().path() here as path normalization is
+                            // what threw in the first place; use uri() for the raw, unnormalized value.
+                            log.atWarn.withCause(ctx.failure()).log(s"Bad request (malformed URL): ${ctx.request().uri()}")
+                            if !ctx.response().ended() then ctx.response().setStatusCode(400).end()
+                        case Some(t) =>
+                            log.atError.withCause(t).log(s"Unhandled exception in route: ${ctx.request().uri()}")
+                            if !ctx.response().ended() then ctx.response().setStatusCode(500).end()
+                        case None    =>
+                            log.atError.log(s"Error 500 in route: ${ctx.request().uri()}")
+                            if !ctx.response().ended() then ctx.response().setStatusCode(500).end()
+            )
+
         val program = server.requestHandler(router).listen(port).asScala
 
         Await.result(program, Duration.Inf)
