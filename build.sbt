@@ -2,7 +2,7 @@ import Dependencies._
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-ThisBuild / javacOptions ++= Seq("-target", "21", "-source", "21")
+ThisBuild / javacOptions ++= Seq("-target", "25", "-source", "25")
 ThisBuild / licenses         := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / organization     := "org.mbari"
 ThisBuild / organizationName := "Monterey Bay Aquarium Research Institute"
@@ -49,7 +49,7 @@ lazy val oni = project
   .settings(
     // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
     // Use `show gitCurrentTags` in sbt to update/see the tags
-    dockerBaseImage    := "eclipse-temurin:21",
+    dockerBaseImage    := "eclipse-temurin:25",
     dockerExposedPorts := Seq(8080),
     dockerUpdateLatest := true,
     git.gitTagToVersionNumber := { tag: String =>
