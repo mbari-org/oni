@@ -42,7 +42,7 @@ import org.mbari.oni.{
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 
-class ConceptService(entityManagerFactory: EntityManagerFactory):
+class ConceptService(val entityManagerFactory: EntityManagerFactory):
 
     private val log                = System.getLogger(getClass.getName)
 //    private val historyService     = HistoryService(entityManagerFactory)

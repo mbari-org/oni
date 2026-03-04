@@ -113,6 +113,29 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
+    test("findByName (with escaped characters)") {
+        val root = init(2, 0)
+        val name = "SomeConceptWith/Slash"
+
+        val entityManager = conceptService.entityManagerFactory.createEntityManager()
+        entityManager.getTransaction.begin()
+        val concept = TestEntityFactory.buildNode(1)
+        concept.getPrimaryConceptName.setName(name)
+        root.addChildConcept(concept)
+        entityManager.persist(concept)
+        entityManager.getTransaction.commit()
+        entityManager.close()
+
+        runGet(
+            endpoints.findByNameImpl,
+            s"http://test.com/v1/concept/${name.replace("/", "%2F")}",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[ConceptMetadata](response.body)
+                assertEquals(obtained.name, name)
+        )
+    }
+
     test("findByName (no match)") {
         val root = init(2, 0)
         val name = Strings.random(10)
