@@ -32,7 +32,10 @@ ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
 ThisBuild / Test / fork              := true
 ThisBuild / Test / parallelExecution := false
-ThisBuild / Test / testOptions += Tests.Argument(TestFrameworks.MUnit, "-b")
+ThisBuild / Test / testOptions ++= Seq(
+    Tests.Argument(TestFrameworks.MUnit, "-b"),
+    Tests.Argument(TestFrameworks.MUnit, "--log=debug")
+)
 ThisBuild / Test / javaOptions ++= Seq(
     "-Duser.timezone=UTC"
 )
