@@ -17,7 +17,15 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkUpdate, LinkUtilities}
+import org.mbari.oni.domain.{
+    ExtendedLink,
+    ILink,
+    Link,
+    LinkCreate,
+    LinkRenameToConceptResponse,
+    LinkUpdate,
+    LinkUtilities
+}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
@@ -69,6 +77,33 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                         .toSeq
                         .sortBy(_.shortStringValue)
                 case None          => throw ConceptNameNotFound(conceptName)
+        )
+
+    def countByToConcept(toConcept: String): Either[Throwable, Long] =
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo         = new LinkRealizationRepository(entityManager)
+            val conceptRepo  = new ConceptRepository(entityManager)
+            val resolvedName = conceptRepo.findByName(toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => toConcept
+            repo.countByToConcept(resolvedName)
+
+            // A ToConcept might not be an actual concept, most notably during development/testing
+            // So we check if it's used and if not, we check for the primary concept name.
+        )
+
+    def findByToConcept(toConcept: String): Either[Throwable, Seq[ExtendedLink]] =
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo         = new LinkRealizationRepository(entityManager)
+            val conceptRepo  = new ConceptRepository(entityManager)
+            val resolvedName = conceptRepo.findByName(toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => toConcept
+            repo.findByToConcept(resolvedName)
+                .asScala
+                .map(ExtendedLink.from)
+                .toSeq
+                .sortBy(_.shortStringValue)
         )
 
     def findByPrototype(link: Link): Either[Throwable, Seq[ExtendedLink]] =
@@ -171,6 +206,25 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
             _    <- txn(user.toEntity)
         yield ()
 
+    def renameToConcept(
+        oldConcept: String,
+        newConcept: String,
+        userName: String
+    ): Either[Throwable, LinkRenameToConceptResponse] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, LinkRenameToConceptResponse] =
+            entityManagerFactory.transaction(entityManager =>
+                val query = entityManager.createNamedQuery("LinkRealization.updateToConcept")
+                query.setParameter(1, newConcept)
+                query.setParameter(2, oldConcept)
+                val n     = query.executeUpdate()
+                LinkRenameToConceptResponse(oldConcept, newConcept, n)
+            )
+
+        for
+            user     <- userAccountService.verifyWriteAccess(Option(userName))
+            response <- txn(user.toEntity)
+        yield response
+
     def inTxnRejectAdd(
         history: HistoryEntity,
         user: UserAccountEntity,
@@ -236,6 +290,3 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 lr.setToConcept(linkNode.toConcept())
                 entityManger.flush()
                 Right(true)
-
-
-

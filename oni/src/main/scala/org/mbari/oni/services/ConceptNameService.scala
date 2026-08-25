@@ -228,7 +228,6 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                 repo.delete(conceptName)
                 Right(true)
 
-
     def inTxnRejectReplace(
         historyEntity: HistoryEntity,
         userEntity: UserAccountEntity,

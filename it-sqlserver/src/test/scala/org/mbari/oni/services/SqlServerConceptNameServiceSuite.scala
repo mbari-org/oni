@@ -18,6 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerConceptNameServiceSuite extends ConceptNameServiceSuite with SqlServerMixin {
-
-}
+class SqlServerConceptNameServiceSuite extends ConceptNameServiceSuite with SqlServerMixin {}

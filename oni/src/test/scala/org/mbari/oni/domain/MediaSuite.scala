@@ -18,7 +18,7 @@ package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.MediaEntity
 
-class MediaSuite extends munit.FunSuite {
+class MediaSuite extends munit.FunSuite:
 
     test("resolveMimeType (image)") {
         val a = Media.resolveMimeType("image", "http://foo.com/bar.jpg")
@@ -40,7 +40,7 @@ class MediaSuite extends munit.FunSuite {
         val mediaEntity = new MediaEntity()
         mediaEntity.setUrl("http://foo.com/bar bax.jpg")
         mediaEntity.setType("image/jpeg")
-        val media = Media.from(mediaEntity)
+        val media       = Media.from(mediaEntity)
         assertEquals(media.url.toString, "http://foo.com/bar%20bax.jpg")
     }
 
@@ -71,6 +71,3 @@ class MediaSuite extends munit.FunSuite {
             case MediaType.Image => assert(true) // Default to image
             case other           => fail(s"Expected MediaType.Image, got $other")
     }
-
-
-}

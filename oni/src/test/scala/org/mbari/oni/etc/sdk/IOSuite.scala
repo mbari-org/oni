@@ -26,7 +26,7 @@ class IOSuite extends munit.FunSuite:
     val io: IO[Int, String] = i => Right(i.toString())
 
     test("unit") {
-        val a = IO.unit
+        val a      = IO.unit
         val result = a(1)
         assertEquals(result, Right(()))
     }
@@ -49,7 +49,7 @@ class IOSuite extends munit.FunSuite:
 
     test("async (Success)") {
         import scala.concurrent.ExecutionContext.Implicits.global
-        val a = io.async
+        val a      = io.async
         val result = Await.result(a(1), scala.concurrent.duration.Duration("1s"))
         assertEquals(result, "1")
     }
@@ -57,7 +57,7 @@ class IOSuite extends munit.FunSuite:
     test("async (Failure)") {
         import scala.concurrent.ExecutionContext.Implicits.global
         def testFun(a: Int): Either[Throwable, String] = Left(new RuntimeException("Boom!"))
-        val io = testFun.async
+        val io                                         = testFun.async
         interceptMessage[RuntimeException]("Boom!") {
             Await.result(io(1), scala.concurrent.duration.Duration("1s"))
         }

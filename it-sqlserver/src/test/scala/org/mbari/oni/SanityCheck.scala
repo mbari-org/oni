@@ -16,10 +16,8 @@
 
 package org.mbari.oni
 
-class SanityCheck extends munit.FunSuite {
+class SanityCheck extends munit.FunSuite:
 
-  test("testing framework is ok") {
-    assertEquals(1, 1)
-  }
-
-}
+    test("testing framework is ok") {
+        assertEquals(1, 1)
+    }

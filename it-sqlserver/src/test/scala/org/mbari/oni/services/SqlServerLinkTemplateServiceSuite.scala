@@ -18,6 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerLinkTemplateServiceSuite extends LinkTemplateServiceSuite with SqlServerMixin {
-
-}
+class SqlServerLinkTemplateServiceSuite extends LinkTemplateServiceSuite with SqlServerMixin {}

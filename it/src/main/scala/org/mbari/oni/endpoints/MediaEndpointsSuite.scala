@@ -160,11 +160,12 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
                     mediaUpdate.stringify,
                     response =>
                         assertEquals(response.code, StatusCode.Ok)
-                        val obtained = checkResponse[Media](response.body)
+                        val obtained          = checkResponse[Media](response.body)
                         assertEquals(mediaUpdate.url.orNull, obtained.url)
                         assertEquals(mediaUpdate.caption, obtained.caption)
-                            assertEquals(mediaUpdate.credit, obtained.credit)
-                        val expectedMediaType = Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
+                        assertEquals(mediaUpdate.credit, obtained.credit)
+                        val expectedMediaType =
+                            Media.resolveMimeType(mediaUpdate.mediaType.getOrElse(""), obtained.url.toExternalForm)
 
                         assertEquals(expectedMediaType, obtained.mimeType)
                         assertEquals(mediaUpdate.isPrimary.getOrElse(false), obtained.isPrimary)
@@ -403,7 +404,11 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
                     response =>
                         assertEquals(response.code, StatusCode.Ok)
                         val obtained = checkResponse[Media](response.body)
-                        assertEquals(true, obtained.isPrimary, "Second media should be promoted to primary after first is deleted")
+                        assertEquals(
+                            true,
+                            obtained.isPrimary,
+                            "Second media should be promoted to primary after first is deleted"
+                        )
                 )
             ,
             password

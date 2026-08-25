@@ -16,7 +16,6 @@
 
 package org.mbari.oni.endpoints
 
-
 import scala.concurrent.ExecutionContext
 import sttp.client3.*
 import sttp.client3.SttpBackend
@@ -66,6 +65,5 @@ class HealthEndpointsSuite extends munit.FunSuite:
         val request  = basicRequest.get(uri"http://test.com/v1/health")
         val response = request.send(backendStub).join
         response.body match
-            case Left(e) => fail(e)
+            case Left(e)  => fail(e)
             case Right(r) => assertEquals(response.code, StatusCode.Ok)
-

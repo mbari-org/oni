@@ -55,9 +55,9 @@ object EntityManagers:
          * transaction instead of committing to ensure no changes are persisted. Also sets read-only hints at the
          * Hibernate session level.
          *
-         * Note: We only use Hibernate's session-level read-only mode, not JDBC connection.setReadOnly(),
-         * because PostgreSQL does not allow changing the read-only property in the middle of a transaction,
-         * and the connection pool may have already started implicit transaction state.
+         * Note: We only use Hibernate's session-level read-only mode, not JDBC connection.setReadOnly(), because
+         * PostgreSQL does not allow changing the read-only property in the middle of a transaction, and the connection
+         * pool may have already started implicit transaction state.
          */
         def runReadOnlyTransaction[R](fn: EntityManager => R): Either[Throwable, R] =
             val originalFlushMode = entityManager.getFlushMode

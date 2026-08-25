@@ -18,6 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerHistoryActionServiceSuite extends HistoryActionServiceSuite with SqlServerMixin {
-
-}
+class SqlServerHistoryActionServiceSuite extends HistoryActionServiceSuite with SqlServerMixin {}

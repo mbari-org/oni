@@ -65,27 +65,28 @@ object Main:
         val server            = vertx.createHttpServer(httpServerOptions)
         val router            = Router.router(vertx)
 
-        // Log all requests at DEBUG, and log the time taken for each request at INFO. This 
-        // gives us visibility into all requests and their performance without overwhelming 
+        // Log all requests at DEBUG, and log the time taken for each request at INFO. This
+        // gives us visibility into all requests and their performance without overwhelming
         // the logs with INFO-level messages.
         val debugLogger = log.atDebug // Avoid object allocation
         val infoLogger  = log.atInfo  // Avoid object allocation
-        router.route()
-           .handler(ctx => {
-                val start  = System.currentTimeMillis()
-                val method = ctx.request().method()
-                val path   = ctx.request().uri()
-                val remoteAddress = Option(ctx.request().getHeader("X-Real-IP")).getOrElse(ctx.request().remoteAddress().host())
+        router
+            .route()
+            .handler(ctx =>
+                val start         = System.currentTimeMillis()
+                val method        = ctx.request().method()
+                val path          = ctx.request().uri()
+                val remoteAddress =
+                    Option(ctx.request().getHeader("X-Real-IP")).getOrElse(ctx.request().remoteAddress().host())
                 debugLogger.log(s"→ $method $path from $remoteAddress")
                 ctx.addEndHandler(_ =>
                     val dt = System.currentTimeMillis() - start
                     infoLogger.log(s"← $method $path ${dt}ms from $remoteAddress")
                 )
                 ctx.next()
-            })
+            )
 
-
-        val interpreter       = VertxFutureServerInterpreter(serverOptions)
+        val interpreter = VertxFutureServerInterpreter(serverOptions)
 
         Endpoints
             .endpoints
@@ -120,12 +121,14 @@ object Main:
                             // Log at WARN — this is a client error, not a server fault.
                             // Avoid calling ctx.request().path() here as path normalization is
                             // what threw in the first place; use uri() for the raw, unnormalized value.
-                            log.atWarn.withCause(ctx.failure()).log(s"Bad request (malformed URL): ${ctx.request().uri()}")
+                            log.atWarn
+                                .withCause(ctx.failure())
+                                .log(s"Bad request (malformed URL): ${ctx.request().uri()}")
                             if !ctx.response().ended() then ctx.response().setStatusCode(400).end()
-                        case Some(t) =>
+                        case Some(t)                           =>
                             log.atError.withCause(t).log(s"Unhandled exception in route: ${ctx.request().uri()}")
                             if !ctx.response().ended() then ctx.response().setStatusCode(500).end()
-                        case None    =>
+                        case None                              =>
                             log.atError.log(s"Error 500 in route: ${ctx.request().uri()}")
                             if !ctx.response().ended() then ctx.response().setStatusCode(500).end()
             )

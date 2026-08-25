@@ -18,10 +18,9 @@ package org.mbari.oni.jdbc
 
 import org.mbari.oni.domain.ConceptNameTypes
 
-class MutableConceptSuite extends munit.FunSuite {
+class MutableConceptSuite extends munit.FunSuite:
 
-
-    /* 
+    /*
         1 - root, object
         `- 2 - child2
               |- 4 - child4
@@ -32,7 +31,7 @@ class MutableConceptSuite extends munit.FunSuite {
         `- 3 - child3
                 |- 6 - child6
                 `- 7 - child7
-    */
+     */
     val rows: Seq[ConceptRow] = Seq(
         ConceptRow(1, None, "root", rankLevel = Some("super"), rankName = Some("family")),
         ConceptRow(1, None, "object", nameType = ConceptNameTypes.ALTERNATE.getType),
@@ -46,14 +45,19 @@ class MutableConceptSuite extends munit.FunSuite {
         ConceptRow(9, Some(4), "child9"),
         ConceptRow(10, Some(9), "child10", nameType = ConceptNameTypes.PRIMARY.getType),
         ConceptRow(10, Some(9), "child10a", nameType = ConceptNameTypes.ALTERNATE.getType),
-        ConceptRow(10, Some(9), "child10s", nameType = ConceptNameTypes.SYNONYM.getType, rankLevel = Some("sub"), rankName = Some("species")),
+        ConceptRow(
+            10,
+            Some(9),
+            "child10s",
+            nameType = ConceptNameTypes.SYNONYM.getType,
+            rankLevel = Some("sub"),
+            rankName = Some("species")
+        ),
         ConceptRow(10, Some(9), "child10c", nameType = ConceptNameTypes.COMMON.getType),
         ConceptRow(10, Some(9), "child10f", nameType = ConceptNameTypes.FORMER.getType)
     )
 
     val (rootOpt: Option[MutableConcept], nodes: Seq[MutableConcept]) = MutableConcept.toTree(rows)
-
-
 
     test("toTree") {
         assert(rootOpt.isDefined)
@@ -67,7 +71,7 @@ class MutableConceptSuite extends munit.FunSuite {
     }
 
     test("root") {
-        val root = rootOpt.get
+        val root   = rootOpt.get
         val child2 = root.children.head
         val child4 = child2.children.head
         val child8 = child4.children.head
@@ -84,7 +88,7 @@ class MutableConceptSuite extends munit.FunSuite {
     }
 
     test("copyUp") {
-        val child9 = nodes.find(_.id.get == 9).get
+        val child9     = nodes.find(_.id.get == 9).get
         val child9Copy = child9.copyUp()
         assertEquals(child9Copy.id, child9.id)
         assertEquals(child9Copy.rank, child9.rank)
@@ -95,7 +99,7 @@ class MutableConceptSuite extends munit.FunSuite {
     }
 
     test("toImmutable") {
-        val root = rootOpt.get
+        val root    = rootOpt.get
         val concept = root.toImmutable
         assertEquals(concept.name, "root")
         assertEquals(concept.rank, Some("superfamily"))
@@ -106,5 +110,3 @@ class MutableConceptSuite extends munit.FunSuite {
         assertEquals(concept.descendants.size, 10)
         assertEquals(concept.descendantNames.size, 15)
     }
-  
-}

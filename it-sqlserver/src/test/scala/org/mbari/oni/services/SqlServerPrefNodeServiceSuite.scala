@@ -18,6 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerPrefNodeServiceSuite extends PrefNodeServiceSuite with SqlServerMixin {
-  
-}
+class SqlServerPrefNodeServiceSuite extends PrefNodeServiceSuite with SqlServerMixin {}

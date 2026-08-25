@@ -20,7 +20,6 @@ import org.mbari.oni.jpa.entities.MediaEntity
 
 import java.net.URL
 
-
 case class MediaCreate(
     conceptName: String,
     url: URL,

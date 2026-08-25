@@ -30,7 +30,6 @@ object PostgresEntityManagerFactoryProvider extends EntityManagerFactoryProvider
     container.withReuse(true)
     container.start()
 
-
     // NOTE: calling container.stop() after each test causes the tests to lose the connection to the database.
     // I'm using a shutdown hook to close the container at the end of the tests.
     //  override def afterAll(): Unit  = container.stop()

@@ -16,7 +16,7 @@
 
 package org.mbari.oni.etc.jdk
 
-class NumbersSuite extends munit.FunSuite {
+class NumbersSuite extends munit.FunSuite:
 
     test("doubleConverter") {
         assertEquals(Numbers.doubleConverter(1.0), Some(1.0))
@@ -61,5 +61,3 @@ class NumbersSuite extends munit.FunSuite {
         val i: java.lang.Integer = 1
         assertEquals(Numbers.intConverter(i), Some(1))
     }
-  
-}

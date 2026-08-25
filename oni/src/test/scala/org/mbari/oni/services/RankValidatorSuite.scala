@@ -16,22 +16,18 @@
 
 package org.mbari.oni.services
 
-class RankValidatorSuite extends munit.FunSuite {
+class RankValidatorSuite extends munit.FunSuite:
 
     test("validate") {
 
         val ranks = RankValidator.ValidRanks
-        for (rank <- ranks) {
+        for rank <- ranks do
             val result = RankValidator.validate(rank)
             assertEquals(result, true)
-        }
 
         val invalidRanks = Seq("foo", "bar", "baz")
-        for (rank <- invalidRanks) {
+        for rank <- invalidRanks do
             val result = RankValidator.validate(rank)
             assertEquals(result, false)
-        }
 
     }
-  
-}

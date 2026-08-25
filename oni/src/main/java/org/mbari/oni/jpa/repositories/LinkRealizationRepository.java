@@ -47,7 +47,19 @@ public class LinkRealizationRepository extends Repository {
     public Collection<LinkRealizationEntity> findAll(int limit, int offset) {
         return findByNamedQuery("LinkRealization.findAll", limit, offset);
     }
-    
+
+    public Long countByToConcept(String toConcept) {
+        return countByNamedQuery("LinkRealization.countByToConcept", Map.of("toConcept", toConcept));
+    }
+
+    public Collection<LinkRealizationEntity> findByToConcept(String toConcept) {
+        return findByNamedQuery("LinkRealization.findByToConcept", Map.of("toConcept", toConcept));
+    }
+
+    public Collection<LinkRealizationEntity> findByToConcept(String toConcept, int limit, int offset) {
+        return findByNamedQuery("LinkRealization.findByToConcept", Map.of("toConcept", toConcept), limit, offset);
+    }
+
 
     public void validateToConcept(LinkRealizationEntity object) {
         var conceptDAO = new ConceptRepository(entityManager);

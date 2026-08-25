@@ -82,7 +82,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
-                val sorted = histories.content.sortBy(_.creatorName.toLowerCase)(Ordering[String]).reverse
+                val sorted    = histories.content.sortBy(_.creatorName.toLowerCase)(Ordering[String]).reverse
                 assertEquals(histories.content, sorted)
         )
 
@@ -93,13 +93,10 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
-                val sorted = histories.content.sortBy(_.creatorName.toLowerCase)(Ordering[String])
+                val sorted    = histories.content.sortBy(_.creatorName.toLowerCase)(Ordering[String])
                 assertEquals(histories.content, sorted)
         )
     }
-
-
-    
 
     test("pendingCount") {
         init(3, 5)
@@ -125,7 +122,6 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
-
     test("approved (sort by oldValue)") {
         init(3, 5)
         runGet(
@@ -135,8 +131,8 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
-                val obtained = histories.content.map(_.oldValue).flatten
-                val expected = obtained.sortBy(_.toLowerCase)(Ordering[String]).reverse
+                val obtained  = histories.content.map(_.oldValue).flatten
+                val expected  = obtained.sortBy(_.toLowerCase)(Ordering[String]).reverse
                 assertEquals(obtained, expected)
         )
 
@@ -147,8 +143,8 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 assertEquals(response.code, StatusCode.Ok)
                 val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
                 assert(histories.content.nonEmpty)
-                val obtained = histories.content.map(_.oldValue).flatten
-                val expected = obtained.sortBy(_.toLowerCase)(Ordering[String])
+                val obtained  = histories.content.map(_.oldValue).flatten
+                val expected  = obtained.sortBy(_.toLowerCase)(Ordering[String])
                 assertEquals(obtained, expected)
         )
     }

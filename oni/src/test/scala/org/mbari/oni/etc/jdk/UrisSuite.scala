@@ -18,7 +18,7 @@ package org.mbari.oni.etc.jdk
 
 import java.net.URI
 
-class UrisSuite extends munit.FunSuite {
+class UrisSuite extends munit.FunSuite:
 
     test("filename") {
         val uri = URI.create("file:///tmp/foo.txt")
@@ -29,5 +29,3 @@ class UrisSuite extends munit.FunSuite {
         val uri = new java.net.URI("http://www.mbari.org")
         assertEquals(Uris.encode(uri), "http%3A%2F%2Fwww.mbari.org")
     }
-  
-}

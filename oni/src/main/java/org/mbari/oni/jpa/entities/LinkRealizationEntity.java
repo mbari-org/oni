@@ -53,6 +53,8 @@ import org.mbari.oni.jpa.*;
 @NamedQueries({
     @NamedQuery(name = "LinkRealization.countAll",
                 query = "SELECT COUNT(v) FROM LinkRealization v"),
+    @NamedQuery(name = "LinkRealization.countByToConcept",
+                query = "SELECT COUNT(v) FROM LinkRealization v WHERE v.toConcept = :toConcept"),
     @NamedQuery(name = "LinkRealization.findAll",
             query = "SELECT v FROM LinkRealization v ORDER BY LOWER(v.linkName), v.toConcept, v.linkValue"),
     @NamedQuery(name = "LinkRealization.findById",
@@ -63,6 +65,12 @@ import org.mbari.oni.jpa.*;
                 query = "SELECT l FROM LinkRealization l WHERE l.toConcept = :toConcept") ,
     @NamedQuery(name = "LinkRealization.findByLinkValue",
                 query = "SELECT l FROM LinkRealization l WHERE l.linkValue = :linkValue")
+})
+@NamedNativeQueries( {
+        @NamedNativeQuery(
+                name = "LinkRealization.updateToConcept",
+                query = "UPDATE LinkRealization SET ToConcept = ?1 WHERE ToConcept = ?2"
+        ),
 })
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)

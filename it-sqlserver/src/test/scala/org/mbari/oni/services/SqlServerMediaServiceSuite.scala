@@ -18,5 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerMediaServiceSuite extends MediaServiceSuite with SqlServerMixin {
-}
+class SqlServerMediaServiceSuite extends MediaServiceSuite with SqlServerMixin {}

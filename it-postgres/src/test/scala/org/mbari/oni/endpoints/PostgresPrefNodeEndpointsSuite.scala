@@ -18,6 +18,4 @@ package org.mbari.oni.endpoints
 
 import org.mbari.oni.PostgresMixin
 
-class PostgresPrefNodeEndpointsSuite extends PrefNodeEndpointsSuite with PostgresMixin {
-
-}
+class PostgresPrefNodeEndpointsSuite extends PrefNodeEndpointsSuite with PostgresMixin {}
