@@ -79,6 +79,33 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 case None          => throw ConceptNameNotFound(conceptName)
         )
 
+    def countByToConcept(toConcept: String): Either[Throwable, Long] =
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo         = new LinkRealizationRepository(entityManager)
+            val conceptRepo  = new ConceptRepository(entityManager)
+            val resolvedName = conceptRepo.findByName(toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => toConcept
+            repo.countByToConcept(resolvedName)
+
+            // A ToConcept might not be an actual concept, most notably during development/testing
+            // So we check if it's used and if not, we check for the primary concept name.
+        )
+
+    def findByToConcept(toConcept: String): Either[Throwable, Seq[ExtendedLink]] =
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo         = new LinkRealizationRepository(entityManager)
+            val conceptRepo  = new ConceptRepository(entityManager)
+            val resolvedName = conceptRepo.findByName(toConcept).toScala match
+                case Some(concept) => concept.getPrimaryConceptName().getName()
+                case None          => toConcept
+            repo.findByToConcept(resolvedName)
+                .asScala
+                .map(ExtendedLink.from)
+                .toSeq
+                .sortBy(_.shortStringValue)
+        )
+
     def findByPrototype(link: Link): Either[Throwable, Seq[ExtendedLink]] =
         entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo              = new LinkRealizationRepository(entityManager)

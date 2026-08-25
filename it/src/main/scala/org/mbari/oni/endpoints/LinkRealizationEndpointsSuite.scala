@@ -190,6 +190,32 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
             case Right(value) => assert(true)
     }
 
+    test("countByToConcept") {
+        val links = createLinkRealizations()
+        val link  = links.head
+        runGet(
+            endpoints.countByToConceptImpl,
+            s"http://test.com/v1/linkrealizations/toconcept/count/${link.toConcept}",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Long](response.body)
+                assertEquals(obtained, 1L)
+        )
+    }
+
+    test("findByToConcept") {
+        val links = createLinkRealizations()
+        val link  = links.head
+        runGet(
+            endpoints.findByToConceptImpl,
+            s"http://test.com/v1/linkrealizations/toconcept/${link.toConcept}",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Seq[ExtendedLink]](response.body)
+                assertEquals(obtained, Seq(link))
+        )
+    }
+
     test("renameToConcept") {
         val root                = init(3, 10)
         val descendants         = root.getDescendants.asScala

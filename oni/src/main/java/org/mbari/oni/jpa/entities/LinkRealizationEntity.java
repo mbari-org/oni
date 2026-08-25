@@ -53,6 +53,8 @@ import org.mbari.oni.jpa.*;
 @NamedQueries({
     @NamedQuery(name = "LinkRealization.countAll",
                 query = "SELECT COUNT(v) FROM LinkRealization v"),
+    @NamedQuery(name = "LinkRealization.countByToConcept",
+                query = "SELECT COUNT(v) FROM LinkRealization v WHERE v.toConcept = :toConcept"),
     @NamedQuery(name = "LinkRealization.findAll",
             query = "SELECT v FROM LinkRealization v ORDER BY LOWER(v.linkName), v.toConcept, v.linkValue"),
     @NamedQuery(name = "LinkRealization.findById",

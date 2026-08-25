@@ -88,6 +88,32 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
             handleErrorsAsync(service.findByPrototype(link))
         }
 
+    val countByToConcept: Endpoint[Unit, String, ErrorMsg, Long, Any] = openEndpoint
+        .get
+        .in(base / "toconcept" / "count" / path[String]("toConcept"))
+        .out(jsonBody[Long])
+        .name("countLinkRealizationsByToConcept")
+        .description("Count all link realizations by toConcept")
+        .tag(tag)
+
+    val countByToConceptImpl: ServerEndpoint[Any, Future] = countByToConcept
+        .serverLogic { toConcept =>
+            handleErrorsAsync(service.countByToConcept(toConcept))
+        }
+
+    val findByToConcept: Endpoint[Unit, String, ErrorMsg, Seq[ExtendedLink], Any] = openEndpoint
+        .get
+        .in(base / "toconcept" / path[String]("toConcept"))
+        .out(jsonBody[Seq[ExtendedLink]])
+        .name("findLinkRealizationsByToConcept")
+        .description("Find all link realizations by toConcept")
+        .tag(tag)
+
+    val findByToConceptImpl: ServerEndpoint[Any, Future] = findByToConcept
+        .serverLogic { toConcept =>
+            handleErrorsAsync(service.findByToConcept(toConcept))
+        }
+
     val renameToConcept
         : Endpoint[Option[String], LinkRenameToConceptRequest, ErrorMsg, LinkRenameToConceptResponse, Any] =
         secureEndpoint
@@ -203,6 +229,8 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkRealizationsByConceptName,
         findLinkRealizationsByLinkName,
         findLinkRealizationByPrototype,
+        countByToConcept,
+        findByToConcept,
         countAllLinkRealizations,
         findAllLinkRealizations,
         create,
@@ -216,6 +244,8 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findLinkRealizationsByConceptNameImpl,
         findLinkRealizationsByLinkNameImpl,
         findLinkRealizationByPrototypeImpl,
+        countByToConceptImpl,
+        findByToConceptImpl,
         countAllLinkRealizationsImpl,
         findAllLinkRealizationsImpl,
         createImpl,
