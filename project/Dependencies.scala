@@ -1,38 +1,38 @@
 import sbt.*
 object Dependencies {
 
-    lazy val auth0                   = "com.auth0"                      % "java-jwt"                   % "4.5.1"
-    val caffeineVersion              = "3.2.3"
+    lazy val auth0                   = "com.auth0"                      % "java-jwt"                   % "4.6.0"
+    val caffeineVersion              = "3.2.4"
     lazy val caffeine                = "com.github.ben-manes.caffeine"  % "caffeine"                   % caffeineVersion
     lazy val caffeineJCache          = "com.github.ben-manes.caffeine"  % "jcache"                     % caffeineVersion
-    val circeVersion                 = "0.14.15"
+    val circeVersion                 = "0.14.16"
     lazy val circeCore               = "io.circe"                      %% "circe-core"                 % circeVersion
     lazy val circeGeneric            = "io.circe"                      %% "circe-generic"              % circeVersion
     lazy val circeParser             = "io.circe"                      %% "circe-parser"               % circeVersion
-    lazy val commonsCodec            = "commons-codec"                  % "commons-codec"              % "1.21.0"
-    val flywayVersion                = "12.0.3"
+    lazy val commonsCodec            = "commons-codec"                  % "commons-codec"              % "1.22.1"
+    val flywayVersion                = "13.3.0"
     lazy val flywayCore              = "org.flywaydb"                   % "flyway-core"                % flywayVersion
     lazy val flywaySqlserver         = "org.flywaydb"                   % "flyway-sqlserver"           % flywayVersion
     lazy val flywayPostgres          = "org.flywaydb"                   % "flyway-database-postgresql" % flywayVersion
-    lazy val gson                    = "com.google.code.gson"           % "gson"                       % "2.13.2"
-    val hibernateVersion             = "7.2.6.Final"
+    lazy val gson                    = "com.google.code.gson"           % "gson"                       % "2.14.0"
+    val hibernateVersion             = "7.4.6.Final"
     lazy val hibernateCore           = "org.hibernate.orm"              % "hibernate-core"             % hibernateVersion
     lazy val hibernateJCache         = "org.hibernate"                  % "hibernate-jcache"           % hibernateVersion
     lazy val hibernateEnvers         = "org.hibernate.orm"              % "hibernate-envers"           % hibernateVersion
     lazy val hibernateHikari         = "org.hibernate.orm"              % "hibernate-hikaricp"         % hibernateVersion
-    lazy val hikariCp                = "com.zaxxer"                     % "HikariCP"                   % "7.0.2"
-    lazy val jansi                   = "org.fusesource.jansi"           % "jansi"                      % "2.4.2"
+    lazy val hikariCp                = "com.zaxxer"                     % "HikariCP"                   % "7.1.0"
+    lazy val jansi                   = "org.fusesource.jansi"           % "jansi"                      % "2.4.3"
     lazy val jaspyt                  = "org.jasypt"                     % "jasypt"                     % "1.9.3"
     lazy val junit                   = "junit"                          % "junit"                      % "4.13.2"
-    lazy val logback                 = "ch.qos.logback"                 % "logback-classic"            % "1.5.32"
+    lazy val logback                 = "ch.qos.logback"                 % "logback-classic"            % "1.6.3"
     lazy val mssqlserver             = "com.microsoft.sqlserver"        % "mssql-jdbc"                 % "13.2.1.jre11"
-    lazy val munit                   = "org.scalameta"                 %% "munit"                      % "1.2.4"
+    lazy val munit                   = "org.scalameta"                 %% "munit"                      % "1.3.5"
     lazy val oracle                  = "com.oracle.ojdbc"               % "ojdbc8"                     % "19.3.0.0"
-    lazy val postgresql              = "org.postgresql"                 % "postgresql"                 % "42.7.10"
-    val slf4jVersion                 = "2.0.17"
+    lazy val postgresql              = "org.postgresql"                 % "postgresql"                 % "42.7.13"
+    val slf4jVersion                 = "2.0.18"
     lazy val slf4jJulBridge          = "org.slf4j"                      % "jul-to-slf4j"               % slf4jVersion
     lazy val slf4jSystem             = "org.slf4j"                      % "slf4j-jdk-platform-logging" % slf4jVersion
-    private val tapirVersion         = "1.13.10"
+    private val tapirVersion         = "1.13.31"
     lazy val tapirCirce              = "com.softwaremill.sttp.tapir"   %% "tapir-json-circe"           % tapirVersion
     lazy val tapirHelidon            = "com.softwaremill.sttp.tapir"   %% "tapir-nima-server"          % tapirVersion
     lazy val tapirPrometheus         = "com.softwaremill.sttp.tapir"   %% "tapir-prometheus-metrics"   % tapirVersion
@@ -40,11 +40,11 @@ object Dependencies {
     lazy val tapirSwagger            = "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui-bundle"    % tapirVersion
     lazy val tapirVertex             = "com.softwaremill.sttp.tapir"   %% "tapir-vertx-server"         % tapirVersion
     lazy val tapirSttpCirce          = "com.softwaremill.sttp.client3" %% "circe"                      % "3.11.0"
-    val testcontainersVersion        = "2.0.3"
+    val testcontainersVersion        = "2.0.5"
     lazy val testcontainersCore      = "org.testcontainers"             % "testcontainers"             % testcontainersVersion
     lazy val testcontainersJdbc      = "org.testcontainers"             % "testcontainers-jdbc"        % testcontainersVersion
     lazy val testcontainersSqlserver = "org.testcontainers"             % "testcontainers-mssqlserver" % testcontainersVersion
     lazy val testcontainersOracle    = "org.testcontainers"             % "testcontainers-oracle-xe"   % testcontainersVersion
     lazy val testcontainersPostgres  = "org.testcontainers"             % "testcontainers-postgresql"  % testcontainersVersion
-    lazy val typesafeConfig          = "com.typesafe"                   % "config"                     % "1.4.6"
+    lazy val typesafeConfig          = "com.typesafe"                   % "config"                     % "1.4.9"
 }
