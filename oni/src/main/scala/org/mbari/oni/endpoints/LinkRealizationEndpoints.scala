@@ -17,7 +17,18 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedLink, Link, LinkCreate, LinkUpdate, Page, ServerError}
+import org.mbari.oni.domain.{
+    Count,
+    ErrorMsg,
+    ExtendedLink,
+    Link,
+    LinkCreate,
+    LinkRenameToConceptRequest,
+    LinkRenameToConceptResponse,
+    LinkUpdate,
+    Page,
+    ServerError
+}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{LinkRealizationService, LinkService}
@@ -75,6 +86,23 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val findLinkRealizationByPrototypeImpl: ServerEndpoint[Any, Future] =
         findLinkRealizationByPrototype.serverLogic { link =>
             handleErrorsAsync(service.findByPrototype(link))
+        }
+
+    val renameToConcept
+        : Endpoint[Option[String], LinkRenameToConceptRequest, ErrorMsg, LinkRenameToConceptResponse, Any] =
+        secureEndpoint
+            .put
+            .in(base / "toconcept" / "rename")
+            .in(jsonBody[LinkRenameToConceptRequest])
+            .out(jsonBody[LinkRenameToConceptResponse])
+            .name("renameLinkRealizationsToConcept")
+            .description("Bulk rename all linkRealization toConcepts")
+            .tag(tag)
+
+    val renameToConceptImpl: ServerEndpoint[Any, Future] = renameToConcept
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => request =>
+            handleErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
         }
 
     val create: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -171,6 +199,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        renameToConcept,
         findLinkRealizationsByConceptName,
         findLinkRealizationsByLinkName,
         findLinkRealizationByPrototype,
@@ -183,6 +212,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
+        renameToConceptImpl,
         findLinkRealizationsByConceptNameImpl,
         findLinkRealizationsByLinkNameImpl,
         findLinkRealizationByPrototypeImpl,

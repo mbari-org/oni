@@ -20,26 +20,21 @@ import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
 import scala.jdk.CollectionConverters.*
 
-class DatabaseContainerSuite extends munit.FunSuite  {
-  test("SqlServer container should be started"):
-    assert(AzureEntityManagerFactoryProvider.container.isRunning)
-    val entityManager = AzureEntityManagerFactoryProvider.entityManagerFactory.createEntityManager()
-    val repo = ConceptRepository(entityManager)
-    val all = repo.findByName("foo")
-    assert(all.isEmpty)
-    entityManager.close()
+class DatabaseContainerSuite extends munit.FunSuite:
+    test("SqlServer container should be started"):
+        assert(AzureEntityManagerFactoryProvider.container.isRunning)
+        val entityManager = AzureEntityManagerFactoryProvider.entityManagerFactory.createEntityManager()
+        val repo          = ConceptRepository(entityManager)
+        val all           = repo.findByName("foo")
+        assert(all.isEmpty)
+        entityManager.close()
 
-  test("SqlServer init script should have been run"):
-    val em = AzureEntityManagerFactoryProvider.entityManagerFactory.createEntityManager()
-    val q = em.createNativeQuery("SELECT COUNT(*) FROM Media")
-    val r = q.getResultList().asScala.toList.head.asInstanceOf[Number].longValue()
-    assert(r >= 0)
+    test("SqlServer init script should have been run"):
+        val em = AzureEntityManagerFactoryProvider.entityManagerFactory.createEntityManager()
+        val q  = em.createNativeQuery("SELECT COUNT(*) FROM Media")
+        val r  = q.getResultList().asScala.toList.head.asInstanceOf[Number].longValue()
+        assert(r >= 0)
 
 //  test("init"):
 //    val entity = AzureEntityManagerFactoryProvider.init
 //    assert(entity != null)
-    
-}
-
-
-

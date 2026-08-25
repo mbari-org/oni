@@ -17,7 +17,15 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkUpdate, LinkUtilities}
+import org.mbari.oni.domain.{
+    ExtendedLink,
+    ILink,
+    Link,
+    LinkCreate,
+    LinkRenameToConceptResponse,
+    LinkUpdate,
+    LinkUtilities
+}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
@@ -171,6 +179,25 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
             _    <- txn(user.toEntity)
         yield ()
 
+    def renameToConcept(
+        oldConcept: String,
+        newConcept: String,
+        userName: String
+    ): Either[Throwable, LinkRenameToConceptResponse] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, LinkRenameToConceptResponse] =
+            entityManagerFactory.transaction(entityManager =>
+                val query = entityManager.createNamedQuery("LinkRealization.updateToConcept")
+                query.setParameter(1, newConcept)
+                query.setParameter(2, oldConcept)
+                val n     = query.executeUpdate()
+                LinkRenameToConceptResponse(oldConcept, newConcept, n)
+            )
+
+        for
+            user     <- userAccountService.verifyWriteAccess(Option(userName))
+            response <- txn(user.toEntity)
+        yield response
+
     def inTxnRejectAdd(
         history: HistoryEntity,
         user: UserAccountEntity,
@@ -236,6 +263,3 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 lr.setToConcept(linkNode.toConcept())
                 entityManger.flush()
                 Right(true)
-
-
-

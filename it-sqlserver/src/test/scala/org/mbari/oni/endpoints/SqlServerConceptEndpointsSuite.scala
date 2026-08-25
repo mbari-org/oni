@@ -18,6 +18,4 @@ package org.mbari.oni.endpoints
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerConceptEndpointsSuite extends ConceptEndpointsSuite with SqlServerMixin {
-
-}
+class SqlServerConceptEndpointsSuite extends ConceptEndpointsSuite with SqlServerMixin {}

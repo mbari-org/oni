@@ -19,5 +19,4 @@ package org.mbari.oni.endpoints
 import org.mbari.oni.PostgresMixin
 import org.mbari.oni.domain.RawConcept
 
-class PostgresRawEndpointsSuite extends RawEndpointsSuite with PostgresMixin {
-}
+class PostgresRawEndpointsSuite extends RawEndpointsSuite with PostgresMixin {}

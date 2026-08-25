@@ -19,6 +19,4 @@ import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.SqlServerMixin
 import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
-class SqlServerPhylogenyEndpointsSuite extends PhylogenyEndpointsSuite with SqlServerMixin{
-
-}
+class SqlServerPhylogenyEndpointsSuite extends PhylogenyEndpointsSuite with SqlServerMixin {}

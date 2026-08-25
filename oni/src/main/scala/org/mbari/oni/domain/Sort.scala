@@ -18,8 +18,6 @@ package org.mbari.oni.domain
 
 import scala.reflect.ClassTag
 
-
-
 final case class Sort(field: String, direction: Sort.Direction = Sort.Direction.Ascending):
 
     def sort[T: ClassTag](seq: Seq[T]): Seq[T] =
@@ -56,8 +54,8 @@ object Sort:
      * Parse a sort string in the format "field,direction" where direction is optional and can be "asc" or "desc". If
      * direction is not provided, it defaults to ascending. The field is the name of the field to sort by. The function
      * returns an Option[Sort] which will be None if the input string is not in the correct format or if the direction
-     * is invalid. 
-     * 
+     * is invalid.
+     *
      * Examples of valid input strings:
      *   - "processedTimestamp,asc" => Sort("processedTimestamp", SortDirection.Ascending)
      *   - "concept,desc" => Sort("concept", SortDirection.Descending)

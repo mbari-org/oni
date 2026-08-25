@@ -16,8 +16,8 @@
 
 package org.mbari.oni.domain
 
-class HealthStatusSuite extends munit.FunSuite {
-  
+class HealthStatusSuite extends munit.FunSuite:
+
     test("HealthStatus.Default") {
         val healthStatus = HealthStatus.Default
         assertEquals(healthStatus.jdkVersion, Runtime.version.toString)
@@ -29,4 +29,3 @@ class HealthStatusSuite extends munit.FunSuite {
         assert(healthStatus.version != null)
         assert(healthStatus.description != null)
     }
-}

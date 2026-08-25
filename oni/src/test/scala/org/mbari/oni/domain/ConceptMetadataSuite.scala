@@ -19,10 +19,10 @@ package org.mbari.oni.domain
 import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity}
 import org.mbari.oni.etc.circe.CirceCodecs.{given, *}
 
-class ConceptMetadataSuite extends munit.FunSuite {
+class ConceptMetadataSuite extends munit.FunSuite:
 
     test("from (entity)") {
-        val concept = new ConceptEntity()
+        val concept     = new ConceptEntity()
         val conceptName = new ConceptNameEntity("root", ConceptNameTypes.PRIMARY.getType)
         concept.addConceptName(conceptName)
         concept.setRankName("rankName")
@@ -41,5 +41,3 @@ class ConceptMetadataSuite extends munit.FunSuite {
 //        println(metadata2.stringify)
 
     }
-
-}

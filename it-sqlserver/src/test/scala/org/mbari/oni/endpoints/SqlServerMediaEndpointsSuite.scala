@@ -18,6 +18,4 @@ package org.mbari.oni.endpoints
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerMediaEndpointsSuite extends MediaEndpointsSuite with SqlServerMixin {
-
-}
+class SqlServerMediaEndpointsSuite extends MediaEndpointsSuite with SqlServerMixin {}

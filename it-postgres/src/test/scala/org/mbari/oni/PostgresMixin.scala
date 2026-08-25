@@ -19,11 +19,6 @@ package org.mbari.oni
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.jpa.PostgresEntityManagerFactoryProvider
 
-trait PostgresMixin {
-
-
+trait PostgresMixin:
 
     def entityManagerFactory: EntityManagerFactory = PostgresEntityManagerFactoryProvider.entityManagerFactory
-
-
-}

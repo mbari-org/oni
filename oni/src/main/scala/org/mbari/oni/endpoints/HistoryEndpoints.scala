@@ -55,15 +55,20 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         }
     }
 
-    val pendingEndpoint: Endpoint[Unit, (Paging, Option[String]), ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
-        .get
-        .in(base / "pending")
-        .in(paging)
-        .in(query[Option[String]]("sort").description("Sort by field and direction, e.g. 'creationTimestamp,asc' or 'processorTimestamp,desc' or 'processorName' (assumed ascending)"))
-        .out(jsonBody[Page[Seq[ExtendedHistory]]])
-        .name("pending")
-        .description("Get all pending change requests")
-        .tag(tag)
+    val pendingEndpoint: Endpoint[Unit, (Paging, Option[String]), ErrorMsg, Page[Seq[ExtendedHistory]], Any] =
+        openEndpoint
+            .get
+            .in(base / "pending")
+            .in(paging)
+            .in(
+                query[Option[String]]("sort").description(
+                    "Sort by field and direction, e.g. 'creationTimestamp,asc' or 'processorTimestamp,desc' or 'processorName' (assumed ascending)"
+                )
+            )
+            .out(jsonBody[Page[Seq[ExtendedHistory]]])
+            .name("pending")
+            .description("Get all pending change requests")
+            .tag(tag)
 
     val pendingEndpointImpl: ServerEndpoint[Any, Future] = pendingEndpoint.serverLogic { (paging, sort) =>
         Future {
@@ -93,15 +98,20 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         }
     }
 
-    val approvedEndpoints: Endpoint[Unit, (Paging, Option[String]), ErrorMsg, Page[Seq[ExtendedHistory]], Any] = openEndpoint
-        .get
-        .in(base / "approved")
-        .in(paging)
-        .in(query[Option[String]]("sort").description("Sort by field and direction, e.g. 'processedTimestamp,asc' or 'concept,desc' or 'concept' (assumed ascending)"))
-        .out(jsonBody[Page[Seq[ExtendedHistory]]])
-        .name("approved")
-        .description("Get all approved change requests")
-        .tag(tag)
+    val approvedEndpoints: Endpoint[Unit, (Paging, Option[String]), ErrorMsg, Page[Seq[ExtendedHistory]], Any] =
+        openEndpoint
+            .get
+            .in(base / "approved")
+            .in(paging)
+            .in(
+                query[Option[String]]("sort").description(
+                    "Sort by field and direction, e.g. 'processedTimestamp,asc' or 'concept,desc' or 'concept' (assumed ascending)"
+                )
+            )
+            .out(jsonBody[Page[Seq[ExtendedHistory]]])
+            .name("approved")
+            .description("Get all approved change requests")
+            .tag(tag)
 
     val approvedEndpointsImpl: ServerEndpoint[Any, Future] = approvedEndpoints.serverLogic { (paging, sort) =>
         Future {

@@ -19,7 +19,4 @@ import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.SqlServerMixin
 import org.mbari.oni.jpa.AzureEntityManagerFactoryProvider
 
-class SqlServerConceptServiceSuite extends ConceptServiceSuite with SqlServerMixin {
-
-
-}
+class SqlServerConceptServiceSuite extends ConceptServiceSuite with SqlServerMixin {}

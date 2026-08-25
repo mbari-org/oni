@@ -18,6 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerReferenceServiceSuite extends ReferenceServiceSuite  with SqlServerMixin {
-
-}
+class SqlServerReferenceServiceSuite extends ReferenceServiceSuite with SqlServerMixin {}

@@ -16,7 +16,7 @@
 
 package org.mbari.oni.etc.jwt
 
-class JwtServiceSuite extends munit.FunSuite {
+class JwtServiceSuite extends munit.FunSuite:
 
     val jwtService = JwtService("issueer", "apiKey", "signingSecret")
 
@@ -26,12 +26,9 @@ class JwtServiceSuite extends munit.FunSuite {
     }
 
     test("verify") {
-        val opt = jwtService.authorize(jwtService.apiKey)
+        val opt     = jwtService.authorize(jwtService.apiKey)
         assert(opt.isDefined)
-        val jwt = opt.get
+        val jwt     = opt.get
         val verfied = jwtService.verify(jwt)
         assert(verfied)
     }
-
-  
-}

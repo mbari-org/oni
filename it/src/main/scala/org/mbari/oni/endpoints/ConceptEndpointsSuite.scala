@@ -119,7 +119,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
 
         val entityManager = conceptService.entityManagerFactory.createEntityManager()
         entityManager.getTransaction.begin()
-        val concept = TestEntityFactory.buildNode(1)
+        val concept       = TestEntityFactory.buildNode(1)
         concept.getPrimaryConceptName.setName(name)
         root.addChildConcept(concept)
         entityManager.persist(concept)

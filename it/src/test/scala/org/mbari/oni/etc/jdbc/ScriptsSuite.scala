@@ -19,19 +19,17 @@ package org.mbari.oni.etc.jdbc
 import java.nio.file.Files
 import scala.io.Source
 
-class ScriptsSuite extends munit.FunSuite {
+class ScriptsSuite extends munit.FunSuite:
 
-  test("generate") {
-    val script = Scripts.generate("/concat")
+    test("generate") {
+        val script   = Scripts.generate("/concat")
 //    println(script)
-    val lines = Source.fromFile(script.toFile).getLines().toList
-    assert(lines.size == 3)
-    val expected =
-      """1
+        val lines    = Source.fromFile(script.toFile).getLines().toList
+        assert(lines.size == 3)
+        val expected =
+            """1
         |2
         |3""".stripMargin
-    assertEquals(lines.mkString("\n"), expected)
-    Files.delete(script)
-  }
-
-}
+        assertEquals(lines.mkString("\n"), expected)
+        Files.delete(script)
+    }

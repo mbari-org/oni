@@ -18,7 +18,4 @@ package org.mbari.oni.endpoints
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerUserAccountsEndpointsSuite extends UserAccountsEndpointsSuite with SqlServerMixin {
-
-
-}
+class SqlServerUserAccountsEndpointsSuite extends UserAccountsEndpointsSuite with SqlServerMixin {}

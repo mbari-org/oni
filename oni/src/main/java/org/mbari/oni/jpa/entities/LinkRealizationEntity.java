@@ -64,6 +64,12 @@ import org.mbari.oni.jpa.*;
     @NamedQuery(name = "LinkRealization.findByLinkValue",
                 query = "SELECT l FROM LinkRealization l WHERE l.linkValue = :linkValue")
 })
+@NamedNativeQueries( {
+        @NamedNativeQuery(
+                name = "LinkRealization.updateToConcept",
+                query = "UPDATE LinkRealization SET ToConcept = ?1 WHERE ToConcept = ?2"
+        ),
+})
 //@Cacheable
 //@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class LinkRealizationEntity implements Serializable, ILink, IPersistentObject, IOptimisticLock {

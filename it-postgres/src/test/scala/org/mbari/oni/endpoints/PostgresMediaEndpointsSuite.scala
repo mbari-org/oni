@@ -18,6 +18,4 @@ package org.mbari.oni.endpoints
 
 import org.mbari.oni.PostgresMixin
 
-class PostgresMediaEndpointsSuite extends MediaEndpointsSuite with PostgresMixin {
-
-}
+class PostgresMediaEndpointsSuite extends MediaEndpointsSuite with PostgresMixin {}

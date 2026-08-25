@@ -117,7 +117,6 @@ object EntityManagerFactories:
             em.close()
             either
 
-        
         def readOnlyTransaction[T](f: EntityManager => T): Either[Throwable, T] =
             val em     = emf.createEntityManager()
             val either = em.runReadOnlyTransaction(f)

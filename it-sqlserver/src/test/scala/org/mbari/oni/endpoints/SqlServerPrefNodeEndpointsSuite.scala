@@ -18,6 +18,4 @@ package org.mbari.oni.endpoints
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerPrefNodeEndpointsSuite extends PrefNodeEndpointsSuite with SqlServerMixin {
-
-}
+class SqlServerPrefNodeEndpointsSuite extends PrefNodeEndpointsSuite with SqlServerMixin {}

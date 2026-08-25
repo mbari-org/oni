@@ -18,7 +18,7 @@ package org.mbari.oni.etc.jdk
 
 import java.net.URI
 
-class JdbcTypesSuite extends munit.FunSuite {
+class JdbcTypesSuite extends munit.FunSuite:
 
     test("instantConverter") {
         val instant = java.time.Instant.now()
@@ -33,7 +33,10 @@ class JdbcTypesSuite extends munit.FunSuite {
         val uuid = java.util.UUID.randomUUID()
         assertEquals(JdbcTypes.uuidConverter(uuid), Some(uuid))
         assertEquals(JdbcTypes.uuidConverter(null), None)
-        assertEquals(JdbcTypes.uuidConverter("123e4567-e89b-12d3-a456-426614174000"), Some(java.util.UUID.fromString("123e4567-e89b-12d3-a456-426614174000")))
+        assertEquals(
+            JdbcTypes.uuidConverter("123e4567-e89b-12d3-a456-426614174000"),
+            Some(java.util.UUID.fromString("123e4567-e89b-12d3-a456-426614174000"))
+        )
         assertEquals(JdbcTypes.uuidConverter(new Object()), None)
     }
 
@@ -50,6 +53,3 @@ class JdbcTypesSuite extends munit.FunSuite {
         assertEquals(JdbcTypes.stringConverter(str), Some(str))
         assertEquals(JdbcTypes.stringConverter(null), None)
     }
-
-  
-}

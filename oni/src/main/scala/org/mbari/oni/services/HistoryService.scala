@@ -41,7 +41,11 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             repo.countPendingHistories()
         )
 
-    def findAllPending(limit: Int = 100, offset: Int = 0, sort: Option[Sort] = None): Either[Throwable, Seq[ExtendedHistory]] =
+    def findAllPending(
+        limit: Int = 100,
+        offset: Int = 0,
+        sort: Option[Sort] = None
+    ): Either[Throwable, Seq[ExtendedHistory]] =
         val actualSort = HistoryService.normalizeSort(sort).getOrElse(Sort("creationDate", Sort.Direction.Ascending))
         val sortColumn = actualSort.field
         val direction  = actualSort.direction == Sort.Direction.Ascending
@@ -50,20 +54,24 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
             val repo = HistoryRepository(entityManager)
 
             // Java entities
-            val entities: java.util.List[HistoryEntity] = repo.findPendingHistories(limit, offset, sortColumn, direction)
+            val entities: java.util.List[HistoryEntity] =
+                repo.findPendingHistories(limit, offset, sortColumn, direction)
 
             // Scala domain objects
-            entities.asScala
-                    .toSeq.
-                    map(h => 
-                        val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
-                        ExtendedHistory.from(concept, h)
-                    )
-
+            entities
+                .asScala
+                .toSeq
+                .map(h =>
+                    val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
+                    ExtendedHistory.from(concept, h)
+                )
         )
-            
 
-    def findAllApproved(limit: Int = 100, offset: Int = 0, sort: Option[Sort] = None): Either[Throwable, Seq[ExtendedHistory]] =
+    def findAllApproved(
+        limit: Int = 100,
+        offset: Int = 0,
+        sort: Option[Sort] = None
+    ): Either[Throwable, Seq[ExtendedHistory]] =
 
         val actualSort = HistoryService.normalizeSort(sort).getOrElse(Sort("creationDate", Sort.Direction.Ascending))
         val sortColumn = actualSort.field
@@ -72,17 +80,19 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
         entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
 
-             // Java entities
-            val entities: java.util.List[HistoryEntity] = repo.findApprovedHistories(limit, offset, sortColumn, direction)
+            // Java entities
+            val entities: java.util.List[HistoryEntity] =
+                repo.findApprovedHistories(limit, offset, sortColumn, direction)
 
             // Scala domain objects
-            entities.asScala
-                    .toSeq
-                    .map(h => 
-                        // Fix for https://github.com/mbari-org/kb/issues/12
-                        val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
-                        ExtendedHistory.from(concept, h)
-                    ) // TRY because of the potential for nulls during development
+            entities
+                .asScala
+                .toSeq
+                .map(h =>
+                    // Fix for https://github.com/mbari-org/kb/issues/12
+                    val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
+                    ExtendedHistory.from(concept, h)
+                ) // TRY because of the potential for nulls during development
 
         )
 
@@ -117,24 +127,24 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 case None          => throw ItemNotFound(s"History with id ${id} does not exist")
         )
 
-
 object HistoryService:
 
     /**
-      * Normalize sort field names to match the database column names. This is necessary because the API may use different
-      * field names than the database, and we need to ensure that the sort field is correctly mapped to the database column. For example,
-      * the API may use "processedTimestamp" while the database column is "processedDate". This function will convert "processedTimestamp" to "processedDate"
-      * and "creationTimestamp" to "creationDate". If the field is not recognized, it will be returned as-is, which may result in a database error if it does not match a valid column.
-      * This function can be extended in the future to handle additional field name mappings as needed.
-      *
-      * @param field
-      * @return
-      */
+     * Normalize sort field names to match the database column names. This is necessary because the API may use
+     * different field names than the database, and we need to ensure that the sort field is correctly mapped to the
+     * database column. For example, the API may use "processedTimestamp" while the database column is "processedDate".
+     * This function will convert "processedTimestamp" to "processedDate" and "creationTimestamp" to "creationDate". If
+     * the field is not recognized, it will be returned as-is, which may result in a database error if it does not match
+     * a valid column. This function can be extended in the future to handle additional field name mappings as needed.
+     *
+     * @param field
+     * @return
+     */
     def normalizeSortField(field: String): String =
         field match
             case "processedTimestamp" => "processedDate"
-            case "creationTimestamp" => "creationDate"
-            case other              => other
+            case "creationTimestamp"  => "creationDate"
+            case other                => other
 
     def normalizeSort(sort: Option[Sort]): Option[Sort] =
         sort.map(s => s.copy(field = normalizeSortField(s.field)))

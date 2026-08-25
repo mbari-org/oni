@@ -17,7 +17,15 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
-import org.mbari.oni.domain.{ExtendedLink, ILink, Link, LinkCreate, LinkRenameToConceptResponse, LinkUpdate, LinkUtilities}
+import org.mbari.oni.domain.{
+    ExtendedLink,
+    ILink,
+    Link,
+    LinkCreate,
+    LinkRenameToConceptResponse,
+    LinkUpdate,
+    LinkUtilities
+}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkTemplateEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
@@ -274,7 +282,6 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 conceptMetadata.removeLinkTemplate(lr)
                 Right(true)
 
-
     def inTxnRejectReplace(
         history: HistoryEntity,
         user: UserAccountEntity,
@@ -299,4 +306,3 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                 lr.setToConcept(linkNode.toConcept())
                 entityManger.flush()
                 Right(true)
-    

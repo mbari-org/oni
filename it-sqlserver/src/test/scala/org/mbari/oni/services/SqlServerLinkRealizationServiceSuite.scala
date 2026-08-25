@@ -18,6 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerLinkRealizationServiceSuite extends LinkRealizationServiceSuite with SqlServerMixin {
-
-}
+class SqlServerLinkRealizationServiceSuite extends LinkRealizationServiceSuite with SqlServerMixin {}

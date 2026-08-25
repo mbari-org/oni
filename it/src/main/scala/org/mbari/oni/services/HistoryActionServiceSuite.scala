@@ -857,7 +857,6 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
                 fail(e.getMessage)
     }
 
-
     test("approveReplaceLinkTemplate") {
         val root           = init(1, 0)
         val add            = LinkCreate(
@@ -969,7 +968,6 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
             conceptService.findByName(originalAlias) match
                 case Right(_) => fail("Original concept name should not exist after approval")
                 case Left(_)  => // Succeed
-
         attempt match
             case Right(_) => // Succeed
             case Left(e)  => fail(e.getMessage)
@@ -1027,7 +1025,6 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
             conceptService.findByName(modifiedAlias) match
                 case Right(_) => fail("Modified concept name should not exist after rejection")
                 case Left(_)  => // Succeed
-
         attempt match
             case Right(_) => // Succeed
             case Left(e)  => fail(e.getMessage)

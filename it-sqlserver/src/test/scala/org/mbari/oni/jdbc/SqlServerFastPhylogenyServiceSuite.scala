@@ -18,6 +18,4 @@ package org.mbari.oni.jdbc
 
 import org.mbari.oni.SqlServerMixin
 
-class SqlServerFastPhylogenyServiceSuite extends FastPhylogenyServiceSuite with SqlServerMixin {
-
-}
+class SqlServerFastPhylogenyServiceSuite extends FastPhylogenyServiceSuite with SqlServerMixin {}

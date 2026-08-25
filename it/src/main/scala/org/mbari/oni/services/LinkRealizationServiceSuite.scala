@@ -16,7 +16,7 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkUpdate}
+import org.mbari.oni.domain.{ExtendedLink, Link, LinkCreate, LinkRenameToConceptRequest, LinkUpdate}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jpa.DataInitializer
 
@@ -114,6 +114,29 @@ trait LinkRealizationServiceSuite extends DataInitializer with UserAuthMixin:
                     assert(obtained.id.isDefined)
                     assertEquals(obtained.id.get, linkRealizations.getId.longValue())
                 case Left(error)     => fail(error.toString)
+    }
+
+    test("renameToConcept") {
+        val root                = init(3, 10)
+        assert(root != null)
+        val descendants         = root.getDescendants.asScala
+        val allLinkRealizations = descendants.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
+        val request             = LinkRenameToConceptRequest(allLinkRealizations.head.getToConcept, Strings.random(10))
+        val attempt             =
+            runWithUserAuth(user => linkRealizationService.renameToConcept(request.old, request.`new`, user.username))
+        attempt match
+            case Right(obtained) =>
+                val expected = allLinkRealizations.count(t => t.getToConcept == request.old)
+                assertEquals(obtained.count, expected)
+                assertEquals(obtained.oldConcept, request.old)
+                assertEquals(obtained.newConcept, request.`new`)
+                // The renamed links should now be findable under the new toConcept
+                linkRealizationService.findByPrototype(
+                    Link.from(allLinkRealizations.head).copy(toConcept = request.`new`)
+                ) match
+                    case Right(links) => assert(links.nonEmpty, "Expected to find link realizations under the new name")
+                    case Left(error)  => fail(error.toString)
+            case Left(error)     => fail(error.toString)
     }
 
     test("deleteById") {

@@ -18,6 +18,4 @@ package org.mbari.oni.services
 
 import org.mbari.oni.PostgresMixin
 
-class PostgresLinkServiceSuite extends LinkServiceSuite with PostgresMixin {
-
-}
+class PostgresLinkServiceSuite extends LinkServiceSuite with PostgresMixin {}
