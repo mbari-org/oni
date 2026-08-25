@@ -117,7 +117,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
+                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
         )
@@ -134,7 +134,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
+                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
         )
@@ -153,7 +153,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
+                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
             ,
             jwt = jwtService.authorize(jwtService.apiKey),
             contentType = "application/x-www-form-urlencoded"
@@ -172,7 +172,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
             response =>
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password), userAccount)
+                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
             ,
             jwt = jwtService.authorize(jwtService.apiKey),
             contentType = "application/x-www-form-urlencoded"

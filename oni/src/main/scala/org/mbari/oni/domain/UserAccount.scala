@@ -18,6 +18,8 @@ package org.mbari.oni.domain
 
 import org.mbari.oni.jpa.entities.UserAccountEntity
 
+import java.time.Instant
+
 /**
  * DTO for user account data
  * @param username
@@ -39,6 +41,8 @@ import org.mbari.oni.jpa.entities.UserAccountEntity
  * @param isEncrypted
  *   If the password is encrypted. If None, the value is assumed to be false and so the password is assumed to be plain
  *   text
+ * @param lastUpdated
+ *   The time the account was last modified. Read-only, it's managed by the database/JPA
  */
 case class UserAccount(
     username: String,
@@ -49,7 +53,8 @@ case class UserAccount(
     lastName: Option[String] = None,
     email: Option[String] = None,
     id: Option[Long] = None,
-    isEncrypted: Option[Boolean] = None
+    isEncrypted: Option[Boolean] = None,
+    lastUpdated: Option[Instant] = None
 ):
 
     def toEntity: UserAccountEntity =
@@ -92,5 +97,6 @@ object UserAccount:
         Option(userAccount.getLastName),
         Option(userAccount.getEmail),
         Option(userAccount.getPrimaryKey).map(_.asInstanceOf[Long]),
-        Some(true)
+        Some(true),
+        Option(userAccount.getLastUpdatedTimestamp)
     )

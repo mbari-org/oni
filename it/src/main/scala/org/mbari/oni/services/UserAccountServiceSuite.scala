@@ -32,6 +32,21 @@ trait UserAccountServiceSuite extends DataInitializer:
                 assertNotEquals(obtained.password, expected.password)
                 assertEquals(obtained.role, expected.role)
                 assert(obtained.id.isDefined)
+                assert(obtained.lastUpdated.isDefined)
+    }
+
+    test("lastUpdated is populated and advances on update") {
+        val either = for
+            created <- userAccountService.create(UserAccount("test11", "password", "admin"))
+            updated <- userAccountService.update("test11", UserAccountUpdate(affiliation = Some("MBARI")))
+            found   <- userAccountService.findByUserName("test11")
+        yield
+            val createdAt = created.lastUpdated.getOrElse(fail("create did not return a lastUpdated"))
+            val updatedAt = updated.lastUpdated.getOrElse(fail("update did not return a lastUpdated"))
+            assert(!updatedAt.isBefore(createdAt), s"$updatedAt should not be before $createdAt")
+            // The timestamp should survive a round trip through the database
+            assertEquals(found.flatMap(_.lastUpdated), Some(updatedAt))
+        assert(either.isRight)
     }
 
     test("update") {
