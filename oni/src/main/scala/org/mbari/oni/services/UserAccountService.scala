@@ -92,6 +92,9 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
                     userAccount.firstName.foreach(entity.setFirstName)
                     userAccount.lastName.foreach(entity.setLastName)
                     userAccount.email.foreach(entity.setEmail)
+                    // Flush so that the optimistic lock version (i.e. lastUpdated) is assigned
+                    // before we snapshot the entity into a DTO
+                    entityManager.flush()
                     UserAccount.from(entity)
                 case None         =>
                     throw new IllegalArgumentException(

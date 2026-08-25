@@ -33,7 +33,8 @@ import org.mbari.oni.jpa.*;
  * @version $date$, 2009.11.10 at 11:55:32 PST
  */
 @Entity(name = "UserAccount")
-@Table(name = "UserAccount")
+@Table(name = "UserAccount",
+        indexes = {@Index(name = "idx_UserAccount_LUT", columnList = "LAST_UPDATED_TIME")})
 @EntityListeners({TransactionLogger.class, KeyNullifier.class})
 @NamedQueries({
 
