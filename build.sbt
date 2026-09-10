@@ -91,14 +91,11 @@ lazy val oni = project
         flywayCore,
         flywayPostgres,
         flywaySqlserver,
-        // helidonEncodingDeflate, // Adding content encooding cause the swagger-ui to
-        // helidonEncodingGzip,    // fail to load the docs.yml file when used with nginx proxy
         flywayCore,
         flywayPostgres,
         flywaySqlserver,
         hibernateCore,
         hibernateJCache,
-//        hibernateEnvers,
         hibernateHikari,
         hikariCp,
         jansi             % Runtime,
@@ -111,7 +108,6 @@ lazy val oni = project
         postgresql,
         slf4jSystem,
         tapirCirce,
-//        tapirHelidon,
         tapirPrometheus,
         tapirServerStub   % Test,
         tapirSttpCirce,
