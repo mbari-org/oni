@@ -36,7 +36,7 @@ jobs:
       - name: Upload site
         uses: actions/upload-pages-artifact@v1.0.1
         with:
-          path: ./oni/target/out/jvm/scala-3.9.0/oni/api
+          path: ./target/out/jvm/scala-3.9.0/oni/api
 
   publish_docs:
     needs: generate_docs
