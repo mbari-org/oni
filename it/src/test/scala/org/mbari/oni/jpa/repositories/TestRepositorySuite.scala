@@ -17,6 +17,7 @@
 package org.mbari.oni.jpa.repositories
 
 import org.mbari.oni.jpa.repositories.TestRepository
+import org.mbari.oni.TestResources
 
 import java.nio.file.{Files, Paths}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
@@ -24,8 +25,9 @@ import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 class TestRepositorySuite extends munit.FunSuite:
 
     test("read") {
-        val url  = getClass.getResource("/kb/kb-dump.json.zip")
-        val path = Paths.get(url.toURI)
+        // val url  = getClass.getResource("/kb/kb-dump.json.zip")
+        val resourcePath = TestResources.path("/kb/kb-dump.json.zip")
+        val path = resourcePath
         assert(Files.exists(path))
         val opt  = TestRepository.read(path);
         assert(opt.isDefined)

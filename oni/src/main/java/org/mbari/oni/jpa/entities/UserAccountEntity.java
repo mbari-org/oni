@@ -113,6 +113,9 @@ public class UserAccountEntity implements Serializable, IPersistentObject, IOpti
     String userName;
 
     public boolean authenticate(String unencryptedPassword) {
+        if (UserAccountRoles.LOCKED.getRoleName().equals(role)) {
+            return false;
+        }
         return (new BasicPasswordEncryptor()).checkPassword(unencryptedPassword, encryptedPassword);
     }
 

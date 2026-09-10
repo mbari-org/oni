@@ -25,7 +25,7 @@ package org.mbari.oni.domain;
  */
 public enum UserAccountRoles {
 
-    ADMINISTRATOR("Admin"), MAINTENANCE("Maint"), READONLY("ReadOnly");
+    ADMINISTRATOR("Admin"), MAINTENANCE("Maint"), READONLY("ReadOnly"), LOCKED("Locked");
 
     private final String roleName;
 

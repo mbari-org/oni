@@ -3,12 +3,22 @@ import Dependencies._
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 ThisBuild / javacOptions ++= Seq("-target", "25", "-source", "25")
-ThisBuild / licenses         := Seq("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0"))
+ThisBuild / licenses         := Seq("Apache-2.0" -> uri("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / organization     := "org.mbari"
 ThisBuild / organizationName := "Monterey Bay Aquarium Research Institute"
 // ThisBuild / resolvers ++= Seq(Resolver.githubPackages("mbari-org", "maven"))
-ThisBuild / scalaVersion     := "3.8.4"
-ThisBuild / usePipelining    := true
+ThisBuild / scalaVersion     := "3.9.0"
+// Pipelining is disabled: sbt 2.x downstream projects compile against the upstream
+// early-output JAR, which contains Scala pickles only -- javac output is not in it.
+// Every module here that has downstream consumers (oni, it) has Java sources, so
+// their Java types (ConceptEntity, UserAccountRoles, ...) are invisible downstream.
+// This worked under sbt 1.12.5; it breaks under sbt 2.0.8.
+ThisBuild / usePipelining    := false
+// sbt 2 defaults exportJars to true, putting JARs on the classpath where sbt 1 used
+// class directories. That breaks test code doing Paths.get(getResource(...).toURI),
+// which throws FileSystemNotFoundException on a jar: URI (ScriptsSuite,
+// TestRepositorySuite). Keep sbt 1's directory-based classpath.
+ThisBuild / exportJars       := false
 // ThisBuild / scalaVersion     := "3.4.2"
 // ThisBuild / scalaVersion     := "3.3.1" // Fails. See https://github.com/lampepfl/dotty/issues/17069#issuecomment-1763053572
 ThisBuild / scalacOptions ++= Seq(
@@ -55,9 +65,11 @@ lazy val oni = project
     dockerBaseImage    := "eclipse-temurin:25",
     dockerExposedPorts := Seq(8080),
     dockerUpdateLatest := true,
-    git.gitTagToVersionNumber := { tag: String =>
-      if(tag matches "[0-9]+\\..*") Some(tag)
-      else None
+    // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
+    // Use `show gitCurrentTags` in sbt to update/see the tags
+    git.gitTagToVersionNumber := { (gitTag: String) =>
+        if (gitTag.matches("[0-9]+\\..*")) Some(gitTag)
+        else None
     },
     git.useGitDescribe := true,
     bashScriptExtraDefines ++= Seq(
