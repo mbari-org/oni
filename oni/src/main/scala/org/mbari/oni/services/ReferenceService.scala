@@ -65,7 +65,8 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
 
     def create(reference: Reference): Either[Throwable, Reference] =
         entityManagerFactory.transaction(entityManager =>
-            val repo   = ReferenceRepository(entityManager)
+            val repo        = ReferenceRepository(entityManager)
+            val conceptRepo = ConceptRepository(entityManager)
             reference
                 .doi
                 .foreach(doi =>
@@ -77,6 +78,11 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
             val entity = reference.toEntity
             entity.setId(null) // just in case. Hibernate requires that this is null for inserts
             repo.create(entity)
+            reference.concepts.foreach(name =>
+                conceptRepo.findByName(name).toScala match
+                    case None          => throw new IllegalArgumentException(s"Concept with name '${name}' not found")
+                    case Some(concept) => concept.getConceptMetadata.addReference(entity)
+            )
             Reference.from(entity)
         )
 
