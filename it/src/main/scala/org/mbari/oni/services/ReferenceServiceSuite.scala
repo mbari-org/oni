@@ -53,6 +53,47 @@ trait ReferenceServiceSuite extends DataInitializer:
 
     }
 
+    test("create with concepts") {
+        val root        = init(4, 2)
+        val conceptName = root.getPrimaryConceptName.getName
+        val childName   = root.getChildConcepts.iterator().next().getPrimaryConceptName.getName
+        val ref         = Reference.from(TestEntityFactory.createReference()).copy(concepts = Seq(conceptName, childName))
+
+        // create should return a reference linked to the concepts
+        val referenceId = service.create(ref) match
+            case Right(reference) =>
+                assert(reference.id.isDefined)
+                assertEquals(reference.concepts.toSet, Set(conceptName, childName))
+                reference.id.get
+            case Left(error)      => fail(error.toString)
+
+        // the links should be persisted, not just present on the returned object
+        service.findById(referenceId) match
+            case Right(Some(reference)) => assertEquals(reference.concepts.toSet, Set(conceptName, childName))
+            case Right(None)            => fail(s"Reference with id '${referenceId}' not found")
+            case Left(error)            => fail(error.toString)
+
+        conceptService.findByName(conceptName) match
+            case Right(concept) => assert(concept.references.flatMap(_.id).contains(referenceId))
+            case Left(error)    => fail(error.toString)
+    }
+
+    test("create with unknown concept") {
+        val root = init(2, 0)
+        val ref  = Reference
+            .from(TestEntityFactory.createReference())
+            .copy(concepts = Seq(root.getPrimaryConceptName.getName, "not-a-real-concept-name"))
+
+        service.create(ref) match
+            case Right(_) => fail("Should have failed")
+            case Left(_)  => assert(true)
+
+        // the transaction should roll back, so the reference itself must not be persisted
+        service.findByDoi(ref.doi.get) match
+            case Right(opt)  => assert(opt.isEmpty)
+            case Left(error) => fail(error.toString)
+    }
+
     test("update") {
         val ref = Reference(
             doi = Some(URI.create("https://doi.org/10.1038/s41598-022-19939-2")),
