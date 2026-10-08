@@ -101,8 +101,7 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
             repo.findById(id).toScala match
                 case None         => throw new IllegalArgumentException(s"Reference with id '${id}' not found")
                 case Some(entity) =>
-                    val metadatas = entity.getConceptMetadatas.asScala
-                    metadatas.foreach(m => m.removeReference(entity))
+                    entity.getConceptMetadatas.asScala.toSet.foreach(m => m.removeReference(entity))
                     repo.delete(entity)
         )
 
