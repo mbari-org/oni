@@ -41,6 +41,21 @@ trait PrefNodeServiceSuite extends DataInitializer:
                 assertEquals(prefNode.value, value)
     }
 
+    test("create duplicate nodeName + prefKey fails") {
+        val name  = "test"
+        val key   = "duplicateKey"
+        prefNodeService.create(name, key, "value1") match
+            case Left(e)  => fail(e.getMessage)
+            case Right(_) =>
+                assert(prefNodeService.create(name, key, "value2").isLeft)
+                prefNodeService.findByNodeName(name) match
+                    case Left(e)          => fail(e.getMessage)
+                    case Right(prefNodes) =>
+                        val matches = prefNodes.filter(_.key == key)
+                        assertEquals(matches.size, 1)
+                        assertEquals(matches.head.value, "value1")
+    }
+
     test("update") {
         val name  = "test"
         val key   = "key2"
