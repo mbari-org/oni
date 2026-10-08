@@ -148,6 +148,30 @@ trait ReferenceServiceSuite extends DataInitializer:
             case Left(error)   => fail(error.toString)
     }
 
+    test("delete reference linked to multiple concepts") {
+        val root        = init(4, 2)
+        val conceptName = root.getPrimaryConceptName.getName
+        val childName   = root.getChildConcepts.iterator().next().getPrimaryConceptName.getName
+        val ref         = Reference.from(TestEntityFactory.createReference()).copy(concepts = Seq(conceptName, childName))
+
+        val referenceId = service.create(ref) match
+            case Right(reference) => reference.id.get
+            case Left(error)      => fail(error.toString)
+
+        // unlinking from each concept must not mutate the collection being iterated
+        service.deleteById(referenceId) match
+            case Right(_)    => assert(true)
+            case Left(error) => fail(error.toString)
+
+        service.findById(referenceId) match
+            case Right(opt)  => assert(opt.isEmpty)
+            case Left(error) => fail(error.toString)
+
+        conceptService.findByName(conceptName) match
+            case Right(concept) => assert(!concept.references.flatMap(_.id).contains(referenceId))
+            case Left(error)    => fail(error.toString)
+    }
+
     test("findAll") {
         val refs = 0 until 10 map { _ => TestEntityFactory.createReference() }
         refs.foreach(ref =>
