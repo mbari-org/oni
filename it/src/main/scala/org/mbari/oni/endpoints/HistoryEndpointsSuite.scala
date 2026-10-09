@@ -56,7 +56,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         for
             _       <- runWithUserAuth(
                            user => linkTemplateService.create(add, user.username),
-                           role = UserAccountRoles.ADMINISTRATOR.getRoleName
+                           role = UserAccountRoles.MAINTENANCE.getRoleName
                        )
             history <- historyService.findByConceptName(root.getName).map(_.head)
         yield history

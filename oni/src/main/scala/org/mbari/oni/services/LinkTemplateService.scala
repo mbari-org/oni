@@ -160,6 +160,7 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
                         // Add history
                         val history = HistoryEntityFactory.add(userEntity, linkTemplate)
                         concept.getConceptMetadata.addHistory(history)
+                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
                         ExtendedLink.from(linkTemplate)
                     case None          => throw ConceptNameNotFound(link.concept)
             )
