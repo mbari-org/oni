@@ -56,4 +56,9 @@ public final class ChangeBus {
     public static void publish(ChangeEvent.Action action, ChangeEvent.DataType dataType, Object id) {
         publish(new ChangeEvent(action, dataType, id));
     }
+
+    /** Publish a change that was made by another Oni instance. See {@link ChangeEvent#remote()}. */
+    public static void publishRemote(ChangeEvent.Action action, ChangeEvent.DataType dataType, Object id) {
+        publish(ChangeEvent.fromRemote(action, dataType, id));
+    }
 }

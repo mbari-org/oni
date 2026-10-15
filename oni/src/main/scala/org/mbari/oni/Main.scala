@@ -22,7 +22,7 @@ import io.vertx.ext.web.Router
 import org.mbari.oni.config.AppConfig
 import org.mbari.oni.etc.jdk.Loggers
 import org.mbari.oni.etc.jdk.Loggers.given
-import org.mbari.oni.etc.nats.NatsPublisher
+import org.mbari.oni.etc.nats.{NatsPublisher, NatsSubscriber}
 import sttp.tapir.server.vertx.VertxFutureServerInterpreter.VertxFutureToScalaFuture
 import sttp.tapir.server.vertx.{VertxFutureServerInterpreter, VertxFutureServerOptions}
 
@@ -57,8 +57,12 @@ object Main:
         log.atInfo.log(s"Starting ${AppConfig.Name} v${AppConfig.Version} on port $port")
 
         // Publishes concept changes to NATS (if enabled) so downstream apps can refresh their caches
-        val nats = NatsPublisher.autowire(AppConfig.DefaultNatsConfig)
-        sys.addShutdownHook(nats.foreach(_.close()))
+        val natsPublisher  = NatsPublisher.autowire(AppConfig.DefaultNatsConfig)
+        // Learns about changes made by other Oni instances so we can clear our own caches
+        val natsSubscriber = NatsSubscriber.autowire(AppConfig.DefaultNatsConfig)
+        sys.addShutdownHook:
+            natsSubscriber.foreach(_.close())
+            natsPublisher.foreach(_.close())
 
         val serverOptions = VertxFutureServerOptions
             .customiseInterceptors

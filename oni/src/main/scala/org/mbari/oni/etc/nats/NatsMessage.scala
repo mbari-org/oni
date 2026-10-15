@@ -19,6 +19,8 @@ package org.mbari.oni.etc.nats
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.jpa.ChangeEvent
 
+import java.util.UUID
+
 /**
  * A minimal message describing a committed change. It is used to tell other services that something changed so they
  * can refresh (e.g. invalidate a cache) without sending the entire record. The receiving service queries Oni for the
@@ -30,12 +32,27 @@ import org.mbari.oni.jpa.ChangeEvent
  *   The kind of record that changed, e.g. CONCEPT, CONCEPT_NAME, LINK_REALIZATION
  * @param id
  *   The primary key of the changed record. None if many records changed (e.g. a bulk rename of link targets).
+ * @param source
+ *   Identifies the Oni instance that sent the message, so that an instance can ignore its own messages.
  */
-case class NatsMessage(action: String, dataType: String, id: Option[String] = None)
+case class NatsMessage(
+    action: String,
+    dataType: String,
+    id: Option[String] = None,
+    source: Option[String] = None
+)
 
 
 
 object NatsMessage:
 
-    def from(event: ChangeEvent): NatsMessage =
-        NatsMessage(event.action().toString, event.dataType().toString, Option(event.id()).map(_.toString))
+    /** Identifies this running Oni instance. It is different every time Oni starts. */
+    val InstanceId: String = UUID.randomUUID().toString
+
+    def from(event: ChangeEvent, source: Option[String] = Some(InstanceId)): NatsMessage =
+        NatsMessage(
+            event.action().toString,
+            event.dataType().toString,
+            Option(event.id()).map(_.toString),
+            source
+        )

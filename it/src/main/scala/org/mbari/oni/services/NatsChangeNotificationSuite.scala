@@ -19,8 +19,8 @@ package org.mbari.oni.services
 import io.nats.client.Nats
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, LinkRenameToConceptRequest}
 import org.mbari.oni.etc.jdk.Strings
-import org.mbari.oni.etc.circe.CirceCodecs.given
-import org.mbari.oni.etc.nats.{NatsConfig, NatsMessage, NatsPublisher}
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.nats.{NatsConfig, NatsMessage, NatsPublisher, NatsSubscriber}
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.ConceptNameEntity
@@ -29,7 +29,8 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.utility.DockerImageName
 
 import java.nio.charset.StandardCharsets
-import java.util.concurrent.{CopyOnWriteArrayList, TimeUnit}
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
 import scala.jdk.CollectionConverters.*
 
 /**
@@ -55,6 +56,11 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
         .autowire(Some(NatsConfig(natsUrl, enable = true, topic = topic)))
         .getOrElse(fail("NatsPublisher.autowire returned None"))
 
+    // Listens for changes made by other Oni instances, just like Main does
+    private lazy val natsSubscriber = NatsSubscriber
+        .autowire(Some(NatsConfig(natsUrl, enable = true, topic = topic)))
+        .getOrElse(fail("NatsSubscriber.autowire returned None"))
+
     private val received = new CopyOnWriteArrayList[NatsMessage]()
 
     private lazy val subscriber =
@@ -71,8 +77,10 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
     override def beforeAll(): Unit =
         publisher // starts the container and the publisher
         subscriber
+        natsSubscriber
 
     override def afterAll(): Unit =
+        natsSubscriber.close()
         publisher.close()
         subscriber.close()
         container.stop()
@@ -140,4 +148,54 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
                 val msg = awaitMessage(m => m.action == "UPDATED" && m.dataType == "LINK_REALIZATION")
                 assert(msg.isDefined, s"No UPDATED LINK_REALIZATION message. Got: ${received.asScala}")
                 assertEquals(msg.get.id, None)
+    }
+
+    /** Plays the part of another Oni instance announcing a change. */
+    private def sendFromOtherInstance(source: String): Unit =
+        val message = NatsMessage("UPDATED", "CONCEPT", Some("1"), Some(source))
+        subscriber.publish(topic, message.stringify.getBytes(StandardCharsets.UTF_8))
+        subscriber.flush(java.time.Duration.ofSeconds(2))
+
+    /** A ConceptService that counts how often the database is actually consulted. */
+    private def countingService(lookups: AtomicInteger): ConceptService =
+        new ConceptService(entityManagerFactory):
+            override def findByName(name: String) =
+                lookups.incrementAndGet()
+                super.findByName(name)
+
+    test("a message from another instance clears the ConceptCache") {
+        val root    = init(2, 2)
+        settle()
+        val name    = root.getPrimaryConceptName.getName
+        val lookups = new AtomicInteger(0)
+        val cache   = new ConceptCache(countingService(lookups), conceptNameService)
+        try
+            cache.findByName(name)
+            cache.findByName(name)
+            assertEquals(lookups.get, 1, "The second lookup should have been served from the cache")
+
+            sendFromOtherInstance("another-oni-instance")
+
+            // Each lookup is served from the cache until it is cleared, after which the next one hits the database
+            val deadline = System.currentTimeMillis() + 5000
+            while lookups.get == 1 && System.currentTimeMillis() < deadline do
+                cache.findByName(name)
+                Thread.sleep(50)
+            assert(lookups.get > 1, "The cache was not cleared by a message from another instance")
+        finally cache.close()
+    }
+
+    test("a message from this same instance does not clear the ConceptCache again") {
+        val root    = init(2, 2)
+        settle()
+        val name    = root.getPrimaryConceptName.getName
+        val lookups = new AtomicInteger(0)
+        val cache   = new ConceptCache(countingService(lookups), conceptNameService)
+        try
+            cache.findByName(name)
+            sendFromOtherInstance(NatsMessage.InstanceId)
+            Thread.sleep(1500) // generous time for a (wrong) clear to happen
+            cache.findByName(name)
+            assertEquals(lookups.get, 1, "Our own message should not have cleared the cache")
+        finally cache.close()
     }

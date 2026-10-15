@@ -20,16 +20,20 @@ import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 
 /**
  * Translates ChangeEvents published on the ChangeBus into NatsMessages and forwards them to the sink. Only changes to
- * concept data are forwarded; see ChangeEvent.affectsConceptData.
+ * concept data made by this instance are forwarded: see ChangeEvent.affectsConceptData. Remote events (learned from
+ * other instances) are never forwarded, otherwise instances would echo each other's messages forever.
  *
  * @param sink
  *   Receives the messages, typically NatsPublisher.offer
+ * @param source
+ *   Stamped on each message so receivers can ignore their own messages
  */
-class NatsBridge(sink: NatsMessage => Unit) extends AutoCloseable:
+class NatsBridge(sink: NatsMessage => Unit, source: Option[String] = Some(NatsMessage.InstanceId))
+    extends AutoCloseable:
 
     private val unsubscribe: Runnable = ChangeBus.subscribe(event => handle(event).foreach(sink))
 
     def handle(event: ChangeEvent): Option[NatsMessage] =
-        if event.affectsConceptData() then Some(NatsMessage.from(event)) else None
+        if event.affectsConceptData() && !event.remote() then Some(NatsMessage.from(event, source)) else None
 
     override def close(): Unit = unsubscribe.run()

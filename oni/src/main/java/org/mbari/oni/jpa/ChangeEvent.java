@@ -28,8 +28,20 @@ import java.util.Optional;
  * @param action   what happened
  * @param dataType the kind of record that changed
  * @param id       the primary key of the affected record, or null if many/unknown records were affected
+ * @param remote   true if the change was made by another Oni instance and learned about via messaging. Remote events
+ *                 must never be forwarded back out, or instances would echo each other's messages forever.
  */
-public record ChangeEvent(Action action, DataType dataType, Object id) {
+public record ChangeEvent(Action action, DataType dataType, Object id, boolean remote) {
+
+    /** A change made by this instance. */
+    public ChangeEvent(Action action, DataType dataType, Object id) {
+        this(action, dataType, id, false);
+    }
+
+    /** A change made by another instance. */
+    public static ChangeEvent fromRemote(Action action, DataType dataType, Object id) {
+        return new ChangeEvent(action, dataType, id, true);
+    }
 
     /**
      * User accounts and preference nodes are not part of the concept knowledge base, so consumers interested in

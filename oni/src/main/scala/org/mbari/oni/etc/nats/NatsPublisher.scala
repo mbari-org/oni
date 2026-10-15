@@ -16,7 +16,7 @@
 
 package org.mbari.oni.etc.nats
 
-import io.nats.client.{Connection, Nats, Options}
+import io.nats.client.Connection
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 
@@ -42,14 +42,7 @@ class NatsPublisher(val url: String, val topic: String, maxQueueSize: Int = Nats
     private val log                         = System.getLogger(getClass.getName)
     private val queue                       = new LinkedBlockingQueue[NatsMessage](maxQueueSize)
     @volatile private var ok                = true
-    private val connection: Connection      =
-        val options = Options
-            .builder()
-            .server(url)
-            .maxReconnects(-1)
-            .reconnectWait(Duration.ofSeconds(2))
-            .build()
-        Nats.connectReconnectOnConnect(options)
+    private val connection: Connection      = NatsClient.connect(url)
 
     private val thread = new Thread(() => run(), "NatsPublisher")
     thread.setDaemon(true)

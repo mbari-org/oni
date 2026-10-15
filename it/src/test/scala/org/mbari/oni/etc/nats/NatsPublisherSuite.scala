@@ -60,12 +60,12 @@ class NatsPublisherSuite extends munit.FunSuite:
 
     test("a change published on the ChangeBus arrives on NATS") {
         ChangeBus.publish(Action.UPDATED, DataType.CONCEPT, java.lang.Long.valueOf(99))
-        assertEquals(poll(), Some(NatsMessage("UPDATED", "CONCEPT", Some("99"))))
+        assertEquals(poll(), Some(NatsMessage("UPDATED", "CONCEPT", Some("99"), Some(NatsMessage.InstanceId))))
     }
 
     test("an explicit event with no id arrives on NATS") {
         ChangeBus.publish(Action.UPDATED, DataType.LINK_TEMPLATE, null)
-        assertEquals(poll(), Some(NatsMessage("UPDATED", "LINK_TEMPLATE", None)))
+        assertEquals(poll(), Some(NatsMessage("UPDATED", "LINK_TEMPLATE", None, Some(NatsMessage.InstanceId))))
     }
 
     test("user account changes are not published") {

@@ -17,7 +17,7 @@
 package org.mbari.oni.etc.nats
 
 import org.mbari.oni.jpa.ChangeEvent.{Action, DataType}
-import org.mbari.oni.etc.circe.CirceCodecs.given
+import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 
 import java.util.concurrent.CopyOnWriteArrayList
@@ -35,14 +35,14 @@ class NatsBridgeSuite extends munit.FunSuite:
     test("concept changes are translated to messages") {
         withBridge { (bridge, received) =>
             ChangeBus.publish(Action.CREATED, DataType.CONCEPT, java.lang.Long.valueOf(42))
-            assertEquals(received.asScala.toSeq, Seq(NatsMessage("CREATED", "CONCEPT", Some("42"))))
+            assertEquals(received.asScala.toSeq, Seq(NatsMessage("CREATED", "CONCEPT", Some("42"), Some(NatsMessage.InstanceId))))
         }
     }
 
     test("a missing id becomes None") {
         withBridge { (bridge, received) =>
             ChangeBus.publish(Action.UPDATED, DataType.LINK_REALIZATION, null)
-            assertEquals(received.asScala.toSeq, Seq(NatsMessage("UPDATED", "LINK_REALIZATION", None)))
+            assertEquals(received.asScala.toSeq, Seq(NatsMessage("UPDATED", "LINK_REALIZATION", None, Some(NatsMessage.InstanceId))))
         }
     }
 
@@ -50,6 +50,13 @@ class NatsBridgeSuite extends munit.FunSuite:
         withBridge { (bridge, received) =>
             ChangeBus.publish(Action.CREATED, DataType.USER_ACCOUNT, java.lang.Long.valueOf(1))
             ChangeBus.publish(Action.UPDATED, DataType.PREFERENCE_NODE, "x")
+            assert(received.isEmpty)
+        }
+    }
+
+    test("remote events are not forwarded, so instances never echo each other") {
+        withBridge { (bridge, received) =>
+            ChangeBus.publishRemote(Action.UPDATED, DataType.CONCEPT, "42")
             assert(received.isEmpty)
         }
     }
@@ -63,7 +70,7 @@ class NatsBridgeSuite extends munit.FunSuite:
     }
 
     test("messages round trip through JSON") {
-        val msg = NatsMessage("DELETED", "CONCEPT_NAME", Some("7"))
+        val msg = NatsMessage("DELETED", "CONCEPT_NAME", Some("7"), Some("instance-1"))
         assertEquals(io.circe.parser.decode[NatsMessage](msg.stringify), Right(msg))
         // A missing id is omitted from the JSON
         assertEquals(NatsMessage("UPDATED", "MEDIA").stringify, """{"action":"UPDATED","dataType":"MEDIA"}""")
