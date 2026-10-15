@@ -77,7 +77,8 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
     override def beforeAll(): Unit =
         publisher // starts the container and the publisher
         subscriber
-        natsSubscriber
+        // It connects in the background. Don't start the tests until it is listening.
+        assert(natsSubscriber.awaitReady(java.time.Duration.ofSeconds(10)), "The NatsSubscriber never became ready")
 
     override def afterAll(): Unit =
         natsSubscriber.close()

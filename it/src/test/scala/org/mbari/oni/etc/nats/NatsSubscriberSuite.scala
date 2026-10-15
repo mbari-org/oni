@@ -61,6 +61,9 @@ class NatsSubscriberSuite extends munit.FunSuite:
         .autowire(Some(config))
         .getOrElse(fail("NatsPublisher.autowire returned None"))
 
+    // The subscriber connects in the background. Don't start sending until it is listening.
+    assert(subscriber.awaitReady(java.time.Duration.ofSeconds(10)), "The subscriber never became ready")
+
     override def afterAll(): Unit =
         unsubscribe.run()
         publisher.close()

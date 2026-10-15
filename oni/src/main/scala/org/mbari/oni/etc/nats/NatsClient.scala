@@ -19,14 +19,21 @@ package org.mbari.oni.etc.nats
 import io.nats.client.{Connection, ConnectionListener, Nats, Options}
 
 import java.time.Duration
+import scala.util.control.NonFatal
 
 /**
- * Creates NATS connections that reconnect forever, and that are created in the background if the server isn't
- * available yet, so Oni never fails to start (or stops working) because NATS is down.
+ * Creates NATS connections that reconnect forever.
+ *
+ * Careful: Nats.connectReconnectOnConnect retries until it connects. With unlimited reconnects it never returns if the
+ * server is down, so it must never be called on Oni's startup thread. Use connectInBackground, which is what lets Oni
+ * start (and keep working) when NATS is unavailable.
  */
 object NatsClient:
 
-    def connect(url: String, listener: Option[ConnectionListener] = None): Connection =
+    private val log = System.getLogger(getClass.getName)
+
+    /** BLOCKS until a connection is made, which may be forever if the server is down. See connectInBackground. */
+    def connectBlocking(url: String, listener: Option[ConnectionListener] = None): Connection =
         val builder = Options
             .builder()
             .server(url)
@@ -34,3 +41,27 @@ object NatsClient:
             .reconnectWait(Duration.ofSeconds(2))
         listener.foreach(builder.connectionListener)
         Nats.connectReconnectOnConnect(builder.build())
+
+    /**
+     * Connects on a new daemon thread and returns immediately. The thread keeps retrying until the server is available,
+     * then passes the connection to onConnected. After that, jnats reconnects automatically if the connection drops.
+     *
+     * @return
+     *   The connecting thread. Interrupt it to stop trying to connect.
+     */
+    def connectInBackground(name: String, url: String, listener: Option[ConnectionListener] = None)(
+        onConnected: Connection => Unit
+    ): Thread =
+        val thread = new Thread(
+            () =>
+                try onConnected(connectBlocking(url, listener))
+                catch
+                    case _: InterruptedException => () // We were closed before NATS became available
+                    case NonFatal(e)             =>
+                        log.log(System.Logger.Level.ERROR, s"Unable to connect to NATS at '$url'", e)
+            ,
+            name
+        )
+        thread.setDaemon(true)
+        thread.start()
+        thread

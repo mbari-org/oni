@@ -16,13 +16,15 @@
 
 package org.mbari.oni.etc.nats
 
-import io.nats.client.{Connection, ConnectionListener, Message}
+import io.nats.client.{Connection, ConnectionListener, Dispatcher, Message}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.ChangeBus
 import org.mbari.oni.jpa.ChangeEvent.{Action, DataType}
 
 import java.nio.charset.StandardCharsets
+import java.time.Duration
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -33,6 +35,9 @@ import scala.util.control.NonFatal
  *
  * Messages sent while this instance is disconnected from NATS are lost, so we also publish a catch-all remote event
  * whenever the connection is (re)established. That clears caches that may have missed changes.
+ *
+ * The connection is made on a background thread, so creating a subscriber never blocks (or fails) if NATS is down.
+ * It starts listening as soon as NATS is available. See awaitReady.
  *
  * @param instanceId
  *   Messages with this source are ignored. Only overridden in tests, to simulate another instance.
@@ -47,9 +52,27 @@ class NatsSubscriber(val url: String, val topic: String, instanceId: String = Na
             log.atInfo.log(s"NATS $event at '$url'. Clearing caches since changes may have been missed.")
             ChangeBus.publishRemote(Action.UPDATED, DataType.CONCEPT, null)
 
-    private val connection: Connection = NatsClient.connect(url, Some(connectionListener))
-    private val dispatcher             = connection.createDispatcher(msg => handle(msg))
-    dispatcher.subscribe(topic)
+    private val ready                          = new CountDownLatch(1)
+    private var closed                         = false
+    @volatile private var connection: Connection = null
+    private var dispatcher: Dispatcher         = null
+
+    private val connector = NatsClient.connectInBackground("NatsSubscriber-connect", url, Some(connectionListener)): c =>
+        this.synchronized:
+            if closed then Try(c.close())
+            else
+                connection = c
+                dispatcher = c.createDispatcher(msg => handle(msg))
+                dispatcher.subscribe(topic)
+                Try(c.flush(Duration.ofSeconds(2))) // Make sure the server knows about the subscription
+                ready.countDown()
+
+    /**
+     * Waits until we are connected and subscribed.
+     * @return
+     *   true if the subscription is active, false if the timeout elapsed first (e.g. NATS is down)
+     */
+    def awaitReady(timeout: Duration): Boolean = ready.await(timeout.toMillis, TimeUnit.MILLISECONDS)
 
     private def handle(msg: Message): Unit =
         try
@@ -65,8 +88,11 @@ class NatsSubscriber(val url: String, val topic: String, instanceId: String = Na
         catch case NonFatal(e) => log.atWarn.withCause(e).log("Failed to handle a message from NATS")
 
     override def close(): Unit =
-        Try(dispatcher.unsubscribe(topic))
-        Try(connection.close())
+        this.synchronized:
+            closed = true
+            connector.interrupt()
+            if dispatcher != null then Try(dispatcher.unsubscribe(topic))
+            if connection != null then Try(connection.close())
 
 object NatsSubscriber:
 

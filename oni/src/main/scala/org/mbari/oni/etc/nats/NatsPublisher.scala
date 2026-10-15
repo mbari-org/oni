@@ -30,8 +30,9 @@ import scala.util.control.NonFatal
 /**
  * Publishes NatsMessages to a NATS topic. Messages are queued and sent from a daemon thread so that a slow or
  * unavailable NATS server never blocks the thread that committed a database transaction. Messages that arrive close
- * together are de-duplicated. The jnats client reconnects automatically (forever), and the initial connection is made
- * in the background, so Oni starts normally even if NATS is down.
+ * together are de-duplicated. The initial connection is made on a background thread, and the jnats client reconnects
+ * automatically (forever) after that, so Oni starts normally even if NATS is down. Messages offered before the
+ * connection exists wait in the queue.
  *
  * Messages only signal that something changed, and consumers re-query Oni, so if the queue overflows during a long
  * outage the newest message is dropped rather than blocking or growing memory without bound.
@@ -39,10 +40,15 @@ import scala.util.control.NonFatal
 class NatsPublisher(val url: String, val topic: String, maxQueueSize: Int = NatsPublisher.MaxQueueSize)
     extends AutoCloseable:
 
-    private val log                         = System.getLogger(getClass.getName)
-    private val queue                       = new LinkedBlockingQueue[NatsMessage](maxQueueSize)
-    @volatile private var ok                = true
-    private val connection: Connection      = NatsClient.connect(url)
+    private val log                              = System.getLogger(getClass.getName)
+    private val queue                            = new LinkedBlockingQueue[NatsMessage](maxQueueSize)
+    @volatile private var ok                     = true
+    @volatile private var connection: Connection = null
+
+    // Connecting happens in the background, never on the caller's thread. Messages wait in the queue until it's done.
+    private val connector = NatsClient.connectInBackground("NatsPublisher-connect", url): c =>
+        this.synchronized:
+            if ok then connection = c else Try(c.close())
 
     private val thread = new Thread(() => run(), "NatsPublisher")
     thread.setDaemon(true)
@@ -55,13 +61,15 @@ class NatsPublisher(val url: String, val topic: String, maxQueueSize: Int = Nats
     private def run(): Unit =
         while ok do
             try
-                val first = queue.poll(1, TimeUnit.SECONDS)
-                if first != null then
-                    val pending = new java.util.ArrayList[NatsMessage]()
-                    pending.add(first)
-                    queue.drainTo(pending)
-                    // Coalesce duplicates that arrived together, e.g. many rows changed by a single commit
-                    pending.asScala.distinct.foreach(publish)
+                if connection == null then Thread.sleep(200) // Not connected yet: leave messages in the queue
+                else
+                    val first = queue.poll(1, TimeUnit.SECONDS)
+                    if first != null then
+                        val pending = new java.util.ArrayList[NatsMessage]()
+                        pending.add(first)
+                        queue.drainTo(pending)
+                        // Coalesce duplicates that arrived together, e.g. many rows changed by a single commit
+                        pending.asScala.distinct.foreach(publish)
             catch
                 case _: InterruptedException => ok = false
                 case NonFatal(e)             => log.atWarn.withCause(e).log("Unexpected error in NatsPublisher thread")
@@ -71,10 +79,13 @@ class NatsPublisher(val url: String, val topic: String, maxQueueSize: Int = Nats
         catch case NonFatal(e) => log.atWarn.withCause(e).log(s"Failed to publish to NATS, dropping $msg")
 
     override def close(): Unit =
-        ok = false
-        thread.interrupt()
-        Try(connection.flush(Duration.ofSeconds(1)))
-        Try(connection.close())
+        this.synchronized:
+            ok = false
+            connector.interrupt()
+            thread.interrupt()
+            Option(connection).foreach: c =>
+                Try(c.flush(Duration.ofSeconds(1)))
+                Try(c.close())
 
 object NatsPublisher:
 
