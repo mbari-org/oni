@@ -20,6 +20,7 @@ import io.circe
 import io.circe.*
 import io.circe.generic.semiauto.*
 import org.mbari.oni.domain.*
+import org.mbari.oni.etc.nats.NatsMessage
 import org.mbari.oni.util.HexUtil
 
 import java.net.{URI, URL}
@@ -180,6 +181,10 @@ object CirceCodecs:
 
     given Decoder[UserAccountUpdate] = deriveDecoder
     given Encoder[UserAccountUpdate] = deriveEncoder
+
+    // --- Messaging ---
+    given Decoder[NatsMessage] = deriveDecoder
+    given Encoder[NatsMessage] = deriveEncoder
 
     val CustomPrinter: Printer = Printer(
         dropNullValues = true,

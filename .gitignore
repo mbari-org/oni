@@ -5,6 +5,7 @@
 .history/
 .idea/
 .metals/
+.serena/
 .vscode/
 project/metals.sbt
 project/project
