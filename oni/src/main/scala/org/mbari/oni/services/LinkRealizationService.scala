@@ -26,6 +26,7 @@ import org.mbari.oni.domain.{
     LinkUpdate,
     LinkUtilities
 }
+import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
@@ -218,6 +219,10 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                 query.setParameter(2, oldConcept)
                 val n     = query.executeUpdate()
                 LinkRenameToConceptResponse(oldConcept, newConcept, n)
+            ).map(response =>
+                // Native bulk updates skip Hibernate's entity lifecycle, so notify explicitly (after commit)
+                if response.count > 0 then ChangeBus.publish(ChangeEvent.Action.UPDATED, ChangeEvent.DataType.LINK_REALIZATION, null)
+                response
             )
 
         for

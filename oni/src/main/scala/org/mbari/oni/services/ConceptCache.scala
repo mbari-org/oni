@@ -26,6 +26,8 @@ package org.mbari.oni.services
 import com.github.benmanes.caffeine.cache.{Cache, Caffeine}
 import org.mbari.oni.domain.ConceptMetadata
 import org.mbari.oni.etc.jdk.Loggers.given
+import org.mbari.oni.jpa.ChangeEvent.DataType
+import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 
 import java.util.concurrent.TimeUnit
 
@@ -67,9 +69,23 @@ class ConceptCache(conceptService: ConceptService, conceptNameService: ConceptNa
                     allNamesCache.put(ConceptCache.AllNamesCacheKey, names)
                     Right(names.slice(offset, offset + limit))
 
+    // Clear whenever data is committed that could change what we cache. Events are only published after commit.
+    private val unsubscribe: Runnable = ChangeBus.subscribe(event =>
+        if ConceptCache.affectsCache(event) then clear()
+    )
+
     def clear(): Unit =
         nameCache.invalidateAll()
         allNamesCache.invalidateAll()
 
+    /** Stops listening for changes. */
+    def close(): Unit = unsubscribe.run()
+
 object ConceptCache:
     val AllNamesCacheKey = "all-names"
+
+    /** User accounts and preference nodes are not part of the cached concept data. */
+    def affectsCache(event: ChangeEvent): Boolean =
+        event.dataType() match
+            case DataType.USER_ACCOUNT | DataType.PREFERENCE_NODE => false
+            case _                                                => true
