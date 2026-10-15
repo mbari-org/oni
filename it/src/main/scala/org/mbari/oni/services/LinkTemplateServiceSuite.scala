@@ -25,6 +25,7 @@ import scala.jdk.CollectionConverters.*
 trait LinkTemplateServiceSuite extends DataInitializer with UserAuthMixin:
 
     lazy val linkTemplateService: LinkTemplateService = new LinkTemplateService(entityManagerFactory)
+    lazy val historyService: HistoryService           = new HistoryService(entityManagerFactory)
 
     test("findById") {
         val root = init(3, 4)
@@ -138,6 +139,13 @@ trait LinkTemplateServiceSuite extends DataInitializer with UserAuthMixin:
                 assertEquals(obtained.toConcept, linkCreate.toConcept)
                 assert(obtained.id.isDefined)
             case Left(error)         => fail(error.toString)
+
+        // runWithUserAuth defaults to an admin user, whose history is auto-approved
+        historyService.findByConceptName(root.getPrimaryConceptName.getName) match
+            case Right(histories) =>
+                assert(histories.nonEmpty)
+                assert(histories.head.approved)
+            case Left(error)      => fail(error.toString)
     }
 
     test("update") {
