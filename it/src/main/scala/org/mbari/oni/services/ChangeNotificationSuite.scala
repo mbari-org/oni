@@ -22,6 +22,7 @@ import org.mbari.oni.jpa.ChangeEvent.{Action, DataType}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.domain.ConceptNameTypes
 import org.mbari.oni.jpa.entities.ConceptNameEntity
+import org.mbari.oni.jpa.repositories.ConceptRepository
 import org.mbari.oni.jpa.{ChangeBus, ChangeEvent, DataInitializer}
 
 import java.util.concurrent.CopyOnWriteArrayList
@@ -56,15 +57,17 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
         init(1, 0)
         val (result, events) = capture(
             entityManagerFactory.transaction(em =>
+                val root   = new ConceptRepository(em).findRoot().get()
                 val entity = new ConceptNameEntity()
                 entity.setName(Strings.random(12))
                 entity.setNameType(ConceptNameTypes.SYNONYM.getType)
-                em.persist(entity)
-                em.flush()
-                throw new RuntimeException("force rollback")
+                root.addConceptName(entity)
+                em.flush() // The insert succeeds in the database transaction...
+                throw new RuntimeException("force rollback") // ...and then we roll back
             )
         )
-        assert(result.isLeft)
+        // Make sure we rolled back because of our exception and not because the flush failed
+        assertEquals(result.left.toOption.map(_.getMessage), Some("force rollback"))
         assert(events.isEmpty, s"Expected no events but got $events")
     }
 

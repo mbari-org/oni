@@ -31,6 +31,14 @@ import java.util.Optional;
  */
 public record ChangeEvent(Action action, DataType dataType, Object id) {
 
+    /**
+     * User accounts and preference nodes are not part of the concept knowledge base, so consumers interested in
+     * concept data (the cache, downstream apps) can ignore them.
+     */
+    public boolean affectsConceptData() {
+        return dataType != DataType.USER_ACCOUNT && dataType != DataType.PREFERENCE_NODE;
+    }
+
     public enum Action {
         CREATED,
         UPDATED,

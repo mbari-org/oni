@@ -23,6 +23,7 @@ object Dependencies {
     lazy val hikariCp                = "com.zaxxer"                     % "HikariCP"                   % "7.1.0"
     lazy val jansi                   = "org.fusesource.jansi"           % "jansi"                      % "2.4.3"
     lazy val jaspyt                  = "org.jasypt"                     % "jasypt"                     % "1.9.3"
+    lazy val jnats                   = "io.nats"                        % "jnats"                      % "2.25.2"
     lazy val junit                   = "junit"                          % "junit"                      % "4.13.2"
     lazy val logback                 = "ch.qos.logback"                 % "logback-classic"            % "1.6.5"
     lazy val mssqlserver             = "com.microsoft.sqlserver"        % "mssql-jdbc"                 % "13.6.0.jre11"

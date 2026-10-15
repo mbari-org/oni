@@ -18,6 +18,7 @@ package org.mbari.oni.config
 
 import com.typesafe.config.ConfigFactory
 import jakarta.persistence.EntityManagerFactory
+import org.mbari.oni.etc.nats.NatsConfig
 import org.mbari.oni.jpa.EntityManagerFactories
 
 /**
@@ -61,6 +62,21 @@ object AppConfig:
         user = Config.getString("database.user"),
         password = Config.getString("database.password")
     )
+
+    /** NATS is optional. If the settings are missing or invalid we log a warning and run without it. */
+    lazy val DefaultNatsConfig: Option[NatsConfig] =
+        try
+            Some(
+                NatsConfig(
+                    url = Config.getString("messaging.nats.url"),
+                    enable = Config.getBoolean("messaging.nats.enable"),
+                    topic = Config.getString("messaging.nats.topic")
+                )
+            )
+        catch
+            case e: Exception =>
+                System.getLogger(getClass.getName).log(System.Logger.Level.WARNING, "Failed to load NATS configuration", e)
+                None
 
     lazy val DefaultEntityManagerFactory: EntityManagerFactory =
         EntityManagerFactories("database")

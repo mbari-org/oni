@@ -100,6 +100,7 @@ lazy val oni = project
         hikariCp,
         jansi             % Runtime,
         jaspyt,
+        jnats,
         junit             % Test,
         logback,
         mssqlserver,
