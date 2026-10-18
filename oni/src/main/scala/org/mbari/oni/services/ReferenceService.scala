@@ -77,12 +77,12 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
                 )
             val entity = reference.toEntity
             entity.setId(null) // just in case. Hibernate requires that this is null for inserts
-            repo.create(entity)
             reference.concepts.foreach(name =>
                 conceptRepo.findByName(name).toScala match
                     case None          => throw new IllegalArgumentException(s"Concept with name '${name}' not found")
                     case Some(concept) => concept.getConceptMetadata.addReference(entity)
             )
+            repo.create(entity)
             Reference.from(entity)
         )
 
