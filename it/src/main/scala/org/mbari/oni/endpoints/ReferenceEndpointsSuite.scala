@@ -69,6 +69,33 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
         )
     }
 
+    test("create with concepts") {
+        val root        = init(4, 2)
+        val conceptName = root.getPrimaryConceptName.getName
+        val childName   = root.getChildConcepts.iterator().next().getPrimaryConceptName.getName
+        val dto         = Reference.from(TestEntityFactory.createReference()).copy(concepts = Seq(conceptName, childName))
+
+        runPost(
+            endpoints.createReferenceEndpointImpl,
+            "http://test.com/v1/references",
+            dto.stringify,
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val obtained = checkResponse[Reference](response.body)
+                assert(obtained.id.isDefined)
+                assertEquals(obtained.concepts.toSet, Set(conceptName, childName))
+            ,
+            jwt = jwtService.authorize(jwtService.apiKey)
+        )
+
+        // the links must be persisted, not just echoed back in the response
+        referenceService.findAll(10000, 0) match
+            case Right(refs) =>
+                assertEquals(refs.size, 1)
+                assertEquals(refs.head.concepts.toSet, Set(conceptName, childName))
+            case Left(error) => fail(error.toString)
+    }
+
     test("update") {
         val refs   = initRefs(1)
         val ref    = refs.head
