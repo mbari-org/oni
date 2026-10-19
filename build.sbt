@@ -7,7 +7,7 @@ ThisBuild / licenses         := Seq("Apache-2.0" -> uri("http://www.apache.org/l
 ThisBuild / organization     := "org.mbari"
 ThisBuild / organizationName := "Monterey Bay Aquarium Research Institute"
 // ThisBuild / resolvers ++= Seq(Resolver.githubPackages("mbari-org", "maven"))
-ThisBuild / scalaVersion     := "3.9.0"
+ThisBuild / scalaVersion     := "3.10.0"
 // Pipelining is disabled: sbt 2.x downstream projects compile against the upstream
 // early-output JAR, which contains Scala pickles only -- javac output is not in it.
 // Every module here that has downstream consumers (oni, it) has Java sources, so
