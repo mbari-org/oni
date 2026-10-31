@@ -177,6 +177,8 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                             linkRealization
                         )
                         linkRealization.getConceptMetadata.addHistory(history)
+                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
+                        entityManager.flush()
                         ExtendedLink.from(linkRealization)
                     case None                  => throw LinkRealizationIdNotFound(id)
             )

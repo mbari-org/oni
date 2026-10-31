@@ -25,6 +25,7 @@ import scala.jdk.CollectionConverters.*
 trait LinkRealizationServiceSuite extends DataInitializer with UserAuthMixin:
 
     lazy val linkRealizationService: LinkRealizationService = new LinkRealizationService(entityManagerFactory)
+    lazy val historyService: HistoryService                 = new HistoryService(entityManagerFactory)
 
     test("findById") {
         val root = init(3, 4)
@@ -93,6 +94,13 @@ trait LinkRealizationServiceSuite extends DataInitializer with UserAuthMixin:
                 assertEquals(obtained.toConcept, linkCreate.toConcept)
                 assert(obtained.id.isDefined)
             case Left(error)         => fail(error.toString)
+
+        historyService.findByConceptName(root.getPrimaryConceptName.getName) match
+            case Right(histories) =>
+                val linkHistories = histories.filter(_.field == "LinkRealization")
+                assert(linkHistories.nonEmpty)
+                assert(linkHistories.forall(_.approved))
+            case Left(error)      => fail(error.toString)
     }
 
     test("updateById") {
@@ -114,6 +122,14 @@ trait LinkRealizationServiceSuite extends DataInitializer with UserAuthMixin:
                     assert(obtained.id.isDefined)
                     assertEquals(obtained.id.get, linkRealizations.getId.longValue())
                 case Left(error)     => fail(error.toString)
+
+            val conceptName = linkRealizations.getConceptMetadata.getConcept.getPrimaryConceptName.getName
+            historyService.findByConceptName(conceptName) match
+                case Right(histories) =>
+                    val linkHistories = histories.filter(_.field == "LinkRealization")
+                    assert(linkHistories.nonEmpty)
+                    assert(linkHistories.forall(_.approved))
+                case Left(error)      => fail(error.toString)
     }
 
     test("countByToConcept") {
