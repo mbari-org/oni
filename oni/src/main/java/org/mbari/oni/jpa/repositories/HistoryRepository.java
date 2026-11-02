@@ -17,6 +17,13 @@
 package org.mbari.oni.jpa.repositories;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Predicate;
+import org.mbari.oni.domain.ConceptNameTypes;
+import org.mbari.oni.jpa.entities.ConceptEntity;
+import org.mbari.oni.jpa.entities.ConceptMetadataEntity;
+import org.mbari.oni.jpa.entities.ConceptNameEntity;
 import org.mbari.oni.jpa.entities.HistoryEntity;
 
 import java.util.ArrayList;
@@ -57,16 +64,7 @@ public class HistoryRepository extends Repository {
     }
 
     public List<HistoryEntity> findPendingHistories(int limit, int offset, String sort, boolean ascending) {
-        var criteriaBuilder = entityManager.getCriteriaBuilder();
-        var criteriaQuery = criteriaBuilder.createQuery(HistoryEntity.class);
-        var root = criteriaQuery.from(HistoryEntity.class);
-        criteriaQuery.select(root)
-            .where(criteriaBuilder.isNull(root.get("processedDate")))
-            .orderBy(ascending ? criteriaBuilder.asc(root.get(sort)) : criteriaBuilder.desc(root.get(sort)));
-        var query = entityManager.createQuery(criteriaQuery);
-        query.setFirstResult(offset);
-        query.setMaxResults(limit);
-        return new ArrayList<>(query.getResultList());
+        return findHistories(limit, offset, sort, ascending, false);
     }
 
     public List<HistoryEntity> findApprovedHistories(int limit, int offset) {
@@ -74,12 +72,41 @@ public class HistoryRepository extends Repository {
     }
 
     public List<HistoryEntity> findApprovedHistories(int limit, int offset, String sort, boolean ascending) {
+        return findHistories(limit, offset, sort, ascending, true);
+    }
+
+    private List<HistoryEntity> findHistories(int limit, int offset, String sort, boolean ascending, boolean approved) {
         var criteriaBuilder = entityManager.getCriteriaBuilder();
         var criteriaQuery = criteriaBuilder.createQuery(HistoryEntity.class);
         var root = criteriaQuery.from(HistoryEntity.class);
-        criteriaQuery.select(root)
-            .where(criteriaBuilder.equal(root.get("approved"), 1))
-            .orderBy(ascending ? criteriaBuilder.asc(root.get(sort)) : criteriaBuilder.desc(root.get(sort)));
+
+        Predicate statusPredicate = approved
+                ? criteriaBuilder.equal(root.get("approved"), 1)
+                : criteriaBuilder.isNull(root.get("processedDate"));
+
+        if ("concept".equals(sort)) {
+            Join<HistoryEntity, ConceptMetadataEntity> conceptMetadata = root.join("conceptMetadata");
+            Join<ConceptMetadataEntity, ConceptEntity> concept = conceptMetadata.join("concept");
+            Join<ConceptEntity, ConceptNameEntity> conceptName = concept.join("conceptNames");
+            Predicate primaryName = criteriaBuilder.equal(
+                    criteriaBuilder.lower(conceptName.get("nameType")),
+                    ConceptNameTypes.PRIMARY.getType()
+            );
+            Order order = ascending
+                    ? criteriaBuilder.asc(conceptName.get("name"))
+                    : criteriaBuilder.desc(conceptName.get("name"));
+            criteriaQuery.select(root)
+                    .where(criteriaBuilder.and(statusPredicate, primaryName))
+                    .orderBy(order);
+        } else {
+            Order order = ascending
+                    ? criteriaBuilder.asc(root.get(sort))
+                    : criteriaBuilder.desc(root.get(sort));
+            criteriaQuery.select(root)
+                    .where(statusPredicate)
+                    .orderBy(order);
+        }
+
         var query = entityManager.createQuery(criteriaQuery);
         query.setFirstResult(offset);
         query.setMaxResults(limit);
