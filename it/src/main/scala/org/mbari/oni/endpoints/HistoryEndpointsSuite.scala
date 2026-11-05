@@ -149,6 +149,33 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
+    test("approved (sort by concept)") {
+        init(3, 5)
+        runGet(
+            endpoints.approvedEndpointsImpl,
+            "http://test.com/v1/history/approved?sort=concept,desc",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                assert(histories.content.nonEmpty)
+                val obtained  = histories.content.map(_.concept)
+                val expected  = obtained.sortBy(_.toLowerCase)(Ordering[String]).reverse
+                assertEquals(obtained, expected)
+        )
+
+        runGet(
+            endpoints.approvedEndpointsImpl,
+            "http://test.com/v1/history/approved?sort=concept",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                assert(histories.content.nonEmpty)
+                val obtained  = histories.content.map(_.concept)
+                val expected  = obtained.sortBy(_.toLowerCase)(Ordering[String])
+                assertEquals(obtained, expected)
+        )
+    }
+
     test("approvedCount") {
         init(3, 5)
         runGet(
