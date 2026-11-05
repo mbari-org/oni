@@ -16,7 +16,9 @@
 
 package org.mbari.oni.endpoints
 
+import io.circe.parser.decode
 import org.mbari.oni.domain.{
+    BadRequest,
     ConceptNameCreate,
     ConceptNameTypes,
     Count,
@@ -175,6 +177,123 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 assertEquals(obtained, expected)
         )
     }
+
+    // ---- Exhaustive sort tests --------------------------------------------------------------
+    // Compare only the sort keys (not whole objects) so ties in the key can't cause flaky failures.
+    // Optional keys are flattened because SQL Server and Postgres order NULLs differently.
+
+    final private case class SortField[K](name: String, key: ExtendedHistory => Option[K])(using
+        val ordering: Ordering[K]
+    )
+
+    private val stringKey: (ExtendedHistory => Option[String]) => ExtendedHistory => Option[String] =
+        f => h => f(h).map(_.toLowerCase)
+
+    private val pendingSortFields: Seq[SortField[?]] = Seq(
+        SortField[Long]("creationTimestamp", h => Some(h.creationTimestamp.toEpochMilli)),
+        SortField[String]("creatorName", stringKey(h => Some(h.creatorName))),
+        SortField[String]("oldValue", stringKey(_.oldValue)),
+        SortField[String]("newValue", stringKey(_.newValue)),
+        SortField[String]("concept", stringKey(h => Some(h.concept)))
+    )
+
+    private val approvedSortFields: Seq[SortField[?]] = pendingSortFields ++ Seq(
+        SortField[Long]("processedTimestamp", _.processedTimestamp.map(_.toEpochMilli)),
+        SortField[String]("processorName", stringKey(_.processorName))
+    )
+
+    // (query suffix, descending?)
+    private val directions = Seq(
+        ""      -> false, // no direction => ascending
+        ",asc"  -> false,
+        ",desc" -> true,
+        ",DESC" -> true   // direction is case-insensitive
+    )
+
+    private def assertSortedBy[K](histories: Seq[ExtendedHistory], field: SortField[K], descending: Boolean): Unit =
+        val obtained = histories.flatMap(field.key)
+        val ord      = if descending then field.ordering.reverse else field.ordering
+        assertEquals(obtained, obtained.sorted(using ord), s"Not sorted by ${field.name} (descending=$descending)")
+
+    for
+        (label, path, endpointImpl, fields) <- Seq(
+                                                   (
+                                                       "pending",
+                                                       "pending",
+                                                       () => endpoints.pendingEndpointImpl,
+                                                       pendingSortFields
+                                                   ),
+                                                   (
+                                                       "approved",
+                                                       "approved",
+                                                       () => endpoints.approvedEndpointsImpl,
+                                                       approvedSortFields
+                                                   )
+                                               )
+        field                               <- fields
+        (suffix, descending)                <- directions
+    do
+        test(s"$label (sort=${field.name}$suffix)") {
+            init(3, 5)
+            runGet(
+                endpointImpl(),
+                s"http://test.com/v1/history/$path?sort=${field.name}$suffix",
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                    assert(histories.content.nonEmpty)
+                    assertSortedBy(histories.content, field, descending)
+            )
+        }
+
+    for (label, path, endpointImpl) <- Seq(
+                                           ("pending", "pending", () => endpoints.pendingEndpointImpl),
+                                           ("approved", "approved", () => endpoints.approvedEndpointsImpl)
+                                       )
+    do
+        test(s"$label (no sort param defaults to creationTimestamp asc)") {
+            init(3, 5)
+            runGet(
+                endpointImpl(),
+                s"http://test.com/v1/history/$path",
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                    assert(histories.content.nonEmpty)
+                    assertSortedBy(histories.content, pendingSortFields.head, descending = false)
+            )
+        }
+
+        test(s"$label (invalid sort field returns 400 Bad Request)") {
+            init(3, 5)
+            for (sort, field) <- Seq("notAField" -> "notAField", "notAField,desc" -> "notAField", "" -> "")
+            do
+                runGet(
+                    endpointImpl(),
+                    s"http://test.com/v1/history/$path?sort=$sort",
+                    response =>
+                        assertEquals(response.code, StatusCode.BadRequest, s"sort='$sort'")
+                        response.body match
+                            case Left(json) =>
+                                val error = decode[BadRequest](json).fold(e => fail(e.getMessage), identity)
+                                assertEquals(error.message, s"`$field` is not a valid sort field")
+                            case Right(_)   => fail(s"Expected an error body for sort='$sort'")
+                )
+        }
+
+        test(s"$label (invalid sort direction falls back to default sort)") {
+            init(3, 5)
+            runGet(
+                endpointImpl(),
+                s"http://test.com/v1/history/$path?sort=creatorName,sideways",
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val histories = checkResponse[Page[Seq[ExtendedHistory]]](response.body)
+                    assert(histories.content.nonEmpty)
+                    // Sort.fromString returns None for an unknown direction, so the default sort is applied
+                    assertSortedBy(histories.content, pendingSortFields.head, descending = false)
+            )
+        }
 
     test("approvedCount") {
         init(3, 5)

@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import io.circe.Printer
-import org.mbari.oni.ConceptNotFoundException
+import org.mbari.oni.{BadRequestException, ConceptNotFoundException}
 import org.mbari.oni.config.AppConfig
 import org.mbari.oni.domain.*
 import org.mbari.oni.etc.circe.CirceCodecs
@@ -132,6 +132,7 @@ trait Endpoints:
         f match
             case Right(concept)                    => Right(concept)
             case Left(c: ConceptNotFoundException) => Left(NotFound(c.getMessage))
+            case Left(b: BadRequestException)      => Left(BadRequest(b.getMessage))
             case Left(e)                           =>
                 log.atError.withCause(e).log("Error")
                 Left(ServerError(e.getMessage))

@@ -24,6 +24,7 @@ sealed trait OniException extends Throwable
 trait NotFoundException        extends OniException
 trait AccessException          extends OniException
 trait ConceptNotFoundException extends NotFoundException
+trait BadRequestException      extends OniException
 
 case class AccessDenied(user: String)
     extends Exception(s"I'm sorry `$user`, I can not let you do that.")
@@ -43,6 +44,9 @@ case class HistoryHasBeenPreviouslyProcessed(id: Long)
     extends Exception(s"History with id `$id` has already been processed")
     with OniException
 case class HistoryIsInvalid(msg: String)                   extends Exception(msg) with OniException
+case class InvalidSortField(field: String, cause: Throwable)
+    extends Exception(s"`$field` is not a valid sort field", cause)
+    with BadRequestException
 case class ItemNotFound(msg: String)                       extends Exception(msg) with NotFoundException
 case class LinkRealizationIdNotFound(id: Long)
     extends Exception(s"LinkRealization with `$id` was not found")

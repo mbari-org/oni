@@ -17,7 +17,8 @@
 package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.ItemNotFound
+import org.hibernate.query.sqm.PathElementException
+import org.mbari.oni.{InvalidSortField, ItemNotFound}
 import org.mbari.oni.domain.{ExtendedHistory, Sort}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.HistoryEntity
@@ -50,7 +51,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
         val sortColumn = actualSort.field
         val direction  = actualSort.direction == Sort.Direction.Ascending
 
-        entityManagerFactory.readOnlyTransaction(entityManager =>
+        val attempt = entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
 
             // Java entities
@@ -67,6 +68,8 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                 )
         )
 
+        attempt.left.map(HistoryService.translateSortError(sort, sortColumn))
+
     def findAllApproved(
         limit: Int = 100,
         offset: Int = 0,
@@ -77,7 +80,7 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
         val sortColumn = actualSort.field
         val direction  = actualSort.direction == Sort.Direction.Ascending
 
-        entityManagerFactory.readOnlyTransaction(entityManager =>
+        val attempt = entityManagerFactory.readOnlyTransaction(entityManager =>
             val repo = HistoryRepository(entityManager)
 
             // Java entities
@@ -93,8 +96,9 @@ class HistoryService(entityManagerFactory: EntityManagerFactory):
                     val concept = Try(h.getConceptMetadata().getConcept().getName()).getOrElse("")
                     ExtendedHistory.from(concept, h)
                 ) // TRY because of the potential for nulls during development
-
         )
+
+        attempt.left.map(HistoryService.translateSortError(sort, sortColumn))
 
     def findById(id: Long): Either[Throwable, ExtendedHistory] =
         entityManagerFactory.readOnlyTransaction(entityManager =>
@@ -148,3 +152,18 @@ object HistoryService:
 
     def normalizeSort(sort: Option[Sort]): Option[Sort] =
         sort.map(s => s.copy(field = normalizeSortField(s.field)))
+
+    /**
+     * Hibernate throws a PathElementException when the requested sort field is not an attribute of HistoryEntity. That
+     * is a client error (bad `sort` query param), so convert it to an InvalidSortField, which the endpoints map to a 400.
+     * Any other error is passed through unchanged.
+     *
+     * @param sort
+     *   the sort requested by the client (used for the error message so it reports what the client sent)
+     * @param sortColumn
+     *   the normalized column actually used in the query
+     */
+    def translateSortError(sort: Option[Sort], sortColumn: String)(e: Throwable): Throwable =
+        e match
+            case p: PathElementException => InvalidSortField(sort.map(_.field).getOrElse(sortColumn), p)
+            case other                   => other
