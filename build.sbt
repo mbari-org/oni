@@ -2,6 +2,9 @@ import Dependencies._
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
+// Mitigation for CVE-2026-114938 (Java4Shell): disable the vulnerable Base64 intrinsic
+Universal / javaOptions += "-J-XX:-UseBASE64Intrinsics"
+
 ThisBuild / javacOptions ++= Seq("-target", "25", "-source", "25")
 ThisBuild / licenses         := Seq("Apache-2.0" -> uri("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / organization     := "org.mbari"
