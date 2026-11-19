@@ -17,15 +17,15 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{
-  Count,
-  ExtendedLink,
-  ILink,
-  LinkCreate,
-  LinkRenameToConceptRequest,
-  LinkRenameToConceptResponse,
-  LinkUpdate,
-  Page,
-  UserAccountRoles
+    Count,
+    ExtendedLink,
+    ILink,
+    LinkCreate,
+    LinkRenameToConceptRequest,
+    LinkRenameToConceptResponse,
+    LinkUpdate,
+    Page,
+    UserAccountRoles
 }
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings

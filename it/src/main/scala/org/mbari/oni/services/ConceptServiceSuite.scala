@@ -309,11 +309,12 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         val attempt = runWithUserAuth(user =>
             for
                 _            <- conceptService.init(root)
-                updatedChild <- conceptService.updateById(
-                                    child.getId,
-                                    ConceptUpdate(rankLevel = Some("sub"), rankName = Some("genus"), aphiaId = Some(4321)),
-                                    user.username
-                                )
+                updatedChild <-
+                    conceptService.updateById(
+                        child.getId,
+                        ConceptUpdate(rankLevel = Some("sub"), rankName = Some("genus"), aphiaId = Some(4321)),
+                        user.username
+                    )
             yield updatedChild
         )
 
@@ -552,7 +553,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         )
 
         attempt match
-            case Left(e)                  => fail(e.toString)
+            case Left(e)              => fail(e.toString)
             case Right((n, userName)) =>
                 assertEquals(n, 0)
                 // Concept must still exist
@@ -651,7 +652,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
     }
 
     test("update (maintainer may blank a rank that is already empty)") {
-        val root = TestEntityFactory.buildRoot(2)
+        val root    = TestEntityFactory.buildRoot(2)
         root.setRankName(null)
         root.setRankLevel(null)
         val attempt = runWithUserAuth(

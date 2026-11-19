@@ -26,7 +26,7 @@ import java.util.concurrent.{LinkedBlockingQueue, TimeUnit}
 import scala.jdk.CollectionConverters.*
 import scala.util.Try
 import scala.util.control.NonFatal
- 
+
 /**
  * Publishes NatsMessages to a NATS topic. Messages are queued and sent from a daemon thread so that a slow or
  * unavailable NATS server never blocks the thread that committed a database transaction. Messages that arrive close

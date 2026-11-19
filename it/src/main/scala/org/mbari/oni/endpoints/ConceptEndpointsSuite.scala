@@ -661,7 +661,12 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
             runPost(
                 endpoints.createEndpointImpl,
                 "http://test.com/v1/concept",
-                ConceptCreate(name, Some(root.getName), rankLevel = Some("bogus"), rankName = Some("notarank")).stringify,
+                ConceptCreate(
+                    name,
+                    Some(root.getName),
+                    rankLevel = Some("bogus"),
+                    rankName = Some("notarank")
+                ).stringify,
                 response => assertEquals(response.code, StatusCode.BadRequest),
                 jwt = jwt
             )

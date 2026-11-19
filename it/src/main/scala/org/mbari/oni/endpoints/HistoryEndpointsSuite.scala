@@ -626,16 +626,22 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with End
         // The token still claims role=Admin, but the database says Maint. The database must win.
         val history  = pendingHistory()
         val password = Strings.random(12)
-        val entity   = org.mbari.oni.jpa.entities.TestEntityFactory
+        val entity   = org
+            .mbari
+            .oni
+            .jpa
+            .entities
+            .TestEntityFactory
             .createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName, password)
 
         userAccountService.create(org.mbari.oni.domain.UserAccount.from(entity)) match
             case Left(error) => fail(error.toString)
             case Right(user) =>
                 try
-                    val jwt = jwtService.login(user.username, password, user.toEntity)
+                    val jwt    = jwtService.login(user.username, password, user.toEntity)
                     assert(jwt.isDefined)
-                    val demote = org.mbari.oni.domain.UserAccountUpdate(role = Some(UserAccountRoles.MAINTENANCE.getRoleName))
+                    val demote =
+                        org.mbari.oni.domain.UserAccountUpdate(role = Some(UserAccountRoles.MAINTENANCE.getRoleName))
                     assert(userAccountService.update(user.username, demote).isRight)
                     runDelete(
                         endpoints.deleteEndpointImpl,

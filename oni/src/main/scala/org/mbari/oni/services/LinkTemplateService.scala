@@ -230,17 +230,20 @@ class LinkTemplateService(entityManagerFactory: EntityManagerFactory):
         userName: String
     ): Either[Throwable, LinkRenameToConceptResponse] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, LinkRenameToConceptResponse] =
-            entityManagerFactory.transaction(entityManager =>
-                val query = entityManager.createNamedQuery("LinkTemplate.updateToConcept")
-                query.setParameter(1, newConcept)
-                query.setParameter(2, oldConcept)
-                val n     = query.executeUpdate()
-                LinkRenameToConceptResponse(oldConcept, newConcept, n)
-            ).map(response =>
-                // Native bulk updates skip Hibernate's entity lifecycle, so notify explicitly (after commit)
-                if response.count > 0 then ChangeBus.publish(ChangeEvent.Action.UPDATED, ChangeEvent.DataType.LINK_TEMPLATE, null)
-                response
-            )
+            entityManagerFactory
+                .transaction(entityManager =>
+                    val query = entityManager.createNamedQuery("LinkTemplate.updateToConcept")
+                    query.setParameter(1, newConcept)
+                    query.setParameter(2, oldConcept)
+                    val n     = query.executeUpdate()
+                    LinkRenameToConceptResponse(oldConcept, newConcept, n)
+                )
+                .map(response =>
+                    // Native bulk updates skip Hibernate's entity lifecycle, so notify explicitly (after commit)
+                    if response.count > 0 then
+                        ChangeBus.publish(ChangeEvent.Action.UPDATED, ChangeEvent.DataType.LINK_TEMPLATE, null)
+                    response
+                )
 
         for
             user     <- userAccountService.verifyWriteAccess(Option(userName))

@@ -16,14 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{
-  ConceptNameCreate,
-  ConceptNameTypes,
-  ConceptNameUpdate,
-  Page,
-  RawConcept,
-  UserAccountRoles
-}
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, Page, RawConcept, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService

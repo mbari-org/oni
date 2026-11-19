@@ -75,7 +75,9 @@ object AppConfig:
             )
         catch
             case e: Exception =>
-                System.getLogger(getClass.getName).log(System.Logger.Level.WARNING, "Failed to load NATS configuration", e)
+                System
+                    .getLogger(getClass.getName)
+                    .log(System.Logger.Level.WARNING, "Failed to load NATS configuration", e)
                 None
 
     lazy val DefaultEntityManagerFactory: EntityManagerFactory =

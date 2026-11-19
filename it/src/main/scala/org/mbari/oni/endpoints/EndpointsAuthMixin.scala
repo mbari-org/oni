@@ -33,10 +33,10 @@ trait EndpointsAuthMixin extends UserAuthMixin:
     /**
      * Create a temporary user with the given role, run `f` with a JWT for that user, then delete the user.
      *
-     * `JwtService.login` only issues tokens to administrators and maintainers. To get a token for a READONLY user
-     * the user is logged in as a maintainer and then demoted. This mirrors a real scenario (a user demoted while
-     * holding a still-valid token) and makes sure the request reaches the service-layer access checks instead of
-     * being rejected for a missing token.
+     * `JwtService.login` only issues tokens to administrators and maintainers. To get a token for a READONLY user the
+     * user is logged in as a maintainer and then demoted. This mirrors a real scenario (a user demoted while holding a
+     * still-valid token) and makes sure the request reaches the service-layer access checks instead of being rejected
+     * for a missing token.
      */
     def withRole(role: UserAccountRoles)(f: Option[String] => Unit): Unit =
         val password  = Strings.random(12)

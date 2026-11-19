@@ -66,7 +66,8 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
     private lazy val subscriber =
         val nc         = Nats.connect(natsUrl)
         val dispatcher = nc.createDispatcher(msg =>
-            io.circe.parser
+            io.circe
+                .parser
                 .decode[NatsMessage](new String(msg.getData, StandardCharsets.UTF_8))
                 .foreach(m => received.add(m))
         )
@@ -111,7 +112,10 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
             case Left(e)  => fail(e.toString)
             case Right(_) =>
                 val msg = awaitMessage(m => m.action == "CREATED" && m.dataType == "CONCEPT_NAME")
-                assert(msg.exists(_.id.isDefined), s"No CREATED CONCEPT_NAME message with an id. Got: ${received.asScala}")
+                assert(
+                    msg.exists(_.id.isDefined),
+                    s"No CREATED CONCEPT_NAME message with an id. Got: ${received.asScala}"
+                )
     }
 
     test("a rolled back transaction sends nothing to NATS") {
@@ -139,7 +143,8 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
 
     test("a bulk link rename (which bypasses Hibernate) reaches NATS") {
         val root                = init(3, 10)
-        val allLinkRealizations = root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
+        val allLinkRealizations =
+            root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
         settle()
         val request             = LinkRenameToConceptRequest(allLinkRealizations.head.getToConcept, Strings.random(10))
         runWithUserAuth(user => linkRealizationService.renameToConcept(request.old, request.`new`, user.username)) match

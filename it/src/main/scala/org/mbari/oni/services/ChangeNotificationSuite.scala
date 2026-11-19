@@ -16,11 +16,7 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{
-  ConceptNameCreate,
-  ConceptNameTypes,
-  LinkRenameToConceptRequest
-}
+import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, LinkRenameToConceptRequest}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jpa.ChangeEvent.{Action, DataType}
 import org.mbari.oni.jpa.EntityManagerFactories.*
@@ -37,9 +33,9 @@ import scala.jdk.CollectionConverters.*
  */
 trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
 
-    lazy val conceptNameService: ConceptNameService                 = new ConceptNameService(entityManagerFactory)
-    lazy val linkTemplateService: LinkTemplateService               = new LinkTemplateService(entityManagerFactory)
-    lazy val linkRealizationService: LinkRealizationService         = new LinkRealizationService(entityManagerFactory)
+    lazy val conceptNameService: ConceptNameService         = new ConceptNameService(entityManagerFactory)
+    lazy val linkTemplateService: LinkTemplateService       = new LinkTemplateService(entityManagerFactory)
+    lazy val linkRealizationService: LinkRealizationService = new LinkRealizationService(entityManagerFactory)
 
     /** Runs fn and returns the events published on the ChangeBus while it ran. */
     private def capture[T](fn: => T): (T, Seq[ChangeEvent]) =
@@ -75,8 +71,8 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("read-only transactions publish nothing") {
-        val root             = init(2, 2)
-        val (_, events)      = capture(conceptService.findByName(root.getPrimaryConceptName.getName))
+        val root        = init(2, 2)
+        val (_, events) = capture(conceptService.findByName(root.getPrimaryConceptName.getName))
         assert(events.isEmpty, s"Expected no events but got $events")
     }
 
@@ -85,8 +81,8 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
         val name  = root.getPrimaryConceptName.getName
         val cache = new ConceptCache(conceptService, conceptNameService)
         try
-            val before = cache.findByName(name).toOption.get
-            val names0 = cache.findAllNames(1000000, 0).toOption.get
+            val before  = cache.findByName(name).toOption.get
+            val names0  = cache.findAllNames(1000000, 0).toOption.get
             val synonym = Strings.random(12)
             val dto     = ConceptNameCreate(name, synonym, ConceptNameTypes.SYNONYM.getType)
             runWithUserAuth(user => conceptNameService.addName(dto, user.username)) match
@@ -96,14 +92,18 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
                     val after = cache.findByName(name).toOption.get
                     assert(after.alternateNames.contains(synonym), "findByName served a stale entry")
                     assert(!before.alternateNames.contains(synonym))
-                    assert(cache.findAllNames(1000000, 0).toOption.get.contains(synonym), "findAllNames served a stale entry")
+                    assert(
+                        cache.findAllNames(1000000, 0).toOption.get.contains(synonym),
+                        "findAllNames served a stale entry"
+                    )
                     assert(!names0.contains(synonym))
         finally cache.close()
     }
 
     test("LinkRealizationService.renameToConcept publishes an explicit event") {
         val root                = init(3, 10)
-        val allLinkRealizations = root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
+        val allLinkRealizations =
+            root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
         val request             = LinkRenameToConceptRequest(allLinkRealizations.head.getToConcept, Strings.random(10))
         val (attempt, events)   = capture(
             runWithUserAuth(user => linkRealizationService.renameToConcept(request.old, request.`new`, user.username))
@@ -114,8 +114,8 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("LinkRealizationService.renameToConcept clears the ConceptCache") {
-        val root                = init(3, 10)
-        val cache               = new ConceptCache(conceptService, conceptNameService)
+        val root  = init(3, 10)
+        val cache = new ConceptCache(conceptService, conceptNameService)
         try
             val withLinks = root.getDescendants.asScala.filter(!_.getConceptMetadata.getLinkRealizations.isEmpty).head
             val name      = withLinks.getPrimaryConceptName.getName
@@ -131,10 +131,10 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
     }
 
     test("LinkTemplateService.renameToConcept publishes an explicit event") {
-        val root                = init(3, 10)
-        val allLinkTemplates    = root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkTemplates.asScala).toSeq
-        val request             = LinkRenameToConceptRequest(allLinkTemplates.head.getToConcept, Strings.random(10))
-        val (attempt, events)   = capture(
+        val root              = init(3, 10)
+        val allLinkTemplates  = root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkTemplates.asScala).toSeq
+        val request           = LinkRenameToConceptRequest(allLinkTemplates.head.getToConcept, Strings.random(10))
+        val (attempt, events) = capture(
             runWithUserAuth(user => linkTemplateService.renameToConcept(request.old, request.`new`, user.username))
         )
         assert(attempt.exists(_.count > 0))

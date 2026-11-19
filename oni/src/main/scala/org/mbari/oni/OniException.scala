@@ -46,11 +46,11 @@ case class ConceptNameNotFound(name: String)
 case class ConceptNameIdNotFound(id: Long)
     extends Exception(s"Concept name with id `$id` was not found")
     with ConceptNotFoundException
-case class InvalidConceptNameChange(msg: String) extends Exception(msg) with BadRequestException
-case class InvalidConceptChange(msg: String)     extends Exception(msg) with BadRequestException
-case class InvalidRank(msg: String)              extends Exception(msg) with BadRequestException
-case class ConceptIdNotFound(id: Long) 
-    extends Exception(s"Concept with id `$id` was not found") 
+case class InvalidConceptNameChange(msg: String)           extends Exception(msg) with BadRequestException
+case class InvalidConceptChange(msg: String)               extends Exception(msg) with BadRequestException
+case class InvalidRank(msg: String)                        extends Exception(msg) with BadRequestException
+case class ConceptIdNotFound(id: Long)
+    extends Exception(s"Concept with id `$id` was not found")
     with ConceptNotFoundException
 case class HistoryHasBeenPreviouslyProcessed(id: Long)
     extends Exception(s"History with id `$id` has already been processed")

@@ -155,8 +155,8 @@ object HistoryService:
 
     /**
      * Hibernate throws a PathElementException when the requested sort field is not an attribute of HistoryEntity. That
-     * is a client error (bad `sort` query param), so convert it to an InvalidSortField, which the endpoints map to a 400.
-     * Any other error is passed through unchanged.
+     * is a client error (bad `sort` query param), so convert it to an InvalidSortField, which the endpoints map to a
+     * 400. Any other error is passed through unchanged.
      *
      * @param sort
      *   the sort requested by the client (used for the error message so it reports what the client sent)

@@ -69,9 +69,7 @@ class ConceptCache(conceptService: ConceptService, conceptNameService: ConceptNa
                     Right(names.slice(offset, offset + limit))
 
     // Clear whenever data is committed that could change what we cache. Events are only published after commit.
-    private val unsubscribe: Runnable = ChangeBus.subscribe(event =>
-        if event.affectsConceptData() then clear()
-    )
+    private val unsubscribe: Runnable = ChangeBus.subscribe(event => if event.affectsConceptData() then clear())
 
     def clear(): Unit =
         nameCache.invalidateAll()

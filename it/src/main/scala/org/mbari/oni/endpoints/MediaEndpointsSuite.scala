@@ -16,13 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{
-  Media,
-  MediaCreate,
-  MediaTypes,
-  MediaUpdate,
-  UserAccountRoles
-}
+import org.mbari.oni.domain.{Media, MediaCreate, MediaTypes, MediaUpdate, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService

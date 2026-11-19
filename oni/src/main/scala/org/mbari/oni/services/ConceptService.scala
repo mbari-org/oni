@@ -20,9 +20,27 @@ import jakarta.persistence.{EntityManager, EntityManagerFactory}
 import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
+import org.mbari.oni.jpa.entities.{
+    ConceptEntity,
+    ConceptNameEntity,
+    HistoryEntity,
+    HistoryEntityFactory,
+    UserAccountEntity
+}
 import org.mbari.oni.jpa.repositories.ConceptRepository
-import org.mbari.oni.{AccessDenied, AdministratorRequired, ChildConceptNotFound, ConceptIdNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, HistoryIsInvalid, InvalidConceptChange, MissingRootConcept, ParentConceptNotFound, RootAlreadyExists}
+import org.mbari.oni.{
+    AccessDenied,
+    AdministratorRequired,
+    ChildConceptNotFound,
+    ConceptIdNotFound,
+    ConceptNameAlreadyExists,
+    ConceptNameNotFound,
+    HistoryIsInvalid,
+    InvalidConceptChange,
+    MissingRootConcept,
+    ParentConceptNotFound,
+    RootAlreadyExists
+}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -194,8 +212,6 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
                 case Some(c) => fn(c, repo)
         )
 
-
-
     /**
      * Handles a query by name. This is a common pattern in this service.
      *
@@ -287,15 +303,14 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             c       <- findByName(conceptCreate.name)
         yield c
 
-
     def updateByName(name: String, conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
-        val lookupConcept = (repo: ConceptRepository) => repo.findByName(name).toScala.toRight(ConceptNameNotFound(name))
+        val lookupConcept = (repo: ConceptRepository) =>
+            repo.findByName(name).toScala.toRight(ConceptNameNotFound(name))
         update(lookupConcept, conceptUpdate, userName)
 
     def updateById(id: Long, conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
         val lookupConcept = (repo: ConceptRepository) => repo.findById(id).toScala.toRight(ConceptIdNotFound(id))
         update(lookupConcept, conceptUpdate, userName)
-
 
     /**
      * Update a concept. This service does not check the users access credentials, that is done by the web service
@@ -305,7 +320,11 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
      * @return
      *   The updated concept or an exception if any errors occur
      */
-    def update(lookupConcept: ConceptRepository => Either[Throwable, ConceptEntity], conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
+    def update(
+        lookupConcept: ConceptRepository => Either[Throwable, ConceptEntity],
+        conceptUpdate: ConceptUpdate,
+        userName: String
+    ): Either[Throwable, ConceptMetadata] =
 
         // -- Helper function to update the parent concept
         def updateParent(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, parentName: Option[String])(using
@@ -410,8 +429,6 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
                 if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
             )
 
-
-
         // -- Helper function to update the aphia id
         def updateAphiaId(conceptEntity: ConceptEntity, aphiaId: Option[Long])(using repo: ConceptRepository): Unit =
             aphiaId.foreach(v =>
@@ -430,7 +447,7 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             entityManagerFactory.transaction(entityManager =>
                 given repo: ConceptRepository = new ConceptRepository(entityManager)
                 lookupConcept.apply(repo) match
-                    case Left(error) => throw error
+                    case Left(error)          => throw error
                     case Right(conceptEntity) =>
                         updateParent(userEntity, conceptEntity, conceptUpdate.parentName)
                         updateRank(userEntity, conceptEntity, conceptUpdate.rankLevel, conceptUpdate.rankName)
@@ -443,7 +460,6 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             user    <- userAccountService.verifyWriteAccess(Option(userName))
             concept <- txn(user.toEntity)
         yield concept
-
 
     def deleteById(id: Long, userName: String): Either[Throwable, Int] =
         val lookupConcept = (repo: ConceptRepository) => repo.findById(id).toScala.toRight(ConceptIdNotFound(id))
@@ -482,7 +498,7 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             entityManagerFactory.transaction(entityManager =>
                 val repo = new ConceptRepository(entityManager)
                 lookupConcept(repo) match
-                    case Left(error)   => throw error
+                    case Left(error)    => throw error
                     case Right(concept) =>
                         val history = HistoryEntityFactory.delete(userEntity, concept)
 
@@ -621,4 +637,3 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
                 Right(true)
             else Left(HistoryIsInvalid(s"History does not contain a valid rank: $oldRank"))
         else Left(HistoryIsInvalid("History is not a replace rank history"))
-
