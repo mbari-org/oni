@@ -16,9 +16,9 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept, UserAccountRoles}
 import org.mbari.oni.jpa.DatabaseFunSuite
-import org.mbari.oni.jpa.entities.TestEntityFactory
+import org.mbari.oni.jpa.entities.{HistoryEntity, TestEntityFactory}
 
 import scala.concurrent.duration.Duration
 import scala.jdk.CollectionConverters.*
@@ -97,6 +97,26 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             assertEquals(found.rankLevel, Option(greatGrandChild.getRankLevel))
             assertEquals(found.rankName, Option(greatGrandChild.getRankName))
 
+    }
+
+    test("findById") {
+        val root = TestEntityFactory.buildRoot(3)
+        conceptService.init(root) match
+            case Left(e)           => fail(e.toString)
+            case Right(rootEntity) =>
+                val child = rootEntity.getChildConcepts.iterator().next()
+                conceptService.findById(child.getId) match
+                    case Left(e)      => fail(e.toString)
+                    case Right(found) =>
+                        assertEquals(found.id, Some(child.getId.longValue()))
+                        assertEquals(found.name, child.getPrimaryConceptName.getName)
+    }
+
+    test("findById (no match)") {
+        conceptService.init(TestEntityFactory.buildRoot(2))
+        conceptService.findById(Long.MaxValue) match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.ConceptIdNotFound])
+            case Right(_) => fail("Should not have found a concept")
     }
 
     test("findParentByChildName") {
@@ -253,7 +273,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         val attempt = runWithUserAuth(user =>
             for
                 rootEntity   <- conceptService.init(root)
-                updatedChild <- conceptService.update(
+                updatedChild <- conceptService.updateByName(
                                     child.getPrimaryConceptName.getName,
                                     ConceptUpdate(
                                         rankLevel = Some("sub"),
@@ -282,6 +302,65 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
 
     }
 
+    test("updateById") {
+        val root  = TestEntityFactory.buildRoot(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        val attempt = runWithUserAuth(user =>
+            for
+                _            <- conceptService.init(root)
+                updatedChild <- conceptService.updateById(
+                                    child.getId,
+                                    ConceptUpdate(rankLevel = Some("sub"), rankName = Some("genus"), aphiaId = Some(4321)),
+                                    user.username
+                                )
+            yield updatedChild
+        )
+
+        attempt match
+            case Left(e)             => fail(e.toString)
+            case Right(updatedChild) =>
+                assertEquals(updatedChild.id, Some(child.getId.longValue()))
+                assertEquals(updatedChild.name, child.getPrimaryConceptName.getName)
+                assertEquals(updatedChild.rank, Some("subgenus"))
+                assertEquals(updatedChild.aphiaId, Some(4321L))
+    }
+
+    test("updateById (parent)") {
+        val root       = TestEntityFactory.buildRoot(3)
+        val grandChild = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+
+        val attempt = runWithUserAuth(user =>
+            for
+                rootEntity <- conceptService.init(root)
+                updated    <- conceptService.updateById(
+                                  grandChild.getId,
+                                  ConceptUpdate(parentName = Some(rootEntity.getName)),
+                                  user.username
+                              )
+            yield updated
+        )
+
+        attempt match
+            case Left(e)        => fail(e.toString)
+            case Right(updated) =>
+                conceptService.findParentByChildName(updated.name) match
+                    case Left(e)      => fail(e.toString)
+                    case Right(found) => assertEquals(found.name, root.getName)
+    }
+
+    test("updateById (no match)") {
+        val attempt = runWithUserAuth(user =>
+            for
+                _       <- conceptService.init(TestEntityFactory.buildRoot(2))
+                updated <- conceptService.updateById(Long.MaxValue, ConceptUpdate(aphiaId = Some(1L)), user.username)
+            yield updated
+        )
+        attempt match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.ConceptIdNotFound], e.toString)
+            case Right(_) => fail("Should not have updated a non-existent concept")
+    }
+
     test("update parent") {
 
         val root       = TestEntityFactory.buildRoot(3)
@@ -297,7 +376,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             for
                 rootEntity        <- conceptService.init(root)
                 grandChildEntity  <- Right(grandChild)
-                updatedGrandChild <- conceptService.update(
+                updatedGrandChild <- conceptService.updateByName(
                                          grandChildEntity.getPrimaryConceptName.getName,
                                          ConceptUpdate(
                                              parentName = Some(rootEntity.getPrimaryConceptName.getName)
@@ -341,8 +420,8 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             for
                 rootEntity         <- conceptService.init(root)
                 grandChildEntity   <- Right(grandChild)
-                updatedGrandChild1 <- conceptService.update(grandChildEntity.getName, update1, user.username)
-                updatedGrandChild2 <- conceptService.update(grandChildEntity.getName, update2, user.username)
+                updatedGrandChild1 <- conceptService.updateByName(grandChildEntity.getName, update1, user.username)
+                updatedGrandChild2 <- conceptService.updateByName(grandChildEntity.getName, update2, user.username)
             yield updatedGrandChild2
         )
 
@@ -370,7 +449,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         val attempt = runWithUserAuth(user =>
             for
                 rootEntity <- conceptService.init(root)
-                updated    <- conceptService.update(
+                updated    <- conceptService.updateByName(
                                   root.getPrimaryConceptName.getName,
                                   ConceptUpdate(rankName = Some(""), rankLevel = Some("")),
                                   user.username
@@ -397,7 +476,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                 rootEntity     <- conceptService.init(root)
                 child           = rootEntity.getChildConcepts.iterator().next()
                 greatGrandChild = child.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
-                updated        <- conceptService.update(
+                updated        <- conceptService.updateByName(
                                       child.getName,
                                       ConceptUpdate(parentName = Some(greatGrandChild.getName)),
                                       user.username
@@ -420,7 +499,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
             for
                 rootEntity <- conceptService.init(root)
                 child      <- Right(childEntity)
-                n          <- conceptService.delete(child.getPrimaryConceptName.getName, user.username)
+                n          <- conceptService.deleteByName(child.getPrimaryConceptName.getName, user.username)
             yield n
         )
 
@@ -436,4 +515,86 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
                     case Left(e)      => fail("Failed to find root")
                     case Right(found) =>
                         assertEquals(found.name, root.getPrimaryConceptName.getName)
+    }
+
+    test("deleteById") {
+        val root  = TestEntityFactory.buildRoot(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        val attempt = runWithUserAuth(user =>
+            for
+                _ <- conceptService.init(root)
+                n <- conceptService.deleteById(child.getId, user.username)
+            yield n
+        )
+
+        attempt match
+            case Left(e)  => fail(e.toString)
+            case Right(n) =>
+                assertEquals(n, 2) // child + grandchild
+                assert(conceptService.findById(child.getId).isLeft)
+                conceptService.findRoot() match
+                    case Left(e)      => fail(e.toString)
+                    case Right(found) => assertEquals(found.name, root.getPrimaryConceptName.getName)
+    }
+
+    test("deleteById (non-admin adds pending history instead of deleting)") {
+        val root  = TestEntityFactory.buildRoot(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        val attempt = runWithUserAuth(
+            user =>
+                for
+                    _ <- conceptService.init(root)
+                    n <- conceptService.deleteById(child.getId, user.username)
+                yield (n, user.username),
+            role = UserAccountRoles.MAINTENANCE.getRoleName
+        )
+
+        attempt match
+            case Left(e)                  => fail(e.toString)
+            case Right((n, userName)) =>
+                assertEquals(n, 0)
+                // Concept must still exist
+                assert(conceptService.findById(child.getId).isRight)
+                // A pending delete history should be attached to the parent
+                historyService.findByConceptName(root.getName) match
+                    case Left(e)          => fail(e.toString)
+                    case Right(histories) =>
+                        val deletes = histories.filter(h =>
+                            h.action == HistoryEntity.ACTION_DELETE && h.oldValue.contains(child.getName)
+                        )
+                        assertEquals(deletes.size, 1)
+                        assert(!deletes.head.approved)
+                        assertEquals(deletes.head.creatorName, userName)
+    }
+
+    test("deleteById (read-only user is denied)") {
+        val root  = TestEntityFactory.buildRoot(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        val attempt = runWithUserAuth(
+            user =>
+                for
+                    _ <- conceptService.init(root)
+                    n <- conceptService.deleteById(child.getId, user.username)
+                yield n,
+            role = UserAccountRoles.READONLY.getRoleName
+        )
+
+        attempt match
+            case Left(_)  => assert(conceptService.findById(child.getId).isRight)
+            case Right(_) => fail("A read-only user should not be able to delete")
+    }
+
+    test("deleteById (no match)") {
+        val attempt = runWithUserAuth(user =>
+            for
+                _ <- conceptService.init(TestEntityFactory.buildRoot(2))
+                n <- conceptService.deleteById(Long.MaxValue, user.username)
+            yield n
+        )
+        attempt match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.ConceptIdNotFound], e.toString)
+            case Right(_) => fail("Should not have deleted a non-existent concept")
     }

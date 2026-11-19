@@ -20,24 +20,9 @@ import jakarta.persistence.{EntityManager, EntityManagerFactory}
 import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, RawConcept}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.entities.{
-    ConceptEntity,
-    ConceptNameEntity,
-    HistoryEntity,
-    HistoryEntityFactory,
-    UserAccountEntity
-}
+import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.ConceptRepository
-import org.mbari.oni.{
-    AccessDenied,
-    ChildConceptNotFound,
-    ConceptNameAlreadyExists,
-    ConceptNameNotFound,
-    HistoryIsInvalid,
-    MissingRootConcept,
-    ParentConceptNotFound,
-    RootAlreadyExists
-}
+import org.mbari.oni.{AccessDenied, ChildConceptNotFound, ConceptIdNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, HistoryIsInvalid, MissingRootConcept, ParentConceptNotFound, RootAlreadyExists}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -107,6 +92,14 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
 
     def findByName(name: String): Either[Throwable, ConceptMetadata] =
         handleByConceptNameQuery(name, ConceptMetadata.from)
+
+    def findById(id: Long): Either[Throwable, ConceptMetadata] =
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo = new ConceptRepository(entityManager)
+            repo.findById(id).toScala match
+                case None    => throw ConceptIdNotFound(id)
+                case Some(c) => ConceptMetadata.from(c)
+        )
 
     def findParentByChildName(name: String): Either[Throwable, ConceptMetadata] =
         handleByConceptNameQuery(
@@ -201,6 +194,8 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
                 case Some(c) => fn(c, repo)
         )
 
+
+
     /**
      * Handles a query by name. This is a common pattern in this service.
      *
@@ -292,6 +287,16 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             c       <- findByName(conceptCreate.name)
         yield c
 
+
+    def updateByName(name: String, conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
+        val lookupConcept = (repo: ConceptRepository) => repo.findByName(name).toScala.toRight(ConceptNameNotFound(name))
+        update(lookupConcept, conceptUpdate, userName)
+
+    def updateById(id: Long, conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
+        val lookupConcept = (repo: ConceptRepository) => repo.findById(id).toScala.toRight(ConceptIdNotFound(id))
+        update(lookupConcept, conceptUpdate, userName)
+
+
     /**
      * Update a concept. This service does not check the users access credentials, that is done by the web service
      * layer.
@@ -300,7 +305,7 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
      * @return
      *   The updated concept or an exception if any errors occur
      */
-    def update(name: String, conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
+    def update(lookupConcept: ConceptRepository => Either[Throwable, ConceptEntity], conceptUpdate: ConceptUpdate, userName: String): Either[Throwable, ConceptMetadata] =
 
         // -- Helper function to update the parent concept
         def updateParent(userEntity: UserAccountEntity, conceptEntity: ConceptEntity, parentName: Option[String])(using
@@ -396,41 +401,7 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
                 if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
             )
 
-        // -- Helper function to update the rank level
-//        def updateRankLevel(
-//            userEntity: UserAccountEntity,
-//            conceptEntity: ConceptEntity,
-//            rankLevel: Option[String]
-//        ): Unit =
-//            rankLevel.foreach(v =>
-//                if v != conceptEntity.getRankLevel then
-//                    if v.isBlank then
-//                        if userEntity.isAdministrator then conceptEntity.setRankLevel(null)
-//                        else throw new IllegalArgumentException("Rank level can only be removed by an administrator")
-//                    else
-//                        val history = HistoryEntityFactory.replaceRankLevel(userEntity, conceptEntity.getRankLevel, v)
-//                        conceptEntity.getConceptMetadata.addHistory(history)
-//                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
-//                        conceptEntity.setRankLevel(v)
-//            )
 
-        // -- Helper function to update the rank name
-//        def updateRankName(
-//            userEntity: UserAccountEntity,
-//            conceptEntity: ConceptEntity,
-//            rankLevel: Option[String]
-//        ): Unit =
-//            rankLevel.foreach(v =>
-//                if v != conceptEntity.getRankName then
-//                    if v.isBlank then
-//                        if userEntity.isAdministrator then conceptEntity.setRankName(null)
-//                        else throw new IllegalArgumentException("Rank name can only be removed by an administrator")
-//                    else
-//                        val history = HistoryEntityFactory.replaceRankName(userEntity, conceptEntity.getRankName, v)
-//                        conceptEntity.getConceptMetadata.addHistory(history)
-//                        if userEntity.isAdministrator then history.approveBy(userEntity.getUserName)
-//                        conceptEntity.setRankName(v)
-//            )
 
         // -- Helper function to update the aphia id
         def updateAphiaId(conceptEntity: ConceptEntity, aphiaId: Option[Long])(using repo: ConceptRepository): Unit =
@@ -449,9 +420,9 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
         def txn(userEntity: UserAccountEntity): Either[Throwable, ConceptMetadata] =
             entityManagerFactory.transaction(entityManager =>
                 given repo: ConceptRepository = new ConceptRepository(entityManager)
-                repo.findByName(name).toScala match
-                    case None                => throw ConceptNameNotFound(name)
-                    case Some(conceptEntity) =>
+                lookupConcept.apply(repo) match
+                    case Left(error) => throw error
+                    case Right(conceptEntity) =>
                         updateParent(userEntity, conceptEntity, conceptUpdate.parentName)
                         updateRank(userEntity, conceptEntity, conceptUpdate.rankLevel, conceptUpdate.rankName)
                         RankValidator.throwExceptionIfInvalid(conceptEntity.getRank)
@@ -464,6 +435,11 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             concept <- txn(user.toEntity)
         yield concept
 
+
+    def deleteById(id: Long, userName: String): Either[Throwable, Int] =
+        val lookupConcept = (repo: ConceptRepository) => repo.findById(id).toScala.toRight(ConceptIdNotFound(id))
+        delete(lookupConcept, userName)
+
     /**
      * Delete a concept and all its descendants. This service does not check the users access credentials, that is done
      * by the web service layer. Only administrators can delete concepts. This is a non recoverable operation.
@@ -472,32 +448,50 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
      * @return
      *   The number of concepts deleted. This includes the concept and all its descendants
      */
-    def delete(conceptName: String, userName: String): Either[Throwable, Int] =
+    def deleteByName(conceptName: String, userName: String): Either[Throwable, Int] =
+        val lookupConcept = (repo: ConceptRepository) =>
+            repo.findByName(conceptName).toScala.toRight(ConceptNameNotFound(conceptName))
+        delete(lookupConcept, userName)
+
+    /**
+     * Delete a concept and all its descendants. Administrators delete immediately (with an approved history).
+     * Non-administrators only add a pending delete history to the parent; nothing is deleted until it's approved.
+     * @param lookupConcept
+     *   Finds the concept to delete within the transaction
+     * @return
+     *   The number of concepts deleted (0 for non-administrators)
+     */
+    private def delete(
+        lookupConcept: ConceptRepository => Either[Throwable, ConceptEntity],
+        userName: String
+    ): Either[Throwable, Int] =
 
         // -- Helper function to delete a concept
-        def txn(userEntity: UserAccountEntity, name: String): Either[Throwable, Int] =
+        def txn(userEntity: UserAccountEntity): Either[Throwable, Int] =
             if userEntity.isReadOnly then throw AccessDenied(userEntity.getUserName)
 
-            handleByConceptName(
-                name,
-                (concept, repo) =>
-                    val history = HistoryEntityFactory.delete(userEntity, concept)
+            entityManagerFactory.transaction(entityManager =>
+                val repo = new ConceptRepository(entityManager)
+                lookupConcept(repo) match
+                    case Left(error)   => throw error
+                    case Right(concept) =>
+                        val history = HistoryEntityFactory.delete(userEntity, concept)
 
-                    concept.getParentConcept match
-                        case null   => // do nothing
-                        case parent =>
-                            parent.getConceptMetadata.addHistory(history)
+                        concept.getParentConcept match
+                            case null   => // do nothing
+                            case parent =>
+                                parent.getConceptMetadata.addHistory(history)
 
-                    // Only delete if the user is an admin. Otherwise we just add a history
-                    if userEntity.isAdministrator then
-                        history.approveBy(userEntity.getUserName)
-                        repo.deleteBranchByName(concept.getPrimaryConceptName.getName)
-                    else 0
+                        // Only delete if the user is an admin. Otherwise we just add a history
+                        if userEntity.isAdministrator then
+                            history.approveBy(userEntity.getUserName)
+                            repo.deleteBranch(() => concept)
+                        else 0
             )
 
         for
             user  <- userAccountService.verifyWriteAccess(Option(userName))
-            count <- txn(user.toEntity, conceptName)
+            count <- txn(user.toEntity)
         yield count
 
     def inTxnRejectAddChildHistory(
@@ -619,34 +613,3 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             else Left(HistoryIsInvalid(s"History does not contain a valid rank: $oldRank"))
         else Left(HistoryIsInvalid("History is not a replace rank history"))
 
-//    def inTxnRejectReplaceRankLevel(
-//        history: HistoryEntity,
-//        user: UserAccountEntity,
-//        entityManger: EntityManager
-//    ): Either[Throwable, Boolean] =
-//        if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
-//            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKLEVEL)
-//        then
-//            val conceptMetadata = history.getConceptMetadata
-//            val concept         = conceptMetadata.getConcept
-//            val oldRankLevel    = history.getOldValue
-//            if oldRankLevel.isEmpty || oldRankLevel.isBlank then concept.setRankLevel(null)
-//            else concept.setRankLevel(oldRankLevel)
-//            Right(true)
-//        else Left(HistoryIsInvalid("History is not a replace rank level history"))
-//
-//    def inTxnRejectReplaceRankName(
-//        history: HistoryEntity,
-//        user: UserAccountEntity,
-//        entityManger: EntityManager
-//    ): Either[Throwable, Boolean] =
-//        if history.getAction.equals(HistoryEntity.ACTION_REPLACE) &&
-//            history.getField.equals(HistoryEntity.FIELD_CONCEPT_RANKNAME)
-//        then
-//            val conceptMetadata = history.getConceptMetadata
-//            val concept         = conceptMetadata.getConcept
-//            val oldRankName     = history.getOldValue
-//            if oldRankName.isEmpty || oldRankName.isBlank then concept.setRankName(null)
-//            else concept.setRankName(oldRankName)
-//            Right(true)
-//        else Left(HistoryIsInvalid("History is not a replace rank name history"))

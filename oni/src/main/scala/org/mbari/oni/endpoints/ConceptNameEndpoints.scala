@@ -63,7 +63,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val addConceptNameEndpointImpl: ServerEndpoint[Any, Future] = addConceptNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => dto =>
-            handleErrorsAsync(service.addName(dto, userAccount.username))
+            handleSecureErrorsAsync(service.addName(dto, userAccount.username))
         }
 
     val findConceptNameEndpoint: Endpoint[Unit, String, ErrorMsg, RawConcept, Any] = openEndpoint
@@ -92,7 +92,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val updateConceptNameEndpointImpl: ServerEndpoint[Any, Future] = updateConceptNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (name, dto) =>
-            handleErrorsAsync(service.updateName(name, dto, userAccount.username))
+            handleSecureErrorsAsync(service.updateName(name, dto, userAccount.username))
         }
 
     val deleteConceptNameEndpoint: Endpoint[Option[String], String, ErrorMsg, RawConcept, Any] = secureEndpoint
@@ -106,7 +106,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val deleteConceptNameEndpointImpl: ServerEndpoint[Any, Future] = deleteConceptNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => name =>
-            handleErrorsAsync(service.deleteName(name, userAccount.username))
+            handleSecureErrorsAsync(service.deleteName(name, userAccount.username))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

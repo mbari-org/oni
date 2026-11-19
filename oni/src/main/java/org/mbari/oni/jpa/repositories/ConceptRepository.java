@@ -20,6 +20,7 @@ import jakarta.persistence.EntityManager;
 import org.mbari.oni.jpa.VARSPersistenceException;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 import org.mbari.oni.etc.jdk.Logging;
 import org.mbari.oni.jpa.entities.ConceptEntity;
@@ -57,6 +58,11 @@ public class ConceptRepository extends Repository {
      */
     public Optional<ConceptEntity> findByName(final String name) {
         List<ConceptEntity> concepts =  findByNamedQuery("Concept.findByName", Map.of("name", name));
+        return concepts.stream().findFirst();
+    }
+
+    public Optional<ConceptEntity> findById(final Long id) {
+        List<ConceptEntity> concepts =  findByNamedQuery("Concept.findById", Map.of("id", id));
         return concepts.stream().findFirst();
     }
 
@@ -105,19 +111,15 @@ public class ConceptRepository extends Repository {
         }
     }
 
-
-
     /**
-     * Delete a concept and allImpl of its descendents
+     * Delete a concept and all of its descendents.  This method should be called within a JPA transaction
+     * @param supplier A supplier that provides the concept to delete
+     * @return The number of concepts deleted
      */
-    public int deleteBranchByName(String conceptName) {
-
+    public int deleteBranch(Supplier<ConceptEntity> supplier) {
         var deleteCount = 0;
-
-        // Find the concept
-        var opt = findByName(conceptName);
-        if (opt.isPresent()) {
-            var concept = opt.get();
+        var concept = supplier.get();
+        if (concept != null) {
             var descendants = findDescendents(concept);
             Queue<ConceptEntity> queue = new LinkedList<>(descendants);
             while(!queue.isEmpty()) {
@@ -143,6 +145,14 @@ public class ConceptRepository extends Repository {
             }
         }
         return deleteCount;
+    }
+
+    public int deleteBranchByName(String conceptName) {
+        return deleteBranch(() -> findByName(conceptName).orElse(null));
+    }
+
+    public int deleteBranchById(Long conceptId) {
+        return deleteBranch(() -> findById(conceptId).orElse(null));
     }
 
 }

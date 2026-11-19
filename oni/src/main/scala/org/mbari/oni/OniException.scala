@@ -40,6 +40,9 @@ case class ConceptNameAlreadyExists(name: String)
 case class ConceptNameNotFound(name: String)
     extends Exception(s"Concept name `$name` was not found")
     with ConceptNotFoundException
+case class ConceptIdNotFound(id: Long) 
+    extends Exception(s"Concept with id `$id` was not found") 
+    with ConceptNotFoundException
 case class HistoryHasBeenPreviouslyProcessed(id: Long)
     extends Exception(s"History with id `$id` has already been processed")
     with OniException

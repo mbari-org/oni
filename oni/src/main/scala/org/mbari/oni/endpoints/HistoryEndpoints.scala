@@ -17,11 +17,11 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedHistory, Page, ServerError, Sort, Unauthorized}
+import org.mbari.oni.domain.{Count, ErrorMsg, ExtendedHistory, Page, Sort}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
-import org.mbari.oni.services.{HistoryActionService, HistoryService}
+import org.mbari.oni.services.{HistoryActionService, HistoryService, UserAccountService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
@@ -35,6 +35,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     private val service              = HistoryService(entityManagerFactory)
     private val historyActionService = HistoryActionService(entityManagerFactory, fastPhylogenyService)
+    private val userAccountService   = UserAccountService(entityManagerFactory)
     private val base                 = "history"
     private val tag                  = "History"
     private val defaultLimit         = 100
@@ -160,18 +161,11 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
         .tag(tag)
 
     val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
-        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
-        .serverLogic { userAccount => id =>
-            Future {
-                if userAccount.isAdministrator then
-                    service
-                        .deleteById(id)
-                        .fold(
-                            error => Left(ServerError(error.getMessage)),
-                            _ => Right(())
-                        )
-                else Left(Unauthorized(s"User, ${userAccount.username} is not an administrator"))
-            }
+        // Only a logged-in user who is *currently* an administrator (role checked against the database, not the
+        // token). API key tokens are rejected.
+        .serverSecurityLogic(jwtOpt => verifyUserAsync(jwtOpt, userAccountService.findByUserName, _.isAdministrator))
+        .serverLogic { _ => id =>
+            handleSecureErrorsAsync(service.deleteById(id).map(_ => ()))
         }
 
     val approveEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
@@ -185,14 +179,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
     val approveEndpointImpl: ServerEndpoint[Any, Future] = approveEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            Future {
-                historyActionService
-                    .approve(id, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        history => Right(history)
-                    )
-            }
+            handleSecureErrorsAsync(historyActionService.approve(id, userAccount.username))
         }
 
     val rejectEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
@@ -206,14 +193,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
     val rejectEndpointImpl: ServerEndpoint[Any, Future] = rejectEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            Future {
-                historyActionService
-                    .reject(id, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        history => Right(history)
-                    )
-            }
+            handleSecureErrorsAsync(historyActionService.reject(id, userAccount.username))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

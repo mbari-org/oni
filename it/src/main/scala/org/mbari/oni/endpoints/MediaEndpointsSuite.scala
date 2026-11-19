@@ -23,12 +23,13 @@ import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.UserAuthMixin
+import org.mbari.oni.domain.UserAccountRoles
 import sttp.model.StatusCode
 
 import java.net.URI
 import scala.jdk.CollectionConverters.*
 
-trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService       = JwtService("mbari", "foo", "bar")
     lazy val fastPhylogenyService      = FastPhylogenyService(entityManagerFactory)
@@ -416,4 +417,42 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with UserA
         attempt match
             case Left(value)  => fail(value.toString)
             case Right(value) => assert(true)
+    }
+
+    test("deleteMedia (read-only user is denied)") {
+        val media = createMedia().head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteMediaEndpointImpl,
+                s"http://test.com/v1/media/${media.id.get}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findMediaByIdEndpointImpl,
+            s"http://test.com/v1/media/${media.id.get}",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("deleteMedia (no match)") {
+        createMedia()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteMediaEndpointImpl,
+                s"http://test.com/v1/media/${Long.MaxValue}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("findMediaById (no match)") {
+        createMedia()
+        runGet(
+            endpoints.findMediaByIdEndpointImpl,
+            s"http://test.com/v1/media/${Long.MaxValue}",
+            response => assertEquals(response.code, StatusCode.NotFound)
+        )
     }

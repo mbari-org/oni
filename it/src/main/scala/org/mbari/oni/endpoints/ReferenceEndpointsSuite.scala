@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{Page, Reference, ReferenceQuery, ReferenceUpdate}
+import org.mbari.oni.domain.{Page, Reference, ReferenceQuery, ReferenceUpdate, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -27,7 +27,7 @@ import sttp.model.StatusCode
 
 import scala.util.Random
 
-trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
+trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
 
@@ -246,5 +246,73 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
                 assertEquals(obtained.concepts.size, 0)
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
+        )
+    }
+
+    // --- Authorization: API key, administrator, or maintainer
+
+    test("create (maintainer login)") {
+        val dto = Reference.from(TestEntityFactory.createReference())
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runPost(
+                endpoints.createReferenceEndpointImpl,
+                "http://test.com/v1/references",
+                dto.stringify,
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("create (administrator login)") {
+        val dto = Reference.from(TestEntityFactory.createReference())
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPost(
+                endpoints.createReferenceEndpointImpl,
+                "http://test.com/v1/references",
+                dto.stringify,
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("create (demoted read-only user is denied)") {
+        val dto = Reference.from(TestEntityFactory.createReference())
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPost(
+                endpoints.createReferenceEndpointImpl,
+                "http://test.com/v1/references",
+                dto.stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        referenceService.findAll(10000, 0) match
+            case Right(refs) => assert(refs.isEmpty)
+            case Left(error) => fail(error.toString)
+    }
+
+    test("delete (demoted read-only user is denied)") {
+        val ref = initRefs(1).head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteReferenceEndpointImpl,
+                s"http://test.com/v1/references/${ref.id.get}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        referenceService.findById(ref.id.get) match
+            case Right(Some(_)) => ()
+            case other          => fail(s"Reference should still exist: $other")
+    }
+
+    test("create (no token)") {
+        runPost(
+            endpoints.createReferenceEndpointImpl,
+            "http://test.com/v1/references",
+            Reference.from(TestEntityFactory.createReference()).stringify,
+            response => assertEquals(response.code, StatusCode.Unauthorized)
         )
     }

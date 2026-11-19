@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import io.circe.Printer
-import org.mbari.oni.{BadRequestException, ConceptNotFoundException}
+import org.mbari.oni.{AccessException, BadRequestException, NotFoundException}
 import org.mbari.oni.config.AppConfig
 import org.mbari.oni.domain.*
 import org.mbari.oni.etc.circe.CirceCodecs
@@ -130,10 +130,11 @@ trait Endpoints:
 
     def handleErrors[T](f: => Either[Throwable, T]): Either[ErrorMsg, T] =
         f match
-            case Right(concept)                    => Right(concept)
-            case Left(c: ConceptNotFoundException) => Left(NotFound(c.getMessage))
-            case Left(b: BadRequestException)      => Left(BadRequest(b.getMessage))
-            case Left(e)                           =>
+            case Right(value)                 => Right(value)
+            // NotFoundException covers ConceptNotFoundException and all other *NotFound errors
+            case Left(n: NotFoundException)   => Left(NotFound(n.getMessage))
+            case Left(b: BadRequestException) => Left(BadRequest(b.getMessage))
+            case Left(e)                      =>
                 log.atError.withCause(e).log("Error")
                 Left(ServerError(e.getMessage))
 
@@ -147,6 +148,20 @@ trait Endpoints:
 
     def handleErrorsAsync[T](f: => Either[Throwable, T])(using ec: ExecutionContext): Future[Either[ErrorMsg, T]] =
         Future(handleErrors(f))
+
+    /**
+     * Like [[handleErrors]] but also maps an [[AccessException]] to [[Unauthorized]]. Only use this with endpoints
+     * built from `secureEndpoint`, since `openEndpoint` does not declare an Unauthorized error variant.
+     */
+    def handleSecureErrors[T](f: => Either[Throwable, T]): Either[ErrorMsg, T] =
+        f match
+            case Left(e: AccessException) => Left(Unauthorized(e.getMessage))
+            case other                    => handleErrors(other)
+
+    def handleSecureErrorsAsync[T](f: => Either[Throwable, T])(using
+        ec: ExecutionContext
+    ): Future[Either[ErrorMsg, T]] =
+        Future(handleSecureErrors(f))
 
     def handleOption[T](f: => Option[T]): Either[ErrorMsg, T] =
         f match
@@ -169,6 +184,75 @@ trait Endpoints:
         jwtOpt: Option[String]
     )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, Unit]] =
         Future(verify(jwtOpt))
+
+    /**
+     * Security logic for endpoints that accept either an API-key token (issued by `JwtService.authorize`) or a
+     * logged-in user whose *current* role satisfies `allowed`. The user's role is looked up with `findUser` rather than
+     * trusted from the token's claims, so a user who has been demoted can't keep using a still-valid token.
+     *
+     * @param findUser
+     *   Looks up a user account by name (normally `UserAccountService.findByUserName`)
+     * @param allowed
+     *   Returns true if the user may call the endpoint
+     */
+    def verifyApiKeyOrUser(
+        jwtOpt: Option[String],
+        findUser: String => Either[Throwable, Option[UserAccount]],
+        allowed: UserAccount => Boolean
+    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
+        verifyCurrentUserOrApiKey(jwtOpt, findUser, allowed, allowApiKey = true)
+
+    def verifyApiKeyOrUserAsync(
+        jwtOpt: Option[String],
+        findUser: String => Either[Throwable, Option[UserAccount]],
+        allowed: UserAccount => Boolean
+    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, Unit]] =
+        Future(verifyApiKeyOrUser(jwtOpt, findUser, allowed))
+
+    /**
+     * Like [[verifyApiKeyOrUser]] but API-key tokens are rejected: only a logged-in user whose *current* role (looked
+     * up with `findUser`, not trusted from the token) satisfies `allowed` may call the endpoint.
+     */
+    def verifyUser(
+        jwtOpt: Option[String],
+        findUser: String => Either[Throwable, Option[UserAccount]],
+        allowed: UserAccount => Boolean
+    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
+        verifyCurrentUserOrApiKey(jwtOpt, findUser, allowed, allowApiKey = false)
+
+    def verifyUserAsync(
+        jwtOpt: Option[String],
+        findUser: String => Either[Throwable, Option[UserAccount]],
+        allowed: UserAccount => Boolean
+    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, Unit]] =
+        Future(verifyUser(jwtOpt, findUser, allowed))
+
+    private def verifyCurrentUserOrApiKey(
+        jwtOpt: Option[String],
+        findUser: String => Either[Throwable, Option[UserAccount]],
+        allowed: UserAccount => Boolean,
+        allowApiKey: Boolean
+    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
+        jwtOpt match
+            case None      => Left(Unauthorized("Missing token"))
+            case Some(jwt) =>
+                jwtService.decode(jwt) match
+                    case None                                    => Left(Unauthorized("Invalid token"))
+                    // API-key tokens (JwtService.authorize) carry no user name claim
+                    case Some(claims) if claims.username == null =>
+                        if allowApiKey then Right(())
+                        else Left(Unauthorized("This endpoint requires a user login; API key tokens are not accepted"))
+                    case Some(claims)                            =>
+                        findUser(claims.username) match
+                            case Right(Some(user)) if allowed(user) => Right(())
+                            case Right(Some(user))                  =>
+                                Left(Unauthorized(s"User `${user.username}` is not permitted to do this"))
+                            case Right(None)                        =>
+                                Left(Unauthorized(s"User `${claims.username}` does not exist"))
+                            case Left(e)                            =>
+                                // Fail closed if we can't verify the user
+                                log.atError.withCause(e).log(s"Unable to look up user `${claims.username}`")
+                                Left(Unauthorized("Unable to verify user"))
 
     def verifyLogin(
         jwtOpt: Option[String]

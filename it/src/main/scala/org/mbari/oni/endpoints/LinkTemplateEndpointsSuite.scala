@@ -32,11 +32,12 @@ import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.entities.TestEntityFactory
 import org.mbari.oni.services.UserAuthMixin
+import org.mbari.oni.domain.UserAccountRoles
 import sttp.model.StatusCode
 
 import scala.jdk.CollectionConverters.*
 
-trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
     lazy val endpoints           = new LinkTemplateEndpoints(entityManagerFactory)
@@ -298,5 +299,43 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[ExtendedLink](response.body)
                 assertEquals(obtained, link)
+        )
+    }
+
+    test("delete (read-only user is denied)") {
+        val link = createLinkTemplates().head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteLinkTemplateImpl,
+                s"http://test.com/v1/linktemplates/${link.id.get}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findLinkTemplateByIdImpl,
+            s"http://test.com/v1/linktemplates/${link.id.get}",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("delete (no match)") {
+        createLinkTemplates()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteLinkTemplateImpl,
+                s"http://test.com/v1/linktemplates/${Long.MaxValue}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("findLinkTemplateById (no match)") {
+        createLinkTemplates()
+        runGet(
+            endpoints.findLinkTemplateByIdImpl,
+            s"http://test.com/v1/linktemplates/${Long.MaxValue}",
+            response => assertEquals(response.code, StatusCode.NotFound)
         )
     }

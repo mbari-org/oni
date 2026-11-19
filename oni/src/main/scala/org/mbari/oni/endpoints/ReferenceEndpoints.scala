@@ -25,12 +25,14 @@ import org.mbari.oni.domain.{
     Reference,
     ReferenceQuery,
     ReferenceUpdate,
-    ServerError
+    ServerError,
+    Unauthorized,
+    UserAccountRoles
 }
 import org.mbari.oni.endpoints.ReferenceEndpoints.DefaultLimit
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.ReferenceService
+import org.mbari.oni.services.{ReferenceService, UserAccountService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
@@ -46,6 +48,18 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     private val base = "references"
     private val tag  = "References"
+
+    private val userAccountService = UserAccountService(entityManagerFactory)
+
+    /** Changes to references require the API key or a user who is currently an administrator or maintainer */
+    private def verifyApiKeyOrWriterAsync(jwtOpt: Option[String]): Future[Either[Unauthorized, Unit]] =
+        verifyApiKeyOrUserAsync(
+            jwtOpt,
+            userAccountService.findByUserName,
+            u =>
+                u.role == UserAccountRoles.ADMINISTRATOR.getRoleName ||
+                    u.role == UserAccountRoles.MAINTENANCE.getRoleName
+        )
 
     val findReferenceByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Reference, Any] =
         openEndpoint
@@ -148,9 +162,9 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val createReferenceEndpointImpl: ServerEndpoint[Any, Future] = createReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => reference =>
-            handleErrorsAsync(service.create(reference))
+            handleSecureErrorsAsync(service.create(reference))
         }
 
     val updateReferenceEndpoint: Endpoint[Option[String], (Long, ReferenceUpdate), ErrorMsg, Reference, Any] =
@@ -164,9 +178,9 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val updateReferenceEndpointImpl: ServerEndpoint[Any, Future] = updateReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => (id, referenceUpdate) =>
-            handleErrorsAsync(service.updateById(id, referenceUpdate))
+            handleSecureErrorsAsync(service.updateById(id, referenceUpdate))
         }
 
     val deleteReferenceEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] =
@@ -179,9 +193,9 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val deleteReferenceEndpointImpl: ServerEndpoint[Any, Future] = deleteReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => id =>
-            handleErrorsAsync(service.deleteById(id))
+            handleSecureErrorsAsync(service.deleteById(id))
         }
 
     val addConceptEndpoint: Endpoint[Option[String], (Long, String), ErrorMsg, Reference, Any] =
@@ -194,9 +208,9 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val addConceptEndpointImpl: ServerEndpoint[Any, Future] = addConceptEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => (id, concept) =>
-            handleErrorsAsync(service.addConcept(id, concept))
+            handleSecureErrorsAsync(service.addConcept(id, concept))
         }
 
     val removeConceptEndpoint: Endpoint[Option[String], (Long, String), ErrorMsg, Reference, Any] =
@@ -209,9 +223,9 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val removeConceptEndpointImpl: ServerEndpoint[Any, Future] = removeConceptEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => (id, concept) =>
-            handleErrorsAsync(service.removeConcept(id, concept))
+            handleSecureErrorsAsync(service.removeConcept(id, concept))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

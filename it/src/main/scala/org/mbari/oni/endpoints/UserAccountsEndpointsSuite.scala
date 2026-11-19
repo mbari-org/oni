@@ -26,11 +26,11 @@ import org.mbari.oni.jpa.entities.TestEntityFactory
 import org.mbari.oni.services.UserAccountService
 import sttp.model.StatusCode
 
-trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
+trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService             = JwtService("mbari", "foo", "bar")
     lazy val endpoints: UserAccountEndpoints = UserAccountEndpoints(entityManagerFactory)
-    lazy val userAccountService              = new UserAccountService(entityManagerFactory)
+    // userAccountService is provided by EndpointsAuthMixin (via UserAuthMixin)
 
     override def beforeEach(context: BeforeEach): Unit =
         super.beforeEach(context)
@@ -194,4 +194,103 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer:
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
         )
+    }
+
+    // --- Authorization: API key or administrator only
+
+    private def newUserJson(role: UserAccountRoles = UserAccountRoles.READONLY): UserAccount =
+        UserAccount.from(TestEntityFactory.createUserAccount(role.getRoleName)).copy(password = Strings.random(10))
+
+    test("createEndpoint (administrator login)") {
+        val userAccount = newUserJson()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/users",
+                userAccount.stringify,
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+        assert(userAccountService.findByUserName(userAccount.username).exists(_.isDefined))
+    }
+
+    test("createEndpoint (maintainer is denied)") {
+        // A maintainer must not be able to create accounts, e.g. an administrator account for themselves
+        val userAccount = newUserJson(UserAccountRoles.ADMINISTRATOR)
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/users",
+                userAccount.stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assertEquals(userAccountService.findByUserName(userAccount.username), Right(None))
+    }
+
+    test("createEndpoint (demoted read-only user is denied)") {
+        val userAccount = newUserJson()
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/users",
+                userAccount.stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assertEquals(userAccountService.findByUserName(userAccount.username), Right(None))
+    }
+
+    test("createEndpoint (no token)") {
+        runPost(
+            endpoints.createEndpointImpl,
+            "http://test.com/v1/users",
+            newUserJson().stringify,
+            response => assertEquals(response.code, StatusCode.Unauthorized)
+        )
+    }
+
+    test("updateEndpoint (maintainer cannot promote a user)") {
+        val user = create(1, UserAccountRoles.MAINTENANCE).head
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runPut(
+                endpoints.updateEndpointImpl,
+                s"http://test.com/v1/users/${user.username}",
+                UserAccountUpdate(role = Some(UserAccountRoles.ADMINISTRATOR.getRoleName)).stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        userAccountService.findByUserName(user.username) match
+            case Right(Some(found)) => assertEquals(found.role, UserAccountRoles.MAINTENANCE.getRoleName)
+            case other              => fail(s"Unexpected lookup result: $other")
+    }
+
+    test("deleteByUserNameEndpoint (administrator login)") {
+        val user = create(1).head
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteByUserNameEndpointImpl,
+                s"http://test.com/v1/users/${user.username}",
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+        assertEquals(userAccountService.findByUserName(user.username), Right(None))
+    }
+
+    test("deleteByUserNameEndpoint (maintainer is denied)") {
+        val user = create(1).head
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runDelete(
+                endpoints.deleteByUserNameEndpointImpl,
+                s"http://test.com/v1/users/${user.username}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assert(userAccountService.findByUserName(user.username).exists(_.isDefined))
     }

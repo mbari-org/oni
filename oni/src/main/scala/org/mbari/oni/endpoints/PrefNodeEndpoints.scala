@@ -51,7 +51,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => paging =>
             if userAccount.isAdministrator then
-                handleErrorsAsync(service.findAll(paging.limit.getOrElse(100), paging.offset.getOrElse(0)))
+                handleSecureErrorsAsync(service.findAll(paging.limit.getOrElse(100), paging.offset.getOrElse(0)))
             else Future(Left(Unauthorized("You must be an admin to access this endpoint")))
         }
 
@@ -115,7 +115,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val createEndpointImpl: ServerEndpoint[Any, Future] =
         createEndpoint
             .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
-            .serverLogic { _ => prefNode => handleErrorsAsync(service.create(prefNode)) }
+            .serverLogic { _ => prefNode => handleSecureErrorsAsync(service.create(prefNode)) }
 
     val updateEndpoint
         : Endpoint[Option[String], (Option[String], Option[String], PrefNodeUpdate), ErrorMsg, PrefNode, Any] =
@@ -143,7 +143,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
                     Future(Left(BadRequest("A name and key must be provided in order to update a preference.")))
                 else
                     val prefNode = PrefNode(name.get, key.get, value)
-                    handleErrorsAsync(service.update(prefNode))
+                    handleSecureErrorsAsync(service.update(prefNode))
             }
 
     val deleteEndpoint: Endpoint[Option[String], (String, String), ErrorMsg, Unit, Any] =
@@ -167,7 +167,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
         .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
-        .serverLogic { _ => (name, key) => handleErrorsAsync(service.delete(name, key)) }
+        .serverLogic { _ => (name, key) => handleSecureErrorsAsync(service.delete(name, key)) }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findByPrefix,

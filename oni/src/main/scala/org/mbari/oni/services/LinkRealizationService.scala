@@ -201,7 +201,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                             history.approveBy(userEntity.getUserName)
                             linkRealization.getConceptMetadata.removeLinkRealization(linkRealization)
                             entityManager.remove(linkRealization)
-                    case None                  => throw new IllegalArgumentException(s"Link with id ${id} does not exist")
+                    case None                  => throw LinkRealizationIdNotFound(id)
             )
 
         for

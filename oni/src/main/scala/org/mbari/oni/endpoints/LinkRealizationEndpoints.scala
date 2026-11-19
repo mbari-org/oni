@@ -26,8 +26,7 @@ import org.mbari.oni.domain.{
     LinkRenameToConceptRequest,
     LinkRenameToConceptResponse,
     LinkUpdate,
-    Page,
-    ServerError
+    Page
 }
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -128,7 +127,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val renameToConceptImpl: ServerEndpoint[Any, Future] = renameToConcept
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => request =>
-            handleErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
+            handleSecureErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
         }
 
     val create: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -143,7 +142,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val createImpl: ServerEndpoint[Any, Future] = create
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => link =>
-            handleErrorsAsync(service.create(link, userAccount.username))
+            handleSecureErrorsAsync(service.create(link, userAccount.username))
         }
 
     val update: Endpoint[Option[String], (Long, LinkUpdate), ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -158,7 +157,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val updateImpl: ServerEndpoint[Any, Future] = update
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (id, linkUpdate) =>
-            handleErrorsAsync(service.updateById(id, linkUpdate, userAccount.username))
+            handleSecureErrorsAsync(service.updateById(id, linkUpdate, userAccount.username))
         }
 
     val delete: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
@@ -172,14 +171,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val deleteImpl: ServerEndpoint[Any, Future] = delete
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            Future {
-                service
-                    .deleteById(id, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        _ => Right(())
-                    )
-            }
+            handleSecureErrorsAsync(service.deleteById(id, userAccount.username).map(_ => ()))
         }
 
     val countAllLinkRealizations: Endpoint[Unit, Unit, ErrorMsg, Count, Any] = openEndpoint

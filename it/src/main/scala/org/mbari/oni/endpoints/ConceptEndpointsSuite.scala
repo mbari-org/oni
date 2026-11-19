@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, Rank}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, Rank, UserAccount, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
@@ -27,7 +27,7 @@ import sttp.model.StatusCode
 
 import scala.jdk.CollectionConverters.*
 
-trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService         = JwtService("mbari", "foo", "bar")
     lazy val endpoints: ConceptEndpoints = ConceptEndpoints(entityManagerFactory)
@@ -147,6 +147,40 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         )
     }
 
+    test("findById") {
+        val root  = init(2, 0)
+        val child = root.getChildConcepts.iterator().next()
+        val id    = child.getId.longValue()
+
+        runGet(
+            endpoints.findByIdImpl,
+            s"http://test.com/v1/concept/id/${id}",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val concept = checkResponse[ConceptMetadata](response.body)
+                assertEquals(concept.id, Some(id))
+                assertEquals(concept.name, child.getPrimaryConceptName.getName)
+        )
+    }
+
+    test("findById (no match)") {
+        val root = init(2, 0)
+
+        runGet(
+            endpoints.findByIdImpl,
+            s"http://test.com/v1/concept/id/${Long.MaxValue}",
+            response => assertEquals(response.code, StatusCode.NotFound)
+        )
+    }
+
+    test("findById (non-numeric id)") {
+        runGet(
+            endpoints.findByIdImpl,
+            "http://test.com/v1/concept/id/notanumber",
+            response => assertEquals(response.code, StatusCode.BadRequest)
+        )
+    }
+
     test("findByNameContaining") {
         val root  = init(2, 0)
         val child = root.getChildConcepts.iterator().next()
@@ -238,7 +272,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 )
 
                 runPut(
-                    endpoints.updateEndpointImpl,
+                    endpoints.updateByNameEndpointImpl,
                     s"http://test.com/v1/concept/${grandChild.getPrimaryConceptName.getName}",
                     conceptUpdate.stringify,
                     response =>
@@ -268,7 +302,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                 val name = root.getPrimaryConceptName.getName
 
                 runDelete(
-                    endpoints.deleteEndpointImpl,
+                    endpoints.deleteByNameEndpointImpl,
                     s"http://test.com/v1/concept/${name}",
                     response => assertEquals(response.code, StatusCode.Ok),
                     jwt = jwtService.login(user.username, password, user.toEntity)
@@ -280,6 +314,265 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         attempt match
             case Right(_)    => () // println("Success")
             case Left(error) => fail(error.toString)
+    }
+
+    test("updateById") {
+
+        val attempt = testWithUserAuth(
+            user =>
+                val root       = init(3, 0)
+                val grandChild = root.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+                val id         = grandChild.getId.longValue()
+
+                val conceptUpdate = ConceptUpdate(
+                    parentName = Some(root.getPrimaryConceptName.getName),
+                    rankLevel = Some("sub"),
+                    rankName = Some("genus"),
+                    aphiaId = Some(98765L)
+                )
+
+                runPut(
+                    endpoints.updateByIdEndpointImpl,
+                    s"http://test.com/v1/concept/id/${id}",
+                    conceptUpdate.stringify,
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        val concept = checkResponse[ConceptMetadata](response.body)
+                        assertEquals(concept.id, Some(id))
+                        assertEquals(concept.name, grandChild.getPrimaryConceptName.getName)
+                        assertEquals(concept.rank, Some("subgenus"))
+                        assertEquals(concept.aphiaId, Some(98765L))
+                    ,
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                )
+
+                // Verify the parent was changed
+                conceptService.findParentByChildName(grandChild.getPrimaryConceptName.getName) match
+                    case Left(error)  => fail(error.toString)
+                    case Right(found) => assertEquals(found.name, root.getPrimaryConceptName.getName)
+            ,
+            password
+        )
+
+        attempt match
+            case Right(_)    => ()
+            case Left(error) => fail(error.toString)
+
+    }
+
+    test("updateById (no match)") {
+
+        val attempt = testWithUserAuth(
+            user =>
+                init(2, 0)
+                runPut(
+                    endpoints.updateByIdEndpointImpl,
+                    s"http://test.com/v1/concept/id/${Long.MaxValue}",
+                    ConceptUpdate(aphiaId = Some(1L)).stringify,
+                    response => assertEquals(response.code, StatusCode.NotFound),
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                )
+            ,
+            password
+        )
+
+        attempt match
+            case Right(_)    => ()
+            case Left(error) => fail(error.toString)
+    }
+
+    test("updateById (no jwt)") {
+        val root = init(2, 0)
+        runPut(
+            endpoints.updateByIdEndpointImpl,
+            s"http://test.com/v1/concept/id/${root.getId}",
+            ConceptUpdate(aphiaId = Some(1L)).stringify,
+            response => assertEquals(response.code, StatusCode.Unauthorized)
+        )
+    }
+
+    test("deleteById") {
+
+        val attempt = testWithUserAuth(
+            user =>
+                val root      = init(3, 0)
+                val child     = root.getChildConcepts.iterator().next()
+                val childName = child.getPrimaryConceptName.getName
+
+                runDelete(
+                    endpoints.deleteByIdEndpointImpl,
+                    s"http://test.com/v1/concept/id/${child.getId}",
+                    response => assertEquals(response.code, StatusCode.Ok),
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                )
+
+                // The child (and its descendants) should be gone, but the root should remain
+                assert(conceptService.findByName(childName).isLeft)
+                assert(conceptService.findById(child.getId).isLeft)
+                conceptService.findRoot() match
+                    case Left(error)  => fail(error.toString)
+                    case Right(found) => assertEquals(found.name, root.getPrimaryConceptName.getName)
+            ,
+            password
+        )
+
+        attempt match
+            case Right(_)    => ()
+            case Left(error) => fail(error.toString)
+    }
+
+    test("deleteById (no match)") {
+
+        val attempt = testWithUserAuth(
+            user =>
+                init(2, 0)
+                runDelete(
+                    endpoints.deleteByIdEndpointImpl,
+                    s"http://test.com/v1/concept/id/${Long.MaxValue}",
+                    response => assertEquals(response.code, StatusCode.NotFound),
+                    jwt = jwtService.login(user.username, password, user.toEntity)
+                )
+            ,
+            password
+        )
+
+        attempt match
+            case Right(_)    => ()
+            case Left(error) => fail(error.toString)
+    }
+
+    test("deleteById (non-admin)") {
+        val root  = init(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runDelete(
+                endpoints.deleteByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${child.getId}",
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+        // A maintenance user only creates a pending delete; the concept must still exist
+        assert(conceptService.findById(child.getId).isRight)
+    }
+
+    test("deleteById (read-only user is denied)") {
+        val root  = init(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${child.getId}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assert(conceptService.findById(child.getId).isRight)
+    }
+
+    test("deleteByName (read-only user is denied)") {
+        val root  = init(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteByNameEndpointImpl,
+                s"http://test.com/v1/concept/${child.getName}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assert(conceptService.findByName(child.getName).isRight)
+    }
+
+    test("deleteByName (no match)") {
+        init(2, 0)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteByNameEndpointImpl,
+                s"http://test.com/v1/concept/${Strings.random(12)}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("updateById (read-only user is denied)") {
+        val root  = init(2, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${child.getId}",
+                ConceptUpdate(aphiaId = Some(13579L)).stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        conceptService.findById(child.getId) match
+            case Left(error)  => fail(error.toString)
+            case Right(found) => assertNotEquals(found.aphiaId, Some(13579L))
+    }
+
+    test("updateByName (read-only user is denied)") {
+        val root  = init(2, 0)
+        val child = root.getChildConcepts.iterator().next()
+
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateByNameEndpointImpl,
+                s"http://test.com/v1/concept/${child.getName}",
+                ConceptUpdate(aphiaId = Some(13579L)).stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        conceptService.findByName(child.getName) match
+            case Left(error)  => fail(error.toString)
+            case Right(found) => assertNotEquals(found.aphiaId, Some(13579L))
+    }
+
+    test("updateByName (no match)") {
+        init(2, 0)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateByNameEndpointImpl,
+                s"http://test.com/v1/concept/${Strings.random(12)}",
+                ConceptUpdate(aphiaId = Some(1L)).stringify,
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("create (read-only user is denied)") {
+        val root = init(2, 0)
+        val name = s"ReadOnlyChild-${Strings.random(6)}"
+
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/concept",
+                ConceptCreate(name, Some(root.getName)).stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assert(conceptService.findByName(name).isLeft)
+    }
+
+    test("deleteById (no jwt)") {
+        val root = init(2, 0)
+        runDelete(
+            endpoints.deleteByIdEndpointImpl,
+            s"http://test.com/v1/concept/id/${root.getId}",
+            response => assertEquals(response.code, StatusCode.Unauthorized)
+        )
+        // Nothing should have been deleted
+        assert(conceptService.findById(root.getId).isRight)
     }
 
     test("listValidRanks") {

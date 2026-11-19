@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, NotFound, UserAccount, UserAccountCreate, UserAccountUpdate}
+import org.mbari.oni.domain.{ErrorMsg, NotFound, Unauthorized, UserAccount, UserAccountCreate, UserAccountUpdate}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAccountService
@@ -35,6 +35,10 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
     private val service = UserAccountService(entityManagerFactory)
     private val base    = "users"
     private val tag     = "User Accounts"
+
+    /** Changes to user accounts require the API key or a user who is currently an administrator */
+    private def verifyApiKeyOrAdminAsync(jwtOpt: Option[String]): Future[Either[Unauthorized, Unit]] =
+        verifyApiKeyOrUserAsync(jwtOpt, service.findByUserName, _.isAdministrator)
 
     // findAll
     val findAllEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[UserAccount], Any] =
@@ -94,9 +98,9 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val deleteByUserNameEndpointImpl: ServerEndpoint[Any, Future] = deleteByUserNameEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrAdminAsync(jwtOpt))
         .serverLogic { _ => name =>
-            handleErrorsAsync(service.deleteByUserName(name))
+            handleSecureErrorsAsync(service.deleteByUserName(name))
         }
 
     // create
@@ -120,9 +124,9 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrAdminAsync(jwtOpt))
         .serverLogic { _ => userAccount =>
-            handleErrorsAsync(service.create(userAccount.toUserAccount))
+            handleSecureErrorsAsync(service.create(userAccount.toUserAccount))
         }
 
     // update
@@ -137,9 +141,9 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrAdminAsync(jwtOpt))
         .serverLogic { _ => (name, userAccountUpdate) =>
-            handleErrorsAsync(service.update(name, userAccountUpdate))
+            handleSecureErrorsAsync(service.update(name, userAccountUpdate))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

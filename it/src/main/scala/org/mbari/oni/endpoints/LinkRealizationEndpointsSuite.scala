@@ -32,11 +32,12 @@ import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.entities.TestEntityFactory
 import org.mbari.oni.services.UserAuthMixin
+import org.mbari.oni.domain.UserAccountRoles
 import sttp.model.StatusCode
 
 import scala.jdk.CollectionConverters.*
 
-trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
 
@@ -256,5 +257,43 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
                 assertEquals(response.code, StatusCode.Ok)
                 val obtained = checkResponse[ExtendedLink](response.body)
                 assertEquals(obtained, link)
+        )
+    }
+
+    test("delete (read-only user is denied)") {
+        val link = createLinkRealizations().head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteImpl,
+                s"http://test.com/v1/linkrealizations/${link.id.get}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findLinkRealizationByIdImpl,
+            s"http://test.com/v1/linkrealizations/${link.id.get}",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("delete (no match)") {
+        createLinkRealizations()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteImpl,
+                s"http://test.com/v1/linkrealizations/${Long.MaxValue}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("findLinkRealizationById (no match)") {
+        createLinkRealizations()
+        runGet(
+            endpoints.findLinkRealizationByIdImpl,
+            s"http://test.com/v1/linkrealizations/${Long.MaxValue}",
+            response => assertEquals(response.code, StatusCode.NotFound)
         )
     }

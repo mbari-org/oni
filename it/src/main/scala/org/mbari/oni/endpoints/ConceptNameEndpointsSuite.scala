@@ -21,9 +21,11 @@ import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.UserAuthMixin
+import org.mbari.oni.domain.UserAccountRoles
+import org.mbari.oni.etc.jdk.Strings
 import sttp.model.StatusCode
 
-trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService             = JwtService("mbari", "foo", "bar")
     lazy val endpoints: ConceptNameEndpoints = ConceptNameEndpoints(entityManagerFactory)
@@ -149,4 +151,36 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
             case Right(_)    => assert(true)
             case Left(error) => fail(error.toString)
 
+    }
+
+    test("deleteConceptName (read-only user is denied)") {
+        val root    = init(3, 3)
+        val rawRoot = RawConcept.from(root)
+        val name    = rawRoot.names.filterNot(_.name == rawRoot.primaryName).head.name
+
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteConceptNameEndpointImpl,
+                s"http://test.com/v1/names/$name",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameEndpointImpl,
+            s"http://test.com/v1/names/$name",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("deleteConceptName (no match)") {
+        init(2, 0)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteConceptNameEndpointImpl,
+                s"http://test.com/v1/names/${Strings.random(12)}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
     }

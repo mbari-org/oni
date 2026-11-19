@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, ErrorMsg, Rank, ServerError}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, ErrorMsg, Rank}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService, RankValidator}
@@ -64,14 +64,14 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
     val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => conceptCreate =>
-            handleErrorsAsync(service.create(conceptCreate, userAccount.username))
+            handleSecureErrorsAsync(service.create(conceptCreate, userAccount.username))
                 .andThen(v =>
                     conceptCache.clear()
                     v
                 )
         }
 
-    val deleteEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] = secureEndpoint
+    val deleteByNameEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] = secureEndpoint
         .delete
         .in(base / path[String]("name"))
         .out(jsonBody[Unit])
@@ -79,20 +79,35 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .description("Delete a concept")
         .tag(tag)
 
-    val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
+    val deleteByNameEndpointImpl: ServerEndpoint[Any, Future] = deleteByNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => name =>
-            Future(
-                service
-                    .delete(name, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        _ => Right(())
-                    )
-            ).andThen(v =>
-                conceptCache.clear()
-                v
-            )
+            handleSecureErrorsAsync(service.deleteByName(name, userAccount.username).map(_ => ()))
+                .andThen(v =>
+                    conceptCache.clear()
+                    v
+                )
+        }
+
+    val deleteByIdEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
+        .delete
+        .in(base / "id" / path[Long]("id"))
+        .out(jsonBody[Unit])
+        .name("deleteConceptById")
+        .description(
+            "Delete a concept and all its descendants by id. Requires write access. Administrators delete immediately; " +
+                "other users create a pending delete that must be approved by an administrator."
+        )
+        .tag(tag)
+
+    val deleteByIdEndpointImpl: ServerEndpoint[Any, Future] = deleteByIdEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => id =>
+            handleSecureErrorsAsync(service.deleteById(id, userAccount.username).map(_ => ()))
+                .andThen(v =>
+                    conceptCache.clear()
+                    v
+                )
         }
 
     val findParentEndpoint: Endpoint[Unit, String, ErrorMsg, ConceptMetadata, Any] = openEndpoint
@@ -129,6 +144,18 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     val findByNameImpl: ServerEndpoint[Any, Future] = findByName.serverLogic { name =>
         handleErrorsAsync(conceptCache.findByName(name))
+    }
+
+    val findById: Endpoint[Unit, Long, ErrorMsg, ConceptMetadata, Any] = openEndpoint
+        .get
+        .in(base / "id" / path[Long]("id"))
+        .out(jsonBody[ConceptMetadata])
+        .name("findById")
+        .description("Find a concept by id")
+        .tag(tag)
+
+    val findByIdImpl: ServerEndpoint[Any, Future] = findById.serverLogic { id =>
+        handleErrorsAsync(service.findById(id))
     }
 
     val findByNameContaining: Endpoint[Unit, String, ErrorMsg, Seq[ConceptMetadata], Any] = openEndpoint
@@ -169,7 +196,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         }))
     }
 
-    val updateEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
+    val updateByNameEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
         secureEndpoint
             .put
             .in(base / path[String]("name"))
@@ -181,17 +208,32 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
             )
             .tag(tag)
 
-    val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
+    val updateByNameEndpointImpl: ServerEndpoint[Any, Future] = updateByNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (name, conceptUpdate) =>
-            Future(
-                service
-                    .update(name, conceptUpdate, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        concept => Right(concept)
-                    )
+            handleSecureErrorsAsync(service.updateByName(name, conceptUpdate, userAccount.username))
+                .andThen(v =>
+                    conceptCache.clear()
+                    v
+                )
+        }
+
+    val updateByIdEndpoint: Endpoint[Option[String], (Long, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
+        secureEndpoint
+            .put
+            .in(base / "id" / path[Long]("id"))
+            .in(jsonBody[ConceptUpdate])
+            .out(jsonBody[ConceptMetadata])
+            .name("updateConceptById")
+            .description(
+                "Update a concept by id. To remove a rank name or level, set it to an empty string. Only administrators can remove rank names and levels."
             )
+            .tag(tag)
+
+    val updateByIdEndpointImpl: ServerEndpoint[Any, Future] = updateByIdEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => (id, conceptUpdate) =>
+            handleSecureErrorsAsync(service.updateById(id, conceptUpdate, userAccount.username))
                 .andThen(v =>
                     conceptCache.clear()
                     v
@@ -205,10 +247,13 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findByNameContaining,
         listValidRanks,
         findByName,
+        findById,
         allEndpoint,
         createEndpoint,
-        deleteEndpoint,
-        updateEndpoint
+        deleteByNameEndpoint,
+        deleteByIdEndpoint,
+        updateByNameEndpoint,
+        updateByIdEndpoint
     )
 
     override val allImpl: List[ServerEndpoint[Any, Future]] = List(
@@ -218,8 +263,11 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findByNameContainingImpl,
         listValidRanksImpl,
         findByNameImpl,
+        findByIdImpl,
         allEndpointImpl,
         createEndpointImpl,
-        deleteEndpointImpl,
-        updateEndpointImpl
+        deleteByNameEndpointImpl,
+        deleteByIdEndpointImpl,
+        updateByNameEndpointImpl,
+        updateByIdEndpointImpl
     )

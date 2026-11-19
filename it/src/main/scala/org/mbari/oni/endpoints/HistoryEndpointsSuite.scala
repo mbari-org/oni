@@ -32,10 +32,14 @@ import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
+import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
 import org.mbari.oni.services.{ConceptNameService, HistoryService, LinkTemplateService, UserAuthMixin}
 import sttp.model.StatusCode
 
-trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+import java.time.Instant
+import java.util.Date
+
+trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService         = JwtService("mbari", "foo", "bar")
     lazy val fastPhylogenyService        = new FastPhylogenyService(entityManagerFactory)
@@ -63,8 +67,34 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
             history <- historyService.findByConceptName(root.getName).map(_.head)
         yield history
 
+    /**
+     * Like `init(3, 5)` but guarantees the tree contains both approved (processed) and pending histories.
+     * `TestEntityFactory.createHistory` only processes a history with probability 1/2, and a random tree can be small,
+     * so `init(3, 5)` alone occasionally produces no approved (or no pending) histories, which made the history listing
+     * tests flaky. Two of each are added so sort-order assertions always compare more than one row.
+     */
+    private def initWithHistories(): ConceptEntity =
+        val root     = TestEntityFactory.buildRoot(3, 5)
+        val metadata = root.getConceptMetadata
+        for _ <- 1 to 2 do
+            val approved = TestEntityFactory.createHistory()
+            approved.setApproved(true)
+            approved.setProcessedDate(Date.from(Instant.now()))
+            approved.setProcessorName(Strings.random(20))
+            metadata.addHistory(approved)
+
+            val pending = TestEntityFactory.createHistory()
+            pending.setApproved(false)
+            pending.setProcessedDate(null)
+            pending.setProcessorName(null)
+            metadata.addHistory(pending)
+
+        conceptService.init(root) match
+            case Right(entity) => entity
+            case Left(error)   => fail(s"Failed to initialize test data: $error")
+
     test("pending") {
-        init(3, 5)
+        initWithHistories()
         runGet(
             endpoints.pendingEndpointImpl,
             "http://test.com/v1/history/pending",
@@ -76,7 +106,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     }
 
     test("pending (sort by creatorName)") {
-        init(3, 5)
+        initWithHistories()
         runGet(
             endpoints.pendingEndpointImpl,
             "http://test.com/v1/history/pending?sort=creatorName,desc",
@@ -101,7 +131,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     }
 
     test("pendingCount") {
-        init(3, 5)
+        initWithHistories()
         runGet(
             endpoints.pendingCountEndpointImpl,
             "http://test.com/v1/history/pending/count",
@@ -113,7 +143,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     }
 
     test("approved") {
-        init(3, 5)
+        initWithHistories()
         runGet(
             endpoints.approvedEndpointsImpl,
             "http://test.com/v1/history/approved",
@@ -125,7 +155,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     }
 
     test("approved (sort by oldValue)") {
-        init(3, 5)
+        initWithHistories()
         runGet(
             endpoints.approvedEndpointsImpl,
             "http://test.com/v1/history/approved?sort=oldValue,desc",
@@ -152,7 +182,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
     }
 
     test("approved (sort by concept)") {
-        init(3, 5)
+        initWithHistories()
         runGet(
             endpoints.approvedEndpointsImpl,
             "http://test.com/v1/history/approved?sort=concept,desc",
@@ -234,7 +264,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         (suffix, descending)                <- directions
     do
         test(s"$label (sort=${field.name}$suffix)") {
-            init(3, 5)
+            initWithHistories()
             runGet(
                 endpointImpl(),
                 s"http://test.com/v1/history/$path?sort=${field.name}$suffix",
@@ -252,7 +282,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                                        )
     do
         test(s"$label (no sort param defaults to creationTimestamp asc)") {
-            init(3, 5)
+            initWithHistories()
             runGet(
                 endpointImpl(),
                 s"http://test.com/v1/history/$path",
@@ -265,7 +295,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         }
 
         test(s"$label (invalid sort field returns 400 Bad Request)") {
-            init(3, 5)
+            initWithHistories()
             for (sort, field) <- Seq("notAField" -> "notAField", "notAField,desc" -> "notAField", "" -> "")
             do
                 runGet(
@@ -282,7 +312,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         }
 
         test(s"$label (invalid sort direction falls back to default sort)") {
-            init(3, 5)
+            initWithHistories()
             runGet(
                 endpointImpl(),
                 s"http://test.com/v1/history/$path?sort=creatorName,sideways",
@@ -296,7 +326,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
         }
 
     test("approvedCount") {
-        init(3, 5)
+        initWithHistories()
         runGet(
             endpoints.approvedCountEndpointImpl,
             "http://test.com/v1/history/approved/count",
@@ -510,4 +540,120 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with Use
                         val updatedConcept =
                             conceptService.findByName(concept.getName).getOrElse(fail("Concept not found"))
                         assertEquals(updatedConcept.name, originalName)
+    }
+
+    test("approve (non-admin is denied)") {
+        val history = buildHistory() match
+            case Left(e)  => fail(e.getMessage)
+            case Right(h) => h
+
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runPut(
+                endpoints.approveEndpointImpl,
+                s"http://test.com/v1/history/approve/${history.id.get}",
+                "",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        historyService.findById(history.id.get) match
+            case Left(e)  => fail(e.getMessage)
+            case Right(h) => assert(!h.approved)
+    }
+
+    test("reject (non-admin is denied)") {
+        val history = buildHistory() match
+            case Left(e)  => fail(e.getMessage)
+            case Right(h) => h
+
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runPut(
+                endpoints.rejectEndpointImpl,
+                s"http://test.com/v1/history/reject/${history.id.get}",
+                "",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        historyService.findById(history.id.get) match
+            case Left(e)  => fail(e.getMessage)
+            case Right(h) => assert(h.processedTimestamp.isEmpty)
+    }
+
+    test("delete (no match)") {
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteEndpointImpl,
+                s"http://test.com/v1/history/${Long.MaxValue}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    // --- Delete authorization: only a user who is currently an administrator (no API key)
+
+    private def pendingHistory(): ExtendedHistory =
+        buildHistory() match
+            case Left(e)  => fail(e.getMessage)
+            case Right(h) => h
+
+    test("delete (API key is denied)") {
+        val history = pendingHistory()
+        runDelete(
+            endpoints.deleteEndpointImpl,
+            s"http://test.com/v1/history/${history.id.get}",
+            response => assertEquals(response.code, StatusCode.Unauthorized),
+            jwt = jwtService.authorize(jwtService.apiKey)
+        )
+        assert(historyService.findById(history.id.get).isRight, "History record should still exist")
+    }
+
+    test("delete (maintainer is denied)") {
+        val history = pendingHistory()
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runDelete(
+                endpoints.deleteEndpointImpl,
+                s"http://test.com/v1/history/${history.id.get}",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assert(historyService.findById(history.id.get).isRight, "History record should still exist")
+    }
+
+    test("delete (admin demoted after login is denied)") {
+        // The token still claims role=Admin, but the database says Maint. The database must win.
+        val history  = pendingHistory()
+        val password = Strings.random(12)
+        val entity   = org.mbari.oni.jpa.entities.TestEntityFactory
+            .createUserAccount(UserAccountRoles.ADMINISTRATOR.getRoleName, password)
+
+        userAccountService.create(org.mbari.oni.domain.UserAccount.from(entity)) match
+            case Left(error) => fail(error.toString)
+            case Right(user) =>
+                try
+                    val jwt = jwtService.login(user.username, password, user.toEntity)
+                    assert(jwt.isDefined)
+                    val demote = org.mbari.oni.domain.UserAccountUpdate(role = Some(UserAccountRoles.MAINTENANCE.getRoleName))
+                    assert(userAccountService.update(user.username, demote).isRight)
+                    runDelete(
+                        endpoints.deleteEndpointImpl,
+                        s"http://test.com/v1/history/${history.id.get}",
+                        response => assertEquals(response.code, StatusCode.Unauthorized),
+                        jwt = jwt
+                    )
+                finally userAccountService.deleteByUserName(user.username)
+
+        assert(historyService.findById(history.id.get).isRight, "History record should still exist")
+    }
+
+    test("delete (no token)") {
+        val history = pendingHistory()
+        runDelete(
+            endpoints.deleteEndpointImpl,
+            s"http://test.com/v1/history/${history.id.get}",
+            response => assertEquals(response.code, StatusCode.Unauthorized)
+        )
+        assert(historyService.findById(history.id.get).isRight, "History record should still exist")
     }

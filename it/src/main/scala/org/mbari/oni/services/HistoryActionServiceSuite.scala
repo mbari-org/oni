@@ -312,7 +312,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
         val update   = ConceptUpdate(Some(a.getName))
         val attempt  = for
             _               <- runWithUserAuth(
-                                   user => service.update(b.getName, update, user.username),
+                                   user => service.updateByName(b.getName, update, user.username),
                                    role = UserAccountRoles.MAINTENANCE.getRoleName
                                )
 //            r               <- fastPhylogenyService.findDown(root.getName).toRight(new Exception("Failed to find descendants"))
@@ -353,7 +353,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
         val update   = ConceptUpdate(Some(a.getName))
         val attempt  = for
             _               <- runWithUserAuth(
-                                   user => service.update(b.getName, update, user.username),
+                                   user => service.updateByName(b.getName, update, user.username),
                                    role = UserAccountRoles.MAINTENANCE.getRoleName
                                )
             historyOpt      <-
@@ -382,7 +382,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
         val service = ConceptService(entityManagerFactory)
         val attempt = for
             _               <- runWithUserAuth(
-                                   user => service.delete(child.getName, user.username),
+                                   user => service.deleteByName(child.getName, user.username),
                                    role = UserAccountRoles.MAINTENANCE.getRoleName
                                )
             historyOpt      <-
@@ -405,7 +405,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
         val service = ConceptService(entityManagerFactory)
         val attempt = for
             _               <- runWithUserAuth(
-                                   user => service.delete(child.getName, user.username),
+                                   user => service.deleteByName(child.getName, user.username),
                                    role = UserAccountRoles.MAINTENANCE.getRoleName
                                )
             history         <- historyService.findByConceptName(root.getName).map(_.head)
@@ -746,7 +746,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
         val conceptUpdate  = ConceptUpdate(rankLevel = rank._1, rankName = rank._2)
         val conceptService = ConceptService(entityManagerFactory)
         val attempt        = for
-            _               <- runWithUserAuth(user => conceptService.update(child.getName, conceptUpdate, user.username))
+            _               <- runWithUserAuth(user => conceptService.updateByName(child.getName, conceptUpdate, user.username))
             concept         <- conceptService.findByName(root.getName)
             historyOpt      <-
                 historyService
@@ -776,7 +776,7 @@ trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
         val conceptUpdate  = ConceptUpdate(rankLevel = rank._1, rankName = rank._2)
         val conceptService = ConceptService(entityManagerFactory)
         val attempt        = for
-            _               <- runWithUserAuth(user => conceptService.update(child.getName, conceptUpdate, user.username))
+            _               <- runWithUserAuth(user => conceptService.updateByName(child.getName, conceptUpdate, user.username))
             concept         <- conceptService.findByName(root.getName)
             historyOpt      <-
                 historyService
