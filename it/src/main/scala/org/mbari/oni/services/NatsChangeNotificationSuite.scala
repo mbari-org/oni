@@ -16,6 +16,8 @@
 
 package org.mbari.oni.services
 
+import org.mbari.oni.cache.{KnowledgebaseCache, KnowledgebaseCacheFixture}
+
 import io.nats.client.Nats
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, LinkRenameToConceptRequest}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
@@ -169,12 +171,12 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
                 lookups.incrementAndGet()
                 super.findByName(name)
 
-    test("a message from another instance clears the ConceptCache") {
+    test("a message from another instance clears the KnowledgebaseCache") {
         val root    = init(2, 2)
         settle()
         val name    = root.getPrimaryConceptName.getName
         val lookups = new AtomicInteger(0)
-        val cache   = new ConceptCache(countingService(lookups), conceptNameService)
+        val cache   = new KnowledgebaseCache(entityManagerFactory, KnowledgebaseCacheFixture.TestConfig, countingService(lookups), conceptNameService)
         try
             cache.findByName(name)
             cache.findByName(name)
@@ -191,12 +193,12 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
         finally cache.close()
     }
 
-    test("a message from this same instance does not clear the ConceptCache again") {
+    test("a message from this same instance does not clear the KnowledgebaseCache again") {
         val root    = init(2, 2)
         settle()
         val name    = root.getPrimaryConceptName.getName
         val lookups = new AtomicInteger(0)
-        val cache   = new ConceptCache(countingService(lookups), conceptNameService)
+        val cache   = new KnowledgebaseCache(entityManagerFactory, KnowledgebaseCacheFixture.TestConfig, countingService(lookups), conceptNameService)
         try
             cache.findByName(name)
             sendFromOtherInstance(NatsMessage.InstanceId)

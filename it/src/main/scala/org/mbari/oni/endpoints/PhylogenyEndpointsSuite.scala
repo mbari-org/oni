@@ -16,14 +16,16 @@
 
 package org.mbari.oni.endpoints
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.domain.SerdeConcept
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.jpa.DataInitializer
 import sttp.model.StatusCode
 
-trait PhylogenyEndpointsSuite extends EndpointsSuite with DataInitializer:
+trait PhylogenyEndpointsSuite extends EndpointsSuite with DataInitializer with KnowledgebaseCacheFixture:
 
-    lazy val endpoints = new PhylogenyEndpoints(entityManagerFactory)
+    lazy val endpoints = new PhylogenyEndpoints(fastPhylogenyService)
 
     test("up") {
         val root  = init(4, 1)

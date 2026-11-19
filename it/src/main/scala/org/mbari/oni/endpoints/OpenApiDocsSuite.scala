@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.jdbc.FastPhylogenyService
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
 import org.mbari.oni.jpa.DatabaseFunSuite
 import sttp.apispec.openapi.{OpenAPI, Operation}
 import sttp.tapir.docs.openapi.OpenAPIDocsInterpreter
@@ -27,17 +27,17 @@ import scala.concurrent.ExecutionContext
 /**
  * Sanity checks on the generated OpenAPI document (the same endpoints that are served via Swagger).
  */
-trait OpenApiDocsSuite extends DatabaseFunSuite:
+trait OpenApiDocsSuite extends DatabaseFunSuite with KnowledgebaseCacheFixture:
 
     given JwtService       = JwtService("mbari", "foo", "bar")
     given ExecutionContext = ExecutionContext.global
 
     lazy val openApi: OpenAPI =
-        val emf                  = entityManagerFactory
-        val fastPhylogenyService = FastPhylogenyService(emf)
-        val endpoints            = List(
+        val emf       = entityManagerFactory
+        val endpoints = List(
             AuthorizationEndpoints(emf),
-            ConceptEndpoints(emf),
+            CacheEndpoints(emf),
+            ConceptEndpoints(emf, knowledgebaseCache),
             ConceptNameEndpoints(emf),
             HealthEndpoints(),
             HistoryEndpoints(emf, fastPhylogenyService),
@@ -45,7 +45,7 @@ trait OpenApiDocsSuite extends DatabaseFunSuite:
             LinkRealizationEndpoints(emf),
             LinkTemplateEndpoints(emf),
             MediaEndpoints(emf, fastPhylogenyService),
-            PhylogenyEndpoints(emf),
+            PhylogenyEndpoints(fastPhylogenyService),
             PrefNodeEndpoints(emf),
             RawEndpoints(emf),
             ReferenceEndpoints(emf),

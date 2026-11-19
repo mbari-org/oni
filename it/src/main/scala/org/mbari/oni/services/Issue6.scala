@@ -16,15 +16,16 @@
 
 package org.mbari.oni.services
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.domain.MediaCreate
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
 
 import java.net.URI
 
-trait Issue6 extends DataInitializer with UserAuthMixin:
+trait Issue6 extends DataInitializer with UserAuthMixin with KnowledgebaseCacheFixture:
 
-    lazy val fastPhylogenyService = new FastPhylogenyService(entityManagerFactory)
     lazy val historyService       = new HistoryService(entityManagerFactory)
     lazy val historyActionService = new HistoryActionService(entityManagerFactory, fastPhylogenyService)
     lazy val mediaService         = new MediaService(entityManagerFactory, fastPhylogenyService)

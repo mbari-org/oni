@@ -30,7 +30,7 @@ import scala.util.control.NonFatal
 
 /**
  * Listens to the NATS topic for changes made by other Oni instances and republishes them on the local ChangeBus as
- * remote events, so things like the ConceptCache are cleared on this instance too. Messages sent by this instance
+ * remote events, so things like the KnowledgebaseCache are cleared on this instance too. Messages sent by this instance
  * (identified by instanceId) are ignored since the change has already been handled locally.
  *
  * Messages sent while this instance is disconnected from NATS are lost, so we also publish a catch-all remote event

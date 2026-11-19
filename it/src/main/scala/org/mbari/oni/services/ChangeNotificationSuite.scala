@@ -16,6 +16,8 @@
 
 package org.mbari.oni.services
 
+import org.mbari.oni.cache.{KnowledgebaseCache, KnowledgebaseCacheFixture}
+
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, LinkRenameToConceptRequest}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jpa.ChangeEvent.{Action, DataType}
@@ -28,7 +30,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 import scala.jdk.CollectionConverters.*
 
 /**
- * Verifies that committed changes are published on the ChangeBus (and so clear the ConceptCache), and that rolled back
+ * Verifies that committed changes are published on the ChangeBus (and so clear the KnowledgebaseCache), and that rolled back
  * transactions publish nothing.
  */
 trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
@@ -76,10 +78,10 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
         assert(events.isEmpty, s"Expected no events but got $events")
     }
 
-    test("ConceptCache is cleared when a concept name is added through the service") {
+    test("KnowledgebaseCache is cleared when a concept name is added through the service") {
         val root  = init(2, 2)
         val name  = root.getPrimaryConceptName.getName
-        val cache = new ConceptCache(conceptService, conceptNameService)
+        val cache = new KnowledgebaseCache(entityManagerFactory, KnowledgebaseCacheFixture.TestConfig, conceptService, conceptNameService)
         try
             val before  = cache.findByName(name).toOption.get
             val names0  = cache.findAllNames(1000000, 0).toOption.get
@@ -113,9 +115,9 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
         assert(events.exists(e => e.dataType() == DataType.LINK_REALIZATION && e.action() == Action.UPDATED))
     }
 
-    test("LinkRealizationService.renameToConcept clears the ConceptCache") {
+    test("LinkRealizationService.renameToConcept clears the KnowledgebaseCache") {
         val root  = init(3, 10)
-        val cache = new ConceptCache(conceptService, conceptNameService)
+        val cache = new KnowledgebaseCache(entityManagerFactory, KnowledgebaseCacheFixture.TestConfig, conceptService, conceptNameService)
         try
             val withLinks = root.getDescendants.asScala.filter(!_.getConceptMetadata.getLinkRealizations.isEmpty).head
             val name      = withLinks.getPrimaryConceptName.getName
@@ -126,7 +128,7 @@ trait ChangeNotificationSuite extends DataInitializer with UserAuthMixin:
                 case Left(e)  => fail(e.toString)
                 case Right(_) =>
                     val links = cache.findByName(name).toOption.get.linkRealizations
-                    assert(links.exists(_.toConcept == newName), "ConceptCache served stale link realizations")
+                    assert(links.exists(_.toConcept == newName), "KnowledgebaseCache served stale link realizations")
         finally cache.close()
     }
 

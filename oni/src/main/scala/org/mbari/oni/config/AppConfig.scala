@@ -63,6 +63,9 @@ object AppConfig:
         password = Config.getString("database.password")
     )
 
+    /** Settings for the in-memory knowledgebase cache. Fails fast at startup if they're invalid. */
+    lazy val DefaultCacheConfig: CacheConfig = CacheConfig.from(Config)
+
     /** NATS is optional. If the settings are missing or invalid we log a warning and run without it. */
     lazy val DefaultNatsConfig: Option[NatsConfig] =
         try

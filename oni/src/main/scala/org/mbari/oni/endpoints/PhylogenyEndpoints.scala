@@ -16,7 +16,6 @@
 
 package org.mbari.oni.endpoints
 
-import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.domain.{Concept, ErrorMsg, SerdeConcept, SimpleConcept}
 import org.mbari.oni.endpoints.CustomTapirJsonCirce.*
 import org.mbari.oni.etc.circe.CirceCodecs.given
@@ -27,11 +26,12 @@ import sttp.tapir.server.ServerEndpoint
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
-class PhylogenyEndpoints(entityManagerFactory: EntityManagerFactory)(using executionContext: ExecutionContext)
+/**
+ * @param service
+ *   The shared phylogeny service, backed by the application's single KnowledgebaseCache
+ */
+class PhylogenyEndpoints(val service: FastPhylogenyService)(using executionContext: ExecutionContext)
     extends Endpoints:
-
-    /** This services does caching so we should share it */
-    val service: FastPhylogenyService = FastPhylogenyService(entityManagerFactory)
     private val base                  = "phylogeny"
     private val tag                   = "Phylogeny"
 

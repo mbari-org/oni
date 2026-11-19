@@ -16,6 +16,8 @@
 
 package org.mbari.oni.endpoints
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import io.circe.parser.decode
 import org.mbari.oni.domain.{
     BadRequest,
@@ -39,10 +41,9 @@ import sttp.model.StatusCode
 import java.time.Instant
 import java.util.Date
 
-trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
+trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin with KnowledgebaseCacheFixture:
 
     given jwtService: JwtService         = JwtService("mbari", "foo", "bar")
-    lazy val fastPhylogenyService        = new FastPhylogenyService(entityManagerFactory)
     lazy val linkTemplateService         = LinkTemplateService(entityManagerFactory)
     lazy val historyService              = new HistoryService(entityManagerFactory)
     // lazy val conceptService              = new ConceptService(entityManagerFactory)

@@ -16,6 +16,8 @@
 
 package org.mbari.oni.services
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.domain.{
     ConceptCreate,
     ConceptNameCreate,
@@ -34,9 +36,8 @@ import org.mbari.oni.jpa.entities.{HistoryEntity, TestEntityFactory}
 import java.net.URI
 import scala.jdk.CollectionConverters.*
 
-trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin:
+trait HistoryActionServiceSuite extends DataInitializer with UserAuthMixin with KnowledgebaseCacheFixture:
 
-    lazy val fastPhylogenyService = new FastPhylogenyService(entityManagerFactory)
     lazy val historyService       = new HistoryService(entityManagerFactory)
     lazy val historyActionService = new HistoryActionService(entityManagerFactory, fastPhylogenyService)
 

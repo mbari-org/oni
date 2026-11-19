@@ -18,8 +18,10 @@ package org.mbari.oni
 
 import jakarta.persistence.EntityManagerFactory
 import org.mbari.oni.config.AppConfig
+import org.mbari.oni.cache.KnowledgebaseCache
 import org.mbari.oni.endpoints.{
     AuthorizationEndpoints,
+    CacheEndpoints,
     ConceptEndpoints,
     ConceptNameEndpoints,
     HealthEndpoints,
@@ -35,6 +37,7 @@ import org.mbari.oni.endpoints.{
     UserAccountEndpoints
 }
 import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.jdbc.FastPhylogenyService
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.server.metrics.prometheus.PrometheusMetrics
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
@@ -56,17 +59,24 @@ object Endpoints:
 
     val entityMangerFactory: EntityManagerFactory = AppConfig.DefaultEntityManagerFactory
 
-    val phylogenyEndpoints: PhylogenyEndpoints = PhylogenyEndpoints(entityMangerFactory)
+    /** The single knowledgebase cache, shared by everything that reads cached data */
+    val cache: KnowledgebaseCache = KnowledgebaseCache(entityMangerFactory, AppConfig.DefaultCacheConfig)
+
+    /** Phylogeny lookups, backed by the shared cache */
+    val fastPhylogenyService: FastPhylogenyService = FastPhylogenyService(cache)
+
+    val phylogenyEndpoints: PhylogenyEndpoints = PhylogenyEndpoints(fastPhylogenyService)
 
     val authorizationEndpoints: AuthorizationEndpoints     = AuthorizationEndpoints(entityMangerFactory)
-    val conceptEndpoints: ConceptEndpoints                 = ConceptEndpoints(entityMangerFactory)
+    val cacheEndpoints: CacheEndpoints                     = CacheEndpoints(entityMangerFactory)
+    val conceptEndpoints: ConceptEndpoints                 = ConceptEndpoints(entityMangerFactory, cache)
     val conceptNameEndpoints: ConceptNameEndpoints         = ConceptNameEndpoints(entityMangerFactory)
     val healthEndpoints: HealthEndpoints                   = HealthEndpoints()
-    val historyEndpoints: HistoryEndpoints                 = HistoryEndpoints(entityMangerFactory, phylogenyEndpoints.service)
+    val historyEndpoints: HistoryEndpoints                 = HistoryEndpoints(entityMangerFactory, fastPhylogenyService)
     val linkEndpoints: LinkEndpoints                       = LinkEndpoints(entityMangerFactory)
     val linkRealizationEndpoints: LinkRealizationEndpoints = LinkRealizationEndpoints(entityMangerFactory)
     val linkTemplateEndpoints: LinkTemplateEndpoints       = LinkTemplateEndpoints(entityMangerFactory)
-    val mediaEndpoints: MediaEndpoints                     = MediaEndpoints(entityMangerFactory, phylogenyEndpoints.service)
+    val mediaEndpoints: MediaEndpoints                     = MediaEndpoints(entityMangerFactory, fastPhylogenyService)
     val prefNodeEndpoints: PrefNodeEndpoints               = PrefNodeEndpoints(entityMangerFactory)
     val rawEndpoints: RawEndpoints                         = RawEndpoints(entityMangerFactory)
     val referenceEndpoints: ReferenceEndpoints             = ReferenceEndpoints(entityMangerFactory)
@@ -74,6 +84,7 @@ object Endpoints:
 
     val endpoints: List[ServerEndpoint[Any, Future]] = List(
         authorizationEndpoints,
+        cacheEndpoints,
         conceptEndpoints,
         conceptNameEndpoints,
         healthEndpoints,

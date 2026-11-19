@@ -16,6 +16,8 @@
 
 package org.mbari.oni.endpoints
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.domain.{Media, MediaCreate, MediaTypes, MediaUpdate, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
@@ -27,10 +29,9 @@ import sttp.model.StatusCode
 import java.net.URI
 import scala.jdk.CollectionConverters.*
 
-trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
+trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin with KnowledgebaseCacheFixture:
 
     given jwtService: JwtService       = JwtService("mbari", "foo", "bar")
-    lazy val fastPhylogenyService      = FastPhylogenyService(entityManagerFactory)
     lazy val endpoints: MediaEndpoints = MediaEndpoints(entityManagerFactory, fastPhylogenyService)
     private val password               = Strings.random(10)
 

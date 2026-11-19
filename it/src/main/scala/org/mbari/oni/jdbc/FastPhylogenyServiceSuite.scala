@@ -16,6 +16,8 @@
 
 package org.mbari.oni.jdbc
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.domain.Concept
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
@@ -24,15 +26,8 @@ import org.mbari.oni.jpa.DataInitializer
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.*
 
-trait FastPhylogenyServiceSuite extends DataInitializer:
+trait FastPhylogenyServiceSuite extends DataInitializer with KnowledgebaseCacheFixture:
 
-    lazy val fastPhylogenyService = new FastPhylogenyService(entityManagerFactory)
-
-    test("findLastUpdate") {
-        val root       = init(4, 2)
-        val lastUpdate = fastPhylogenyService.findLastUpdate()
-        assert(lastUpdate != null)
-    }
 
     test("findUp") {
         val root = init(5, 3)
@@ -103,4 +98,21 @@ trait FastPhylogenyServiceSuite extends DataInitializer:
         assertEquals(fastPhylogenyService.findUpById(Long.MaxValue), None)
         assertEquals(fastPhylogenyService.findDownById(Long.MaxValue), None)
         assertEquals(fastPhylogenyService.findSiblingsById(Long.MaxValue), Nil)
+    }
+
+    test("a deleted concept disappears from the phylogeny tree") {
+        val root      = init(3, 0)
+        val rootName  = root.getPrimaryConceptName.getName
+        val childName = root.getChildConcepts.iterator().next().getPrimaryConceptName.getName
+
+        // Load the tree so it's cached
+        val before = fastPhylogenyService.findDown(rootName)
+        assert(before.exists(_.descendantNames.contains(childName)), "child should be in the tree before the delete")
+
+        assert(conceptService.deleteByName(childName).isRight)
+
+        val after = fastPhylogenyService.findDown(rootName)
+        assert(after.isDefined)
+        assert(!after.get.descendantNames.contains(childName), s"deleted concept $childName is still in the tree")
+        assertEquals(fastPhylogenyService.findUp(childName), None)
     }

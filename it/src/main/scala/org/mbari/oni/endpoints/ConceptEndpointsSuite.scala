@@ -16,6 +16,8 @@
 
 package org.mbari.oni.endpoints
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, Rank, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
@@ -27,10 +29,10 @@ import sttp.model.StatusCode
 
 import scala.jdk.CollectionConverters.*
 
-trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
+trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin with KnowledgebaseCacheFixture:
 
     given jwtService: JwtService         = JwtService("mbari", "foo", "bar")
-    lazy val endpoints: ConceptEndpoints = ConceptEndpoints(entityManagerFactory)
+    lazy val endpoints: ConceptEndpoints = ConceptEndpoints(entityManagerFactory, knowledgebaseCache)
     private val password                 = "foofoofoo"
 
     test("all") {
