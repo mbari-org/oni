@@ -29,6 +29,9 @@ trait BadRequestException      extends OniException
 case class AccessDenied(user: String)
     extends Exception(s"I'm sorry `$user`, I can not let you do that.")
     with AccessException
+case class AdministratorRequired(user: String, action: String)
+    extends Exception(s"User `$user` must be an administrator to $action")
+    with AccessException
 case class AphiaIdNotFound(aphiaId: Long) extends Exception(s"AphiaId `$aphiaId` was not found") with NotFoundException
 
 case class ChildConceptNotFound(parentName: String, childName: String)
@@ -36,10 +39,16 @@ case class ChildConceptNotFound(parentName: String, childName: String)
     with ConceptNotFoundException
 case class ConceptNameAlreadyExists(name: String)
     extends Exception(s"Concept name `$name` already exists")
-    with OniException
+    with BadRequestException
 case class ConceptNameNotFound(name: String)
     extends Exception(s"Concept name `$name` was not found")
     with ConceptNotFoundException
+case class ConceptNameIdNotFound(id: Long)
+    extends Exception(s"Concept name with id `$id` was not found")
+    with ConceptNotFoundException
+case class InvalidConceptNameChange(msg: String) extends Exception(msg) with BadRequestException
+case class InvalidConceptChange(msg: String)     extends Exception(msg) with BadRequestException
+case class InvalidRank(msg: String)              extends Exception(msg) with BadRequestException
 case class ConceptIdNotFound(id: Long) 
     extends Exception(s"Concept with id `$id` was not found") 
     with ConceptNotFoundException

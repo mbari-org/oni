@@ -22,7 +22,7 @@ import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{ConceptEntity, ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.ConceptRepository
-import org.mbari.oni.{AccessDenied, ChildConceptNotFound, ConceptIdNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, HistoryIsInvalid, MissingRootConcept, ParentConceptNotFound, RootAlreadyExists}
+import org.mbari.oni.{AccessDenied, AdministratorRequired, ChildConceptNotFound, ConceptIdNotFound, ConceptNameAlreadyExists, ConceptNameNotFound, HistoryIsInvalid, InvalidConceptChange, MissingRootConcept, ParentConceptNotFound, RootAlreadyExists}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -256,7 +256,7 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
                 findRoot() match
                     case Left(_)  => entityManager.persist(concept)
                     case Right(_) =>
-                        throw new IllegalArgumentException(
+                        throw InvalidConceptChange(
                             "Root concept already exists. Cannot create a new root concept"
                         )
             concept
@@ -314,11 +314,11 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             parentName.foreach(name =>
                 // Don't allow the root concept to have a parent
                 if !conceptEntity.hasParent then
-                    throw new IllegalArgumentException(s"Cannot set the parent of the root concept!")
+                    throw InvalidConceptChange(s"Cannot set the parent of the root concept!")
 
                 // Don't allow cyclic relation
                 if conceptEntity.hasDescendent(name) then
-                    throw new IllegalArgumentException(
+                    throw InvalidConceptChange(
                         s"Cannot set parent ($name) to a descendant of the concept (${conceptEntity.getPrimaryConceptName.getName}). This would create a cyclic relation"
                     )
 
@@ -351,6 +351,15 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
             rankLevel: Option[String],
             rankName: Option[String]
         ): Unit =
+
+            // Only administrators may remove (blank out) an existing rank level or rank name
+            def requireAdminToRemove(field: String, newValue: Option[String], currentValue: String): Unit =
+                val isRemoval = newValue.exists(_.isBlank) && currentValue != null && !currentValue.isBlank
+                if isRemoval && !userEntity.isAdministrator then
+                    throw AdministratorRequired(userEntity.getUserName, s"remove the $field of a concept")
+
+            requireAdminToRemove("rank level", rankLevel, conceptEntity.getRankLevel)
+            requireAdminToRemove("rank name", rankName, conceptEntity.getRankName)
 
             val historyOpt = (rankLevel, rankName) match
                 case (None, None)        => None // No update
@@ -410,7 +419,7 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
                     repo.findByAphiaId(v).toScala match
                         case Some(v) =>
                             if v.getId != conceptEntity.getId then
-                                throw new IllegalArgumentException(
+                                throw InvalidConceptChange(
                                     s"AphiaId $v already exists for " + v.getPrimaryConceptName.getName
                                 )
                         case None    =>

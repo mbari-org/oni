@@ -586,3 +586,157 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 assertEquals(ranks.size, RankValidator.ValidRanks.size)
         )
     }
+
+    // --- Invalid concept changes return 400 Bad Request
+
+    private def assertBadRequestPut(
+        ep: sttp.tapir.server.ServerEndpoint[Any, scala.concurrent.Future],
+        uri: String,
+        update: ConceptUpdate
+    ): Unit =
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(ep, uri, update.stringify, response => assertEquals(response.code, StatusCode.BadRequest), jwt = jwt)
+        )
+
+    test("updateByName (cyclic parent returns 400)") {
+        val root            = init(5, 0)
+        val child           = root.getChildConcepts.iterator().next()
+        val greatGrandChild = child.getChildConcepts.iterator().next().getChildConcepts.iterator().next()
+        assertBadRequestPut(
+            endpoints.updateByNameEndpointImpl,
+            s"http://test.com/v1/concept/${child.getName}",
+            ConceptUpdate(parentName = Some(greatGrandChild.getName))
+        )
+        conceptService.findParentByChildName(child.getName) match
+            case Right(parent) => assertEquals(parent.name, root.getName)
+            case Left(error)   => fail(error.toString)
+    }
+
+    test("updateById (setting the root's parent returns 400)") {
+        val root  = init(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+        assertBadRequestPut(
+            endpoints.updateByIdEndpointImpl,
+            s"http://test.com/v1/concept/id/${root.getId}",
+            ConceptUpdate(parentName = Some(child.getName))
+        )
+    }
+
+    test("updateById (invalid rank returns 400)") {
+        val root  = init(2, 0)
+        val child = root.getChildConcepts.iterator().next()
+        assertBadRequestPut(
+            endpoints.updateByIdEndpointImpl,
+            s"http://test.com/v1/concept/id/${child.getId}",
+            ConceptUpdate(rankLevel = Some("bogus"), rankName = Some("notarank"))
+        )
+    }
+
+    test("updateById (duplicate aphiaId returns 400)") {
+        val root       = init(3, 0)
+        val child      = root.getChildConcepts.iterator().next()
+        val grandChild = child.getChildConcepts.iterator().next()
+        val aphiaId    = 900000000L + scala.util.Random.nextInt(1000000)
+
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${child.getId}",
+                ConceptUpdate(aphiaId = Some(aphiaId)).stringify,
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+        assertBadRequestPut(
+            endpoints.updateByIdEndpointImpl,
+            s"http://test.com/v1/concept/id/${grandChild.getId}",
+            ConceptUpdate(aphiaId = Some(aphiaId))
+        )
+    }
+
+    test("create (invalid rank returns 400)") {
+        val root = init(2, 0)
+        val name = s"BadRank-${Strings.random(6)}"
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/concept",
+                ConceptCreate(name, Some(root.getName), rankLevel = Some("bogus"), rankName = Some("notarank")).stringify,
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+        assert(conceptService.findByName(name).isLeft)
+    }
+
+    test("create (duplicate name returns 400)") {
+        val root  = init(2, 0)
+        val child = root.getChildConcepts.iterator().next()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/concept",
+                ConceptCreate(child.getName, Some(root.getName)).stringify,
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("create (second root returns 400)") {
+        init(2, 0)
+        val name = s"SecondRoot-${Strings.random(6)}"
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/concept",
+                ConceptCreate(name, None).stringify,
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+        assert(conceptService.findByName(name).isLeft)
+    }
+
+    // --- Rank removal is admin-only
+
+    private def initRootWithRank(): org.mbari.oni.jpa.entities.ConceptEntity =
+        val root = TestEntityFactory.buildRoot(2)
+        root.setRankName("genus")
+        root.setRankLevel("sub")
+        conceptService.init(root) match
+            case Right(entity) => entity
+            case Left(error)   => fail(error.toString)
+
+    test("updateById (maintainer removing a rank is denied)") {
+        val root = initRootWithRank()
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runPut(
+                endpoints.updateByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${root.getId}",
+                ConceptUpdate(rankName = Some(""), rankLevel = Some("")).stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        conceptService.findById(root.getId) match
+            case Right(found) => assertEquals(found.rank, Some("subgenus"))
+            case Left(error)  => fail(error.toString)
+    }
+
+    test("updateById (administrator removing a rank is allowed)") {
+        val root = initRootWithRank()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${root.getId}",
+                ConceptUpdate(rankName = Some(""), rankLevel = Some("")).stringify,
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val concept = checkResponse[ConceptMetadata](response.body)
+                    assertEquals(concept.rank, None)
+                ,
+                jwt = jwt
+            )
+        )
+    }

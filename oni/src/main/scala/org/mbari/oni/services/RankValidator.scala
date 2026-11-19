@@ -17,6 +17,7 @@
 package org.mbari.oni.services
 
 import org.mbari.oni.domain.{ConceptCreate, ConceptUpdate}
+import org.mbari.oni.InvalidRank
 
 object RankValidator:
 
@@ -95,20 +96,20 @@ object RankValidator:
 
     def throwExceptionIfInvalid(rank: String): Unit =
         if !validate(rank) then
-            throw new IllegalArgumentException(
+            throw InvalidRank(
                 s"Invalid rank ($rank). Should be one of ${RankValidator.ValidRanks.mkString(", ")}"
             )
 
     def throwExceptionIfInvalid(conceptCreate: ConceptCreate): Unit =
         if !validate(conceptCreate) then
             val rank = s"${conceptCreate.rankLevel.getOrElse("")}${conceptCreate.rankName.getOrElse("")}"
-            throw new IllegalArgumentException(
+            throw InvalidRank(
                 s"Invalid rank level + rank name ($rank). Should be one of ${RankValidator.ValidRanks.mkString(", ")}"
             )
 
     def throwExceptionIfInvalid(conceptUpdate: ConceptUpdate): Unit =
         if !validate(conceptUpdate.rankLevel, conceptUpdate.rankName) then
             val rank = s"${conceptUpdate.rankLevel.getOrElse("")}${conceptUpdate.rankName.getOrElse("")}"
-            throw new IllegalArgumentException(
+            throw InvalidRank(
                 s"Invalid rank level + rank name ($rank). Should be one of ${RankValidator.ValidRanks.mkString(", ")}"
             )

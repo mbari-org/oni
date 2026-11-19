@@ -189,3 +189,236 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
             )
         )
     }
+
+    // --- By id
+
+    private def nameIds(rawConcept: RawConcept): (Long, Long) =
+        val primary = rawConcept.names.find(_.nameType == ConceptNameTypes.PRIMARY.getType).flatMap(_.id)
+        val other   = rawConcept.names.find(_.nameType != ConceptNameTypes.PRIMARY.getType).flatMap(_.id)
+        assert(primary.isDefined && other.isDefined, s"Expected primary and non-primary name ids in $rawConcept")
+        (primary.get, other.get)
+
+    test("findConceptNameById") {
+        val rawRoot        = RawConcept.from(init(3, 3))
+        val (primaryId, _) = nameIds(rawRoot)
+        runGet(
+            endpoints.findConceptNameByIdEndpointImpl,
+            s"http://test.com/v1/names/id/$primaryId",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val rawConcept = checkResponse[RawConcept](response.body)
+                assertEquals(rawConcept.id, rawRoot.id)
+                assert(rawConcept.names.flatMap(_.id).contains(primaryId))
+        )
+    }
+
+    test("findConceptNameById (no match)") {
+        init(2, 0)
+        runGet(
+            endpoints.findConceptNameByIdEndpointImpl,
+            s"http://test.com/v1/names/id/${Long.MaxValue}",
+            response => assertEquals(response.code, StatusCode.NotFound)
+        )
+    }
+
+    test("findConceptNameById (non-numeric id)") {
+        runGet(
+            endpoints.findConceptNameByIdEndpointImpl,
+            "http://test.com/v1/names/id/notanumber",
+            response => assertEquals(response.code, StatusCode.BadRequest)
+        )
+    }
+
+    test("updateConceptNameById") {
+        val rawRoot        = RawConcept.from(init(3, 3))
+        val (primaryId, _) = nameIds(rawRoot)
+        val oldName        = rawRoot.primaryName
+        val newName        = Strings.random(12)
+
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/$primaryId",
+                ConceptNameUpdate(newName = Some(newName)).stringify,
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val names = checkResponse[RawConcept](response.body).names
+                    assert(!names.map(_.name).contains(oldName))
+                    assertEquals(names.find(_.name == newName).flatMap(_.id), Some(primaryId))
+                ,
+                jwt = jwt
+            )
+        )
+    }
+
+    test("updateConceptNameById (no match)") {
+        init(2, 0)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/${Long.MaxValue}",
+                ConceptNameUpdate(author = Some("x")).stringify,
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("updateConceptNameById (read-only user is denied)") {
+        val rawRoot        = RawConcept.from(init(3, 3))
+        val (primaryId, _) = nameIds(rawRoot)
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/$primaryId",
+                ConceptNameUpdate(newName = Some(Strings.random(12))).stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameEndpointImpl,
+            s"http://test.com/v1/names/${rawRoot.primaryName}",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("updateConceptNameById (no jwt)") {
+        val rawRoot        = RawConcept.from(init(2, 0))
+        val (primaryId, _) = nameIds(rawRoot)
+        runPut(
+            endpoints.updateConceptNameByIdEndpointImpl,
+            s"http://test.com/v1/names/id/$primaryId",
+            ConceptNameUpdate(author = Some("x")).stringify,
+            response => assertEquals(response.code, StatusCode.Unauthorized)
+        )
+    }
+
+    test("deleteConceptNameById") {
+        val rawRoot      = RawConcept.from(init(3, 3))
+        val (_, otherId) = nameIds(rawRoot)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/$otherId",
+                response =>
+                    assertEquals(response.code, StatusCode.Ok)
+                    val rawConcept = checkResponse[RawConcept](response.body)
+                    assert(!rawConcept.names.flatMap(_.id).contains(otherId))
+                ,
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameByIdEndpointImpl,
+            s"http://test.com/v1/names/id/$otherId",
+            response => assertEquals(response.code, StatusCode.NotFound)
+        )
+    }
+
+    test("deleteConceptNameById (primary name returns 400)") {
+        val rawRoot        = RawConcept.from(init(2, 0))
+        val (primaryId, _) = nameIds(rawRoot)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/$primaryId",
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameByIdEndpointImpl,
+            s"http://test.com/v1/names/id/$primaryId",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("deleteConceptNameById (no match)") {
+        init(2, 0)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/${Long.MaxValue}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("deleteConceptNameById (read-only user is denied)") {
+        val rawRoot      = RawConcept.from(init(3, 3))
+        val (_, otherId) = nameIds(rawRoot)
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/$otherId",
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameByIdEndpointImpl,
+            s"http://test.com/v1/names/id/$otherId",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    // --- Invalid concept name changes return 400 Bad Request
+
+    test("deleteConceptName (primary name returns 400)") {
+        val rawRoot = RawConcept.from(init(2, 0))
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteConceptNameEndpointImpl,
+                s"http://test.com/v1/names/${rawRoot.primaryName}",
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameEndpointImpl,
+            s"http://test.com/v1/names/${rawRoot.primaryName}",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("updateConceptName (primary to non-primary returns 400)") {
+        val rawRoot = RawConcept.from(init(2, 0))
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateConceptNameEndpointImpl,
+                s"http://test.com/v1/names/${rawRoot.primaryName}",
+                ConceptNameUpdate(nameType = Some(ConceptNameTypes.COMMON.getType)).stringify,
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("updateConceptNameById (primary to non-primary returns 400)") {
+        val rawRoot        = RawConcept.from(init(2, 0))
+        val (primaryId, _) = nameIds(rawRoot)
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateConceptNameByIdEndpointImpl,
+                s"http://test.com/v1/names/id/$primaryId",
+                ConceptNameUpdate(nameType = Some(ConceptNameTypes.COMMON.getType)).stringify,
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("updateConceptName (invalid name type returns 400)") {
+        val rawRoot = RawConcept.from(init(2, 0))
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateConceptNameEndpointImpl,
+                s"http://test.com/v1/names/${rawRoot.primaryName}",
+                ConceptNameUpdate(nameType = Some("notANameType")).stringify,
+                response => assertEquals(response.code, StatusCode.BadRequest),
+                jwt = jwt
+            )
+        )
+    }

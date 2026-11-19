@@ -79,6 +79,19 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
             handleErrorsAsync(service.findByName(name))
         }
 
+    val findConceptNameByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, RawConcept, Any] = openEndpoint
+        .get
+        .in(base / "id" / path[Long]("id"))
+        .out(jsonBody[RawConcept])
+        .name("findConceptNameById")
+        .description("Find the concept that owns the concept name with the given id")
+        .tag(tag)
+
+    val findConceptNameByIdEndpointImpl: ServerEndpoint[Any, Future] = findConceptNameByIdEndpoint
+        .serverLogic { id =>
+            handleErrorsAsync(service.findById(id))
+        }
+
     val updateConceptNameEndpoint: Endpoint[Option[String], (String, ConceptNameUpdate), ErrorMsg, RawConcept, Any] =
         secureEndpoint
             .put
@@ -109,18 +122,57 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
             handleSecureErrorsAsync(service.deleteName(name, userAccount.username))
         }
 
+    val updateConceptNameByIdEndpoint: Endpoint[Option[String], (Long, ConceptNameUpdate), ErrorMsg, RawConcept, Any] =
+        secureEndpoint
+            .put
+            .in(base / "id" / path[Long]("id"))
+            .in(jsonBody[ConceptNameUpdate])
+            .out(jsonBody[RawConcept])
+            .name("updateConceptNameById")
+            .description("Update a concept name by id. To remove the author, set it to an empty string")
+            .tag(tag)
+
+    val updateConceptNameByIdEndpointImpl: ServerEndpoint[Any, Future] = updateConceptNameByIdEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => (id, dto) =>
+            handleSecureErrorsAsync(service.updateNameById(id, dto, userAccount.username))
+        }
+
+    val deleteConceptNameByIdEndpoint: Endpoint[Option[String], Long, ErrorMsg, RawConcept, Any] = secureEndpoint
+        .delete
+        .in(base / "id" / path[Long]("id"))
+        .out(jsonBody[RawConcept])
+        .name("deleteConceptNameById")
+        .description(
+            "Delete a concept name by id. Primary names cannot be deleted. Administrators delete immediately; " +
+                "other users create a pending delete that must be approved by an administrator."
+        )
+        .tag(tag)
+
+    val deleteConceptNameByIdEndpointImpl: ServerEndpoint[Any, Future] = deleteConceptNameByIdEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => id =>
+            handleSecureErrorsAsync(service.deleteNameById(id, userAccount.username))
+        }
+
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findConceptNameEndpoint,
+        findConceptNameByIdEndpoint,
         allEndpoint,
         addConceptNameEndpoint,
         updateConceptNameEndpoint,
-        deleteConceptNameEndpoint
+        updateConceptNameByIdEndpoint,
+        deleteConceptNameEndpoint,
+        deleteConceptNameByIdEndpoint
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
         findConceptNameEndpointImpl,
+        findConceptNameByIdEndpointImpl,
         allEndpointImpl,
         addConceptNameEndpointImpl,
         updateConceptNameEndpointImpl,
-        deleteConceptNameEndpointImpl
+        updateConceptNameByIdEndpointImpl,
+        deleteConceptNameEndpointImpl,
+        deleteConceptNameByIdEndpointImpl
     )

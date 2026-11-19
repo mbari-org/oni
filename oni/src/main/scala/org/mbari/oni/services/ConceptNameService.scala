@@ -19,9 +19,9 @@ package org.mbari.oni.services
 import jakarta.persistence.{EntityManager, EntityManagerFactory}
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, RawConcept}
 import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, UserAccountEntity}
+import org.mbari.oni.jpa.entities.{ConceptNameEntity, HistoryEntity, HistoryEntityFactory, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptNameRepository, ConceptRepository}
-import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameNotFound}
+import org.mbari.oni.{ConceptNameAlreadyExists, ConceptNameIdNotFound, ConceptNameNotFound, InvalidConceptNameChange}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -54,6 +54,15 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                 case None         => throw ConceptNameNotFound(name)
                 case Some(entity) =>
                     RawConcept.from(entity.getConcept(), false)
+        )
+
+    /** Find the concept that owns the concept name with the given id */
+    def findById(id: Long): Either[Throwable, RawConcept] =
+        entityManagerFactory.readOnlyTransaction(entityManager =>
+            val repo = new ConceptNameRepository(entityManager)
+            repo.findById(id).toScala match
+                case None         => throw ConceptNameIdNotFound(id)
+                case Some(entity) => RawConcept.from(entity.getConcept(), false)
         )
 
     def addName(dto: ConceptNameCreate, userName: String): Either[Throwable, RawConcept] =
@@ -100,14 +109,28 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
         yield concept
 
     def updateName(name: String, dto: ConceptNameUpdate, userName: String): Either[Throwable, RawConcept] =
+        updateNameWith(repo => repo.findByName(name).toScala.toRight(ConceptNameNotFound(name)), dto, userName)
+
+    def updateNameById(id: Long, dto: ConceptNameUpdate, userName: String): Either[Throwable, RawConcept] =
+        updateNameWith(repo => repo.findById(id).toScala.toRight(ConceptNameIdNotFound(id)), dto, userName)
+
+    /**
+     * Update a concept name.
+     * @param lookup
+     *   Finds the concept name to update within the transaction
+     */
+    private def updateNameWith(
+        lookup: ConceptNameRepository => Either[Throwable, ConceptNameEntity],
+        dto: ConceptNameUpdate,
+        userName: String
+    ): Either[Throwable, RawConcept] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new ConceptNameRepository(entityManager)
 
                 // Make sure the old name exists
-                val conceptNameOpt      = repo.findByName(name).toScala
-                if conceptNameOpt.isEmpty then throw ConceptNameNotFound(name)
-                val existingConceptName = conceptNameOpt.get // EXISTING NAME
+                val existingConceptName = lookup(repo).fold(e => throw e, identity) // EXISTING NAME
+                val name                = existingConceptName.getName
                 val existingNameType    = ConceptNameTypes.fromString(existingConceptName.getNameType)
 
                 // Mae sure the new name does not exist
@@ -125,11 +148,11 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
                     case Some(nameType) =>
                         val newNameType = ConceptNameTypes.fromString(nameType)
                         if newNameType == null then
-                            throw new IllegalArgumentException(
+                            throw InvalidConceptNameChange(
                                 s"Invalid name type: $nameType. Must be one of ${ConceptNameTypes.values.mkString(", ")}"
                             )
                         if existingNameType == ConceptNameTypes.PRIMARY && newNameType != ConceptNameTypes.PRIMARY then
-                            throw new IllegalArgumentException(
+                            throw InvalidConceptNameChange(
                                 "Attempting to change a primary name to a non-primary name. Use add name instead."
                             )
                     case None           => ()
@@ -152,18 +175,29 @@ class ConceptNameService(entityManagerFactory: EntityManagerFactory) extends Con
         yield concept
 
     def deleteName(name: String, userName: String): Either[Throwable, RawConcept] =
+        deleteNameWith(repo => repo.findByName(name).toScala.toRight(ConceptNameNotFound(name)), userName)
+
+    def deleteNameById(id: Long, userName: String): Either[Throwable, RawConcept] =
+        deleteNameWith(repo => repo.findById(id).toScala.toRight(ConceptNameIdNotFound(id)), userName)
+
+    /**
+     * Delete a concept name. Administrators remove it immediately; other users create a pending delete history.
+     * @param lookup
+     *   Finds the concept name to delete within the transaction
+     */
+    private def deleteNameWith(
+        lookup: ConceptNameRepository => Either[Throwable, ConceptNameEntity],
+        userName: String
+    ): Either[Throwable, RawConcept] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, RawConcept] =
             entityManagerFactory.transaction(entityManager =>
                 val repo = new ConceptNameRepository(entityManager)
 
                 // Make sure the old name exists
-                val conceptNameOpt = repo.findByName(name).toScala
-                if conceptNameOpt.isEmpty then throw ConceptNameNotFound(name)
-
-                val conceptName = conceptNameOpt.get
+                val conceptName = lookup(repo).fold(e => throw e, identity)
 
                 if conceptName.getNameType.equalsIgnoreCase(ConceptNameTypes.PRIMARY.getType) then
-                    throw new IllegalArgumentException("Cannot delete a primary name. Use add name instead.")
+                    throw InvalidConceptNameChange("Cannot delete a primary name. Use add name instead.")
 
                 val concept = conceptName.getConcept
                 val history = HistoryEntityFactory.delete(userEntity, conceptName)

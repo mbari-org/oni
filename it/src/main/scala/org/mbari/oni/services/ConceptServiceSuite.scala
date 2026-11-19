@@ -485,7 +485,7 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         )
 
         attempt match
-            case Left(e)  => // expected
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.InvalidConceptChange], e.toString)
             case Right(_) => fail("Should not have been able to create a cyclic relation")
     }
 
@@ -597,4 +597,76 @@ trait ConceptServiceSuite extends DatabaseFunSuite with UserAuthMixin:
         attempt match
             case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.ConceptIdNotFound], e.toString)
             case Right(_) => fail("Should not have deleted a non-existent concept")
+    }
+
+    // --- Rank removal is admin-only
+
+    private def rootWithRank(): org.mbari.oni.jpa.entities.ConceptEntity =
+        val root = TestEntityFactory.buildRoot(2)
+        root.setRankName("genus")
+        root.setRankLevel("sub")
+        root
+
+    test("update (maintainer cannot remove rank name and rank level)") {
+        val root    = rootWithRank()
+        val attempt = runWithUserAuth(
+            user =>
+                for
+                    _       <- conceptService.init(root)
+                    updated <- conceptService.updateByName(
+                                   root.getName,
+                                   ConceptUpdate(rankName = Some(""), rankLevel = Some("")),
+                                   user.username
+                               )
+                yield updated,
+            role = UserAccountRoles.MAINTENANCE.getRoleName
+        )
+        attempt match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.AdministratorRequired], e.toString)
+            case Right(_) => fail("A maintainer should not be able to remove a rank")
+
+        conceptService.findByName(root.getName) match
+            case Right(found) =>
+                assertEquals(found.rankLevel, Some("sub"))
+                assertEquals(found.rankName, Some("genus"))
+            case Left(e)      => fail(e.toString)
+    }
+
+    test("update (maintainer cannot remove only the rank level)") {
+        val root    = rootWithRank()
+        val attempt = runWithUserAuth(
+            user =>
+                for
+                    _       <- conceptService.init(root)
+                    updated <- conceptService.updateById(root.getId, ConceptUpdate(rankLevel = Some("")), user.username)
+                yield updated,
+            role = UserAccountRoles.MAINTENANCE.getRoleName
+        )
+        attempt match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.AdministratorRequired], e.toString)
+            case Right(_) => fail("A maintainer should not be able to remove a rank level")
+        conceptService.findByName(root.getName) match
+            case Right(found) => assertEquals(found.rankLevel, Some("sub"))
+            case Left(e)      => fail(e.toString)
+    }
+
+    test("update (maintainer may blank a rank that is already empty)") {
+        val root = TestEntityFactory.buildRoot(2)
+        root.setRankName(null)
+        root.setRankLevel(null)
+        val attempt = runWithUserAuth(
+            user =>
+                for
+                    _       <- conceptService.init(root)
+                    updated <- conceptService.updateByName(
+                                   root.getName,
+                                   ConceptUpdate(rankName = Some(""), rankLevel = Some("")),
+                                   user.username
+                               )
+                yield updated,
+            role = UserAccountRoles.MAINTENANCE.getRoleName
+        )
+        attempt match
+            case Left(e)        => fail(s"Blanking an empty rank is not a removal: $e")
+            case Right(updated) => assertEquals(updated.rank, None)
     }
