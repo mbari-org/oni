@@ -18,8 +18,8 @@ package org.mbari.oni.services
 
 import io.nats.client.Nats
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, LinkRenameToConceptRequest}
-import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.nats.{NatsConfig, NatsMessage, NatsPublisher, NatsSubscriber}
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.EntityManagerFactories.*

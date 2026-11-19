@@ -16,7 +16,6 @@
 
 package org.mbari.oni.etc.nats
 
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.jpa.ChangeEvent
 
 import java.util.UUID

@@ -16,13 +16,18 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, ConceptNameUpdate, Page, RawConcept}
+import org.mbari.oni.domain.{
+  ConceptNameCreate,
+  ConceptNameTypes,
+  ConceptNameUpdate,
+  Page,
+  RawConcept,
+  UserAccountRoles
+}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.services.UserAuthMixin
-import org.mbari.oni.domain.UserAccountRoles
-import org.mbari.oni.etc.jdk.Strings
 import sttp.model.StatusCode
 
 trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:

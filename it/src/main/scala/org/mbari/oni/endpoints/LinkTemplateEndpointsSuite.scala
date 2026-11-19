@@ -17,22 +17,21 @@
 package org.mbari.oni.endpoints
 
 import org.mbari.oni.domain.{
-    Count,
-    ExtendedLink,
-    ILink,
-    LinkCreate,
-    LinkRenameToConceptRequest,
-    LinkRenameToConceptResponse,
-    LinkUpdate,
-    Page
+  Count,
+  ExtendedLink,
+  ILink,
+  LinkCreate,
+  LinkRenameToConceptRequest,
+  LinkRenameToConceptResponse,
+  LinkUpdate,
+  Page,
+  UserAccountRoles
 }
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.services.UserAuthMixin
-import org.mbari.oni.domain.UserAccountRoles
 import sttp.model.StatusCode
 
 import scala.jdk.CollectionConverters.*

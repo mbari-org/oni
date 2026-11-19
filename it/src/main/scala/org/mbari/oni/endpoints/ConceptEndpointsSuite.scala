@@ -16,13 +16,13 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, Rank, UserAccount, UserAccountRoles}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, Rank, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.services.{RankValidator, UserAuthMixin}
+import org.mbari.oni.services.RankValidator
 import sttp.model.StatusCode
 
 import scala.jdk.CollectionConverters.*

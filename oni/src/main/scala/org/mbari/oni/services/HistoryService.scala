@@ -18,11 +18,11 @@ package org.mbari.oni.services
 
 import jakarta.persistence.EntityManagerFactory
 import org.hibernate.query.sqm.PathElementException
-import org.mbari.oni.{InvalidSortField, ItemNotFound}
 import org.mbari.oni.domain.{ExtendedHistory, Sort}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.HistoryEntity
 import org.mbari.oni.jpa.repositories.HistoryRepository
+import org.mbari.oni.{InvalidSortField, ItemNotFound}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*

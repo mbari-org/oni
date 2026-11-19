@@ -33,7 +33,7 @@ import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.entities.{ConceptEntity, TestEntityFactory}
-import org.mbari.oni.services.{ConceptNameService, HistoryService, LinkTemplateService, UserAuthMixin}
+import org.mbari.oni.services.{ConceptNameService, HistoryService, LinkTemplateService}
 import sttp.model.StatusCode
 
 import java.time.Instant

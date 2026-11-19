@@ -17,13 +17,13 @@
 package org.mbari.oni.endpoints
 
 import io.circe.Printer
-import org.mbari.oni.{AccessException, BadRequestException, NotFoundException}
 import org.mbari.oni.config.AppConfig
 import org.mbari.oni.domain.*
 import org.mbari.oni.etc.circe.CirceCodecs
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jwt.JwtService
+import org.mbari.oni.{AccessException, BadRequestException, NotFoundException}
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.shared.Identity

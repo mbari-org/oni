@@ -26,7 +26,6 @@ import org.mbari.oni.{ConceptNameNotFound, ItemNotFound}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
-import org.checkerframework.checker.units.qual.m
 
 class MediaService(entityManagerFactory: EntityManagerFactory, fastPhylogenyService: FastPhylogenyService):
 

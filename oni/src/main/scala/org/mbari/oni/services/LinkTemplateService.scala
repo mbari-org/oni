@@ -26,10 +26,10 @@ import org.mbari.oni.domain.{
     LinkUpdate,
     LinkUtilities
 }
-import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkTemplateEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkTemplateRepository}
+import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 import org.mbari.oni.{ConceptNameNotFound, ItemNotFound, LinkRealizationIdNotFound, LinkTemplateIdNotFound}
 
 import scala.jdk.CollectionConverters.*

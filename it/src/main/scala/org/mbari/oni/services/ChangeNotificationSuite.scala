@@ -16,11 +16,14 @@
 
 package org.mbari.oni.services
 
-import org.mbari.oni.domain.{ConceptNameCreate, LinkRenameToConceptRequest}
+import org.mbari.oni.domain.{
+  ConceptNameCreate,
+  ConceptNameTypes,
+  LinkRenameToConceptRequest
+}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jpa.ChangeEvent.{Action, DataType}
 import org.mbari.oni.jpa.EntityManagerFactories.*
-import org.mbari.oni.domain.ConceptNameTypes
 import org.mbari.oni.jpa.entities.ConceptNameEntity
 import org.mbari.oni.jpa.repositories.ConceptRepository
 import org.mbari.oni.jpa.{ChangeBus, ChangeEvent, DataInitializer}

@@ -16,14 +16,18 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{Media, MediaCreate, MediaTypes, MediaUpdate}
+import org.mbari.oni.domain.{
+  Media,
+  MediaCreate,
+  MediaTypes,
+  MediaUpdate,
+  UserAccountRoles
+}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
-import org.mbari.oni.services.UserAuthMixin
-import org.mbari.oni.domain.UserAccountRoles
 import sttp.model.StatusCode
 
 import java.net.URI
