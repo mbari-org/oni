@@ -1,5 +1,5 @@
 import sbt.*
-object Dependencies {
+object Dependencies:
 
     lazy val auth0                   = "com.auth0"                      % "java-jwt"                   % "4.6.2"
     val caffeineVersion              = "3.3.1"
@@ -48,4 +48,3 @@ object Dependencies {
     lazy val testcontainersOracle    = "org.testcontainers"             % "testcontainers-oracle-xe"   % testcontainersVersion
     lazy val testcontainersPostgres  = "org.testcontainers"             % "testcontainers-postgresql"  % testcontainersVersion
     lazy val typesafeConfig          = "com.typesafe"                   % "config"                     % "1.4.10"
-}

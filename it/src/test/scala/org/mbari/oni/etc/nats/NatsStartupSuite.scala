@@ -74,9 +74,9 @@ class NatsStartupSuite extends munit.FunSuite:
         val config = NatsConfig(s"nats://localhost:$port", enable = true, topic = topic)
 
         // NATS is down at startup
-        val publisher  = NatsPublisher.autowire(Some(config)).getOrElse(fail("NatsPublisher.autowire returned None"))
-        val subscriber = NatsSubscriber.autowire(Some(config)).getOrElse(fail("NatsSubscriber.autowire returned None"))
-        val events     = new CopyOnWriteArrayList[org.mbari.oni.jpa.ChangeEvent]()
+        val publisher   = NatsPublisher.autowire(Some(config)).getOrElse(fail("NatsPublisher.autowire returned None"))
+        val subscriber  = NatsSubscriber.autowire(Some(config)).getOrElse(fail("NatsSubscriber.autowire returned None"))
+        val events      = new CopyOnWriteArrayList[org.mbari.oni.jpa.ChangeEvent]()
         val unsubscribe = ChangeBus.subscribe(e => events.add(e))
 
         // A change is made while NATS is down. It should wait in the queue and be sent once we connect.
@@ -97,7 +97,7 @@ class NatsStartupSuite extends munit.FunSuite:
 
             // The publisher connects on its own schedule, so the queued message may predate our raw subscription.
             // Publish again until one arrives.
-            var message = Option.empty[NatsMessage]
+            var message  = Option.empty[NatsMessage]
             val deadline = System.currentTimeMillis() + 20000
             while message.isEmpty && System.currentTimeMillis() < deadline do
                 ChangeBus.publish(Action.UPDATED, DataType.CONCEPT_NAME, java.lang.Long.valueOf(77))
@@ -109,9 +109,13 @@ class NatsStartupSuite extends munit.FunSuite:
             nc.publish(topic, fromOther.stringify.getBytes(StandardCharsets.UTF_8))
             nc.flush(Duration.ofSeconds(2))
             val deadline2 = System.currentTimeMillis() + 5000
-            while !events.asScala.exists(e => e.remote() && e.dataType() == DataType.MEDIA) && System.currentTimeMillis() < deadline2 do
-                Thread.sleep(50)
-            assert(events.asScala.exists(e => e.remote() && e.dataType() == DataType.MEDIA), "No remote event was received")
+            while !events.asScala.exists(e => e.remote() && e.dataType() == DataType.MEDIA) && System
+                    .currentTimeMillis() < deadline2
+            do Thread.sleep(50)
+            assert(
+                events.asScala.exists(e => e.remote() && e.dataType() == DataType.MEDIA),
+                "No remote event was received"
+            )
             nc.close()
         finally
             unsubscribe.run()

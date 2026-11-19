@@ -35,14 +35,20 @@ class NatsBridgeSuite extends munit.FunSuite:
     test("concept changes are translated to messages") {
         withBridge { (bridge, received) =>
             ChangeBus.publish(Action.CREATED, DataType.CONCEPT, java.lang.Long.valueOf(42))
-            assertEquals(received.asScala.toSeq, Seq(NatsMessage("CREATED", "CONCEPT", Some("42"), Some(NatsMessage.InstanceId))))
+            assertEquals(
+                received.asScala.toSeq,
+                Seq(NatsMessage("CREATED", "CONCEPT", Some("42"), Some(NatsMessage.InstanceId)))
+            )
         }
     }
 
     test("a missing id becomes None") {
         withBridge { (bridge, received) =>
             ChangeBus.publish(Action.UPDATED, DataType.LINK_REALIZATION, null)
-            assertEquals(received.asScala.toSeq, Seq(NatsMessage("UPDATED", "LINK_REALIZATION", None, Some(NatsMessage.InstanceId))))
+            assertEquals(
+                received.asScala.toSeq,
+                Seq(NatsMessage("UPDATED", "LINK_REALIZATION", None, Some(NatsMessage.InstanceId)))
+            )
         }
     }
 

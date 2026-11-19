@@ -6,42 +6,41 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 Universal / javaOptions += "-J-XX:-UseBASE64Intrinsics"
 
 ThisBuild / javacOptions ++= Seq("-target", "25", "-source", "25")
-ThisBuild / licenses         := Seq("Apache-2.0" -> uri("http://www.apache.org/licenses/LICENSE-2.0"))
-ThisBuild / organization     := "org.mbari"
-ThisBuild / organizationName := "Monterey Bay Aquarium Research Institute"
+ThisBuild / licenses          := Seq("Apache-2.0" -> uri("http://www.apache.org/licenses/LICENSE-2.0"))
+ThisBuild / organization      := "org.mbari"
+ThisBuild / organizationName  := "Monterey Bay Aquarium Research Institute"
 // ThisBuild / resolvers ++= Seq(Resolver.githubPackages("mbari-org", "maven"))
-ThisBuild / scalaVersion     := "3.10.1"
+ThisBuild / scalaVersion      := "3.10.1"
 // Pipelining is disabled: sbt 2.x downstream projects compile against the upstream
 // early-output JAR, which contains Scala pickles only -- javac output is not in it.
 // Every module here that has downstream consumers (oni, it) has Java sources, so
 // their Java types (ConceptEntity, UserAccountRoles, ...) are invisible downstream.
 // This worked under sbt 1.12.5; it breaks under sbt 2.0.8.
-ThisBuild / usePipelining    := false
+ThisBuild / usePipelining     := false
 // sbt 2 defaults exportJars to true, putting JARs on the classpath where sbt 1 used
 // class directories. That breaks test code doing Paths.get(getResource(...).toURI),
 // which throws FileSystemNotFoundException on a jar: URI (ScriptsSuite,
 // TestRepositorySuite). Keep sbt 1's directory-based classpath.
-ThisBuild / exportJars       := false
+ThisBuild / exportJars        := false
 // ThisBuild / scalaVersion     := "3.4.2"
 // ThisBuild / scalaVersion     := "3.3.1" // Fails. See https://github.com/lampepfl/dotty/issues/17069#issuecomment-1763053572
 ThisBuild / scalacOptions ++= Seq(
-    "-deprecation",  // Emit warning and location for usages of deprecated APIs.
+    "-deprecation",    // Emit warning and location for usages of deprecated APIs.
     "-encoding",
-    "UTF-8",         // yes, this is 2 args. Specify character encoding used by source files.
-    "-explaintypes", // Explain type errors in more detail.
-    "-feature",      // Emit warning and location for usages of features that should be imported explicitly.
+    "UTF-8",           // yes, this is 2 args. Specify character encoding used by source files.
+    "-explaintypes",   // Explain type errors in more detail.
+    "-feature",        // Emit warning and location for usages of features that should be imported explicitly.
     "-language:existentials",
     "-language:higherKinds",
     "-language:implicitConversions",
     "-unchecked",
-    "-Wunused:imports", // Warn if an import selector is not referenced.
+    "-Wunused:imports" // Warn if an import selector is not referenced.
 )
-ThisBuild / startYear        := Some(2024)
+ThisBuild / startYear         := Some(2024)
 //ThisBuild / updateOptions    := updateOptions.value.withCachedResolution(true)
-ThisBuild / versionScheme    := Some("semver-spec")
+ThisBuild / versionScheme     := Some("semver-spec")
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
-
 
 ThisBuild / Test / fork              := true
 ThisBuild / Test / parallelExecution := false
@@ -54,79 +53,81 @@ ThisBuild / Test / javaOptions ++= Seq(
 )
 
 lazy val oni = project
-  .in(file("oni"))
-  .enablePlugins(
-    AutomateHeaderPlugin,
-    DockerPlugin,
-    GitBranchPrompt,
-    GitVersioning,
-    JavaAppPackaging
-  )
-  .settings(
-    // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
-    // Use `show gitCurrentTags` in sbt to update/see the tags
-    dockerBaseImage    := "eclipse-temurin:25",
-    dockerExposedPorts := Seq(8080),
-    dockerUpdateLatest := true,
-    // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
-    // Use `show gitCurrentTags` in sbt to update/see the tags
-    git.gitTagToVersionNumber := { (gitTag: String) =>
-        if (gitTag.matches("[0-9]+\\..*")) Some(gitTag)
-        else None
-    },
-    git.useGitDescribe := true,
-    bashScriptExtraDefines ++= Seq(
+    .in(file("oni"))
+    .enablePlugins(
+        AutomateHeaderPlugin,
+        DockerPlugin,
+        GitBranchPrompt,
+        GitVersioning,
+        JavaAppPackaging
+    )
+    .settings(
+        // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
+        // Use `show gitCurrentTags` in sbt to update/see the tags
+        dockerBaseImage           := "eclipse-temurin:25",
+        dockerExposedPorts        := Seq(8080),
+        dockerUpdateLatest        := true,
+        // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
+        // Use `show gitCurrentTags` in sbt to update/see the tags
+        git.gitTagToVersionNumber := { (gitTag: String) =>
+            if (gitTag.matches("[0-9]+\\..*")) Some(gitTag)
+            else None
+        },
+        git.useGitDescribe        := true,
+        bashScriptExtraDefines ++= Seq(
             """addJava "-Dconfig.file=${app_home}/../conf/application.conf"""",
             """addJava "-Dlogback.configurationFile=${app_home}/../conf/logback.xml""""
         ),
-    batScriptExtraDefines ++= Seq(
-        """call :add_java "-Dconfig.file=%APP_HOME%\conf\application.conf"""",
-        """call :add_java "-Dlogback.configurationFile=%APP_HOME%\conf\logback.xml""""
-    ),
-    libraryDependencies ++= Seq(
-        auth0,
-        caffeine,
-        caffeineJCache,
-        circeCore,
-        circeGeneric,
-        circeParser,
-        commonsCodec,
-        flywayCore,
-        flywayPostgres,
-        flywaySqlserver,
-        flywayCore,
-        flywayPostgres,
-        flywaySqlserver,
-        hibernateCore,
-        hibernateJCache,
-        hibernateHikari,
-        hikariCp,
-        jansi             % Runtime,
-        jaspyt,
-        jnats,
-        junit             % Test,
-        logback,
-        mssqlserver,
-        munit             % Test,
-        oracle,
-        postgresql,
-        slf4jSystem,
-        tapirCirce,
-        tapirPrometheus,
-        tapirServerStub   % Test,
-        tapirSttpCirce,
-        tapirSwagger,
-        tapirVertex,
-        typesafeConfig
-    ),
-    scalacOptions ++= Seq(
-        "-groups",
-        "-project-footer", "Monterey Bay Aquarium Research Institute",
-        "-siteroot", "oni/src/docs",
-        "-doc-root-content", "oni/src/docs/index.md"
+        batScriptExtraDefines ++= Seq(
+            """call :add_java "-Dconfig.file=%APP_HOME%\conf\application.conf"""",
+            """call :add_java "-Dlogback.configurationFile=%APP_HOME%\conf\logback.xml""""
+        ),
+        libraryDependencies ++= Seq(
+            auth0,
+            caffeine,
+            caffeineJCache,
+            circeCore,
+            circeGeneric,
+            circeParser,
+            commonsCodec,
+            flywayCore,
+            flywayPostgres,
+            flywaySqlserver,
+            flywayCore,
+            flywayPostgres,
+            flywaySqlserver,
+            hibernateCore,
+            hibernateJCache,
+            hibernateHikari,
+            hikariCp,
+            jansi           % Runtime,
+            jaspyt,
+            jnats,
+            junit           % Test,
+            logback,
+            mssqlserver,
+            munit           % Test,
+            oracle,
+            postgresql,
+            slf4jSystem,
+            tapirCirce,
+            tapirPrometheus,
+            tapirServerStub % Test,
+            tapirSttpCirce,
+            tapirSwagger,
+            tapirVertex,
+            typesafeConfig
+        ),
+        scalacOptions ++= Seq(
+            "-groups",
+            "-project-footer",
+            "Monterey Bay Aquarium Research Institute",
+            "-siteroot",
+            "oni/src/docs",
+            "-doc-root-content",
+            "oni/src/docs/index.md"
+        )
     )
-  )
-
 
 lazy val integrationTests = (project in file("it"))
     .dependsOn(oni)
@@ -145,28 +146,28 @@ lazy val integrationTests = (project in file("it"))
     )
 
 lazy val itPostgres = (project in file("it-postgres"))
-  .dependsOn(integrationTests)
-  .enablePlugins(
-    AutomateHeaderPlugin
-  )
-  .settings(
-    libraryDependencies ++= Seq(
-      testcontainersPostgres,
-      flywayCore,
-      flywayPostgres
+    .dependsOn(integrationTests)
+    .enablePlugins(
+        AutomateHeaderPlugin
     )
-  )
+    .settings(
+        libraryDependencies ++= Seq(
+            testcontainersPostgres,
+            flywayCore,
+            flywayPostgres
+        )
+    )
 
 lazy val itSqlserver = (project in file("it-sqlserver"))
-  .dependsOn(integrationTests)
-  .enablePlugins(
-    AutomateHeaderPlugin
-  )
-  .settings(
-    libraryDependencies ++= Seq(
-      slf4jJulBridge,
-      testcontainersSqlserver,
-      flywayCore,
-      flywaySqlserver,
+    .dependsOn(integrationTests)
+    .enablePlugins(
+        AutomateHeaderPlugin
     )
-  )
+    .settings(
+        libraryDependencies ++= Seq(
+            slf4jJulBridge,
+            testcontainersSqlserver,
+            flywayCore,
+            flywaySqlserver
+        )
+    )

@@ -28,8 +28,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 import scala.jdk.CollectionConverters.*
 
 /**
- * Receives messages through a real NATS server running in a container. A raw NATS client plays the part of "another
- * Oni instance".
+ * Receives messages through a real NATS server running in a container. A raw NATS client plays the part of "another Oni
+ * instance".
  */
 class NatsSubscriberSuite extends munit.FunSuite:
 
@@ -42,11 +42,11 @@ class NatsSubscriberSuite extends munit.FunSuite:
     private val topic   = "test.oni.subscriber"
     private val config  = NatsConfig(natsUrl, enable = true, topic = topic)
 
-    private val events = new CopyOnWriteArrayList[ChangeEvent]()
+    private val events      = new CopyOnWriteArrayList[ChangeEvent]()
     private val unsubscribe = ChangeBus.subscribe(e => events.add(e))
 
     // Records everything on the topic, so we can see whether anything is echoed back
-    private val onTopic    = new CopyOnWriteArrayList[String]()
+    private val onTopic       = new CopyOnWriteArrayList[String]()
     private val otherInstance = Nats.connect(natsUrl)
     otherInstance
         .createDispatcher(msg => onTopic.add(new String(msg.getData, StandardCharsets.UTF_8)))
@@ -122,7 +122,10 @@ class NatsSubscriberSuite extends munit.FunSuite:
     test("an unknown action or data type is treated as a generic concept change") {
         sendFromOtherInstance(NatsMessage("TRUNCATED", "SOMETHING_NEW", Some("5"), Some("other-instance")))
         val event = await(e => e.id() == "5")
-        assertEquals(event.map(e => (e.action(), e.dataType(), e.remote())), Some((Action.UPDATED, DataType.CONCEPT, true)))
+        assertEquals(
+            event.map(e => (e.action(), e.dataType(), e.remote())),
+            Some((Action.UPDATED, DataType.CONCEPT, true))
+        )
     }
 
     test("an unparseable message is ignored and the subscription keeps working") {

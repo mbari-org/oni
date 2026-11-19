@@ -16,7 +16,6 @@
 
 package org.mbari.oni
 
-
 import java.net.URI
 import java.nio.file.{FileSystem, FileSystemAlreadyExistsException, FileSystems, Files, Path, Paths, StandardCopyOption}
 import java.util as ju
@@ -94,4 +93,3 @@ object TestResources:
             // Files.walk is pre-order, so reversing lists children before their parents
             val paths = Using.resource(Files.walk(path))(_.iterator().asScala.toList)
             paths.reverse.foreach(Files.deleteIfExists)
-
