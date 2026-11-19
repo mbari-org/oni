@@ -763,3 +763,34 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
             jwt = Some("not.a.valid.jwt")
         )
     }
+
+    test("updateById (locked user is denied)") {
+        val root  = init(2, 0)
+        val child = root.getChildConcepts.iterator().next()
+        withRole(UserAccountRoles.LOCKED)(jwt =>
+            runPut(
+                endpoints.updateByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${child.getId}",
+                ConceptUpdate(aphiaId = Some(24680L)).stringify,
+                response => assertEquals(response.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        conceptService.findById(child.getId) match
+            case Left(error)  => fail(error.toString)
+            case Right(found) => assertNotEquals(found.aphiaId, Some(24680L))
+    }
+
+    test("deleteById (locked user is denied)") {
+        val root  = init(3, 0)
+        val child = root.getChildConcepts.iterator().next()
+        withRole(UserAccountRoles.LOCKED)(jwt =>
+            runDelete(
+                endpoints.deleteByIdEndpointImpl,
+                s"http://test.com/v1/concept/id/${child.getId}",
+                response => assertEquals(response.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assert(conceptService.findById(child.getId).isRight)
+    }

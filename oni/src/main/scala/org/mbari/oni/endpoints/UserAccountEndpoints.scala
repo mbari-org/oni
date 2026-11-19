@@ -17,7 +17,15 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, NotFound, UserAccount, UserAccountCreate, UserAccountInfo, UserAccountUpdate}
+import org.mbari.oni.domain.{
+    ErrorMsg,
+    NotFound,
+    UserAccount,
+    UserAccountCreate,
+    UserAccountInfo,
+    UserAccountRoles,
+    UserAccountUpdate
+}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAccountService
@@ -36,7 +44,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
     private val base    = "users"
     private val tag     = "User Accounts"
 
-    /** Changes to user accounts require the API key or a user who is currently an administrator */
+    /** Deleting user accounts requires the API key or a user who is currently an administrator */
     private def verifyApiKeyOrAdminAsync(jwtOpt: Option[String]): Future[Either[ErrorMsg, Unit]] =
         verifyApiKeyOrUserAsync(jwtOpt, service.findByUserName, _.isAdministrator)
 
@@ -80,11 +88,32 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / "role" / path[String]("role"))
             .out(jsonBody[Seq[UserAccountInfo]])
             .name("userAccountsByRole")
-            .description("Find all user accounts by role")
+            .description(
+                "Find all user accounts with a role. The role is matched exactly, ignoring case; an unrecognized role " +
+                    "returns an empty list. Accounts whose stored role isn't recognized are treated as ReadOnly, so " +
+                    "they're listed under ReadOnly."
+            )
             .tag(tag)
 
     val findAllByRoleEndpointImpl: ServerEndpoint[Any, Future] = findAllByRoleEndpoint.serverLogic { role =>
         handleErrorsAsync(service.findAllByRole(role).map(_.map(UserAccountInfo.from)))
+    }
+
+    // listRoles
+    val listRolesEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[String], Any] =
+        openEndpoint
+            .get
+            .in(base / "list" / "roles")
+            .out(jsonBody[Seq[String]])
+            .name("userAccountRoles")
+            .description(
+                "List the recognized user account roles, e.g. [\"Admin\", \"Maint\", \"ReadOnly\", \"Locked\"]. These " +
+                    "are the values to use for `role`. A stored role that isn't one of these is treated as ReadOnly."
+            )
+            .tag(tag)
+
+    val listRolesEndpointImpl: ServerEndpoint[Any, Future] = listRolesEndpoint.serverLogic { _ =>
+        Future.successful(Right(UserAccountRoles.values.toSeq.map(_.getRoleName)))
     }
 
     // deleteByUserName
@@ -120,13 +149,22 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
             )
             .out(jsonBody[UserAccountInfo])
             .name("createUserAccount")
-            .description("Create a new user account. Accepts a JSON or form body. Requires an API key token or an administrator login.")
+            .description(
+                "Create a new user account. Accepts a JSON or form body. `role` defaults to ReadOnly and must be a " +
+                    "valid role (400 otherwise). Requires an API key token, an administrator login, or a maintainer " +
+                    "login; maintainers can only create ReadOnly accounts (403 otherwise)."
+            )
             .tag(tag)
 
     val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
-        .serverSecurityLogic(jwtOpt => verifyApiKeyOrAdminAsync(jwtOpt))
-        .serverLogic { _ => userAccount =>
-            handleSecureErrorsAsync(service.create(userAccount.toUserAccount).map(UserAccountInfo.from))
+        .serverSecurityLogic(jwtOpt => resolveCallerAsync(jwtOpt, service.findByUserName))
+        .serverLogic { caller => userAccount =>
+            UserAccountAccess.checkCreate(caller, userAccount.role) match
+                case Left(error) => Future.successful(Left(error))
+                case Right(role) =>
+                    // Store the canonical role name: access checks compare role names exactly
+                    val account = userAccount.toUserAccount.copy(role = role.getRoleName)
+                    handleSecureErrorsAsync(service.create(account).map(UserAccountInfo.from))
         }
 
     // update
@@ -137,16 +175,27 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[UserAccountUpdate])
             .out(jsonBody[UserAccountInfo])
             .name("updateUserAccount")
-            .description("Update a user account. Requires an API key token or an administrator login.")
+            .description(
+                "Update a user account. API key tokens and administrators can update any account, including its " +
+                    "role. Other users can update only their own account and can't change its role (403 otherwise). " +
+                    "Locked users can't update anything. `role` must be a valid role (400 otherwise). Returns 404 if " +
+                    "the account doesn't exist."
+            )
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
-        .serverSecurityLogic(jwtOpt => verifyApiKeyOrAdminAsync(jwtOpt))
-        .serverLogic { _ => (name, userAccountUpdate) =>
-            handleSecureErrorsAsync(service.update(name, userAccountUpdate).map(UserAccountInfo.from))
+        .serverSecurityLogic(jwtOpt => resolveCallerAsync(jwtOpt, service.findByUserName))
+        .serverLogic { caller => (name, userAccountUpdate) =>
+            UserAccountAccess.checkUpdate(caller, name, userAccountUpdate.role) match
+                case Left(error) => Future.successful(Left(error))
+                case Right(role) =>
+                    // Store the canonical role name: access checks compare role names exactly
+                    val update = userAccountUpdate.copy(role = role.map(_.getRoleName))
+                    handleSecureErrorsAsync(service.update(name, update).map(UserAccountInfo.from))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
+        listRolesEndpoint,
         findAllByRoleEndpoint,
         findByUserNameEndpoint,
         findAllEndpoint,
@@ -156,6 +205,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
     )
 
     override def allImpl: List[ServerEndpoint[Any, Future]] = List(
+        listRolesEndpointImpl,
         findAllByRoleEndpointImpl,
         findByUserNameEndpointImpl,
         findAllEndpointImpl,

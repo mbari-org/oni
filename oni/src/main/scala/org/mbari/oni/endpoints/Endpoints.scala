@@ -237,26 +237,48 @@ trait Endpoints:
         allowed: UserAccount => Boolean,
         allowApiKey: Boolean
     )(using jwtService: JwtService): Either[ErrorMsg, Unit] =
+        resolveCaller(jwtOpt, findUser).flatMap {
+            case Caller.ApiKey                       =>
+                if allowApiKey then Right(())
+                else Left(Forbidden("This endpoint requires a user login; API key tokens are not accepted"))
+            case Caller.User(user) if allowed(user) => Right(())
+            case Caller.User(user)                  => Left(Forbidden(s"User `${user.username}` is not permitted to do this"))
+        }
+
+    /**
+     * Works out who is calling, for endpoints whose rules depend on both the caller and the request (e.g. what's being
+     * changed). A user's account, including their role, is looked up with `findUser` rather than trusted from the token,
+     * so a user who has been demoted can't keep using a still-valid token.
+     *
+     * @return
+     *   [[Caller.ApiKey]] for an API-key token, [[Caller.User]] for a user login, or an error: 401 for a missing or
+     *   invalid token or a user that no longer exists, 500 if the user couldn't be looked up
+     */
+    def resolveCaller(
+        jwtOpt: Option[String],
+        findUser: String => Either[Throwable, Option[UserAccount]]
+    )(using jwtService: JwtService): Either[ErrorMsg, Caller] =
         jwtOpt match
             case None      => Left(Unauthorized("Missing token"))
             case Some(jwt) =>
                 jwtService.decode(jwt) match
                     case None                                    => Left(Unauthorized("Invalid token"))
-                    // API-key tokens (JwtService.authorize) carry no user name claim
-                    case Some(claims) if claims.username == null =>
-                        if allowApiKey then Right(())
-                        else Left(Forbidden("This endpoint requires a user login; API key tokens are not accepted"))
+                    // API-key tokens (JwtService.authorize) carry no user name claim. Holders of the API key are trusted.
+                    case Some(claims) if claims.username == null => Right(Caller.ApiKey)
                     case Some(claims)                            =>
                         findUser(claims.username) match
-                            case Right(Some(user)) if allowed(user) => Right(())
-                            case Right(Some(user))                  =>
-                                Left(Forbidden(s"User `${user.username}` is not permitted to do this"))
-                            case Right(None)                        =>
-                                Left(Unauthorized(s"User `${claims.username}` does not exist"))
-                            case Left(e)                            =>
+                            case Right(Some(user)) => Right(Caller.User(user))
+                            case Right(None)       => Left(Unauthorized(s"User `${claims.username}` does not exist"))
+                            case Left(e)           =>
                                 // Fail closed if we can't verify the user
                                 log.atError.withCause(e).log(s"Unable to look up user `${claims.username}`")
                                 Left(ServerError("Unable to verify user"))
+
+    def resolveCallerAsync(
+        jwtOpt: Option[String],
+        findUser: String => Either[Throwable, Option[UserAccount]]
+    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[ErrorMsg, Caller]] =
+        Future(resolveCaller(jwtOpt, findUser))
 
     def verifyLogin(
         jwtOpt: Option[String]

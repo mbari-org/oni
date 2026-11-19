@@ -493,7 +493,7 @@ class ConceptService(val entityManagerFactory: EntityManagerFactory):
 
         // -- Helper function to delete a concept
         def txn(userEntity: UserAccountEntity): Either[Throwable, Int] =
-            if userEntity.isReadOnly then throw AccessDenied(userEntity.getUserName)
+            if !(userEntity.isAdministrator || userEntity.isMaintainer) then throw AccessDenied(userEntity.getUserName)
 
             entityManagerFactory.transaction(entityManager =>
                 val repo = new ConceptRepository(entityManager)

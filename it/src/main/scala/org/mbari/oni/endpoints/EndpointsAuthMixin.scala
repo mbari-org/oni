@@ -33,14 +33,19 @@ trait EndpointsAuthMixin extends UserAuthMixin:
     /**
      * Create a temporary user with the given role, run `f` with a JWT for that user, then delete the user.
      *
-     * `JwtService.login` only issues tokens to administrators and maintainers. To get a token for a READONLY user the
-     * user is logged in as a maintainer and then demoted. This mirrors a real scenario (a user demoted while holding a
-     * still-valid token) and makes sure the request reaches the service-layer access checks instead of being rejected
-     * for a missing token.
+     * `JwtService.login` only issues tokens to administrators and maintainers. To get a token for any other role
+     * (ReadOnly, Locked) the user is logged in as a maintainer and then demoted. This mirrors a real scenario (a user
+     * demoted while holding a still-valid token) and makes sure the request reaches the access checks instead of being
+     * rejected for a missing token.
      */
     def withRole(role: UserAccountRoles)(f: Option[String] => Unit): Unit =
+        withRoleAccount(role)((_, jwt) => f(jwt))
+
+    /** Like [[withRole]], but `f` also receives the temporary user's username. */
+    def withRoleAccount(role: UserAccountRoles)(f: (String, Option[String]) => Unit): Unit =
         val password  = Strings.random(12)
-        val loginRole = if role == UserAccountRoles.READONLY then UserAccountRoles.MAINTENANCE else role
+        val canLogin  = role == UserAccountRoles.ADMINISTRATOR || role == UserAccountRoles.MAINTENANCE
+        val loginRole = if canLogin then role else UserAccountRoles.MAINTENANCE
         val entity    = TestEntityFactory.createUserAccount(loginRole.getRoleName, password)
 
         userAccountService.create(UserAccount.from(entity)) match
@@ -53,5 +58,5 @@ trait EndpointsAuthMixin extends UserAuthMixin:
                         userAccountService.update(user.username, UserAccountUpdate(role = Some(role.getRoleName))) match
                             case Left(error) => fail(s"Failed to change test user role to ${role.getRoleName}: $error")
                             case Right(_)    => ()
-                    f(jwt)
+                    f(user.username, jwt)
                 finally userAccountService.deleteByUserName(user.username)

@@ -243,7 +243,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
         assert(userAccountService.findByUserName(userAccount.username).exists(_.isDefined))
     }
 
-    test("createEndpoint (maintainer is denied)") {
+    test("createEndpoint (maintainer can't create an administrator)") {
         // A maintainer must not be able to create accounts, e.g. an administrator account for themselves
         val userAccount = newUserJson(UserAccountRoles.ADMINISTRATOR)
         withRole(UserAccountRoles.MAINTENANCE)(jwt =>
@@ -338,4 +338,177 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             )
         )
         assertEquals(userAccountService.findByUserName(userAccount.username), Right(None))
+    }
+
+    // --- Maintainers can create ReadOnly accounts; anyone can update their own account; only admins change roles
+
+    private def createAs(role: UserAccountRoles, account: UserAccount, expected: StatusCode): Unit =
+        withRole(role)(jwt =>
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/users",
+                account.stringify,
+                r => assertEquals(r.code, expected, r.body.toString),
+                jwt = jwt
+            )
+        )
+
+    private def storedRole(username: String): Option[String] =
+        userAccountService.findByUserName(username).toOption.flatten.map(_.role)
+
+    private def updateSelf(role: UserAccountRoles, update: UserAccountUpdate, expected: StatusCode): Option[String] =
+        var result: Option[String] = None
+        withRoleAccount(role)((username, jwt) =>
+            runPut(
+                endpoints.updateEndpointImpl,
+                s"http://test.com/v1/users/$username",
+                update.stringify,
+                r => assertEquals(r.code, expected, r.body.toString),
+                jwt = jwt
+            )
+            result = storedRole(username)
+        )
+        result
+
+    test("createEndpoint (maintainer can create a ReadOnly account)") {
+        val account = newUserJson(UserAccountRoles.READONLY)
+        createAs(UserAccountRoles.MAINTENANCE, account, StatusCode.Ok)
+        assertEquals(storedRole(account.username), Some(UserAccountRoles.READONLY.getRoleName))
+    }
+
+    test("createEndpoint (a loosely written role is stored by its canonical name)") {
+        // Access checks compare role names exactly, so "readonly" must be stored as "ReadOnly"
+        val account = newUserJson().copy(role = "readonly")
+        createAs(UserAccountRoles.MAINTENANCE, account, StatusCode.Ok)
+        assertEquals(storedRole(account.username), Some(UserAccountRoles.READONLY.getRoleName))
+    }
+
+    test("createEndpoint (maintainer can't create a maintainer)") {
+        val account = newUserJson(UserAccountRoles.MAINTENANCE)
+        createAs(UserAccountRoles.MAINTENANCE, account, StatusCode.Forbidden)
+        assertEquals(storedRole(account.username), None)
+    }
+
+    test("createEndpoint (an invalid role is a bad request)") {
+        val account = newUserJson().copy(role = "superuser")
+        createAs(UserAccountRoles.ADMINISTRATOR, account, StatusCode.BadRequest)
+        assertEquals(storedRole(account.username), None)
+    }
+
+    test("updateEndpoint (maintainer can update their own account)") {
+        val firstName = Strings.random(8)
+        withRoleAccount(UserAccountRoles.MAINTENANCE)((username, jwt) =>
+            runPut(
+                endpoints.updateEndpointImpl,
+                s"http://test.com/v1/users/$username",
+                UserAccountUpdate(firstName = Some(firstName)).stringify,
+                r =>
+                    assertEquals(r.code, StatusCode.Ok)
+                    assertEquals(checkResponse[UserAccountInfo](r.body).firstName, Some(firstName))
+                ,
+                jwt = jwt
+            )
+        )
+    }
+
+    test("updateEndpoint (read-only user can update their own account)") {
+        val role = updateSelf(UserAccountRoles.READONLY, UserAccountUpdate(lastName = Some("Smith")), StatusCode.Ok)
+        assertEquals(role, Some(UserAccountRoles.READONLY.getRoleName))
+    }
+
+    test("updateEndpoint (maintainer can't change their own role)") {
+        val update = UserAccountUpdate(role = Some(UserAccountRoles.ADMINISTRATOR.getRoleName))
+        assertEquals(
+            updateSelf(UserAccountRoles.MAINTENANCE, update, StatusCode.Forbidden),
+            Some(UserAccountRoles.MAINTENANCE.getRoleName)
+        )
+    }
+
+    test("updateEndpoint (read-only user can't change their own role)") {
+        val update = UserAccountUpdate(role = Some(UserAccountRoles.MAINTENANCE.getRoleName))
+        assertEquals(
+            updateSelf(UserAccountRoles.READONLY, update, StatusCode.Forbidden),
+            Some(UserAccountRoles.READONLY.getRoleName)
+        )
+    }
+
+    test("updateEndpoint (resending your current role is allowed)") {
+        val update = UserAccountUpdate(role = Some(UserAccountRoles.MAINTENANCE.getRoleName), email = Some("m@mbari.org"))
+        assertEquals(
+            updateSelf(UserAccountRoles.MAINTENANCE, update, StatusCode.Ok),
+            Some(UserAccountRoles.MAINTENANCE.getRoleName)
+        )
+    }
+
+    test("updateEndpoint (locked user can't update their own account)") {
+        updateSelf(UserAccountRoles.LOCKED, UserAccountUpdate(firstName = Some("x")), StatusCode.Forbidden)
+    }
+
+    test("updateEndpoint (administrator can change another user's role)") {
+        val user = create(1).head
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateEndpointImpl,
+                s"http://test.com/v1/users/${user.username}",
+                UserAccountUpdate(role = Some("maint")).stringify,
+                r => assertEquals(r.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+        assertEquals(storedRole(user.username), Some(UserAccountRoles.MAINTENANCE.getRoleName))
+    }
+
+    test("updateEndpoint (unknown user is not found)") {
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPut(
+                endpoints.updateEndpointImpl,
+                s"http://test.com/v1/users/${Strings.random(16)}",
+                UserAccountUpdate(firstName = Some("x")).stringify,
+                r => assertEquals(r.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("deleteByUserNameEndpoint (unknown user is not found)") {
+        runDelete(
+            endpoints.deleteByUserNameEndpointImpl,
+            s"http://test.com/v1/users/${Strings.random(16)}",
+            r => assertEquals(r.code, StatusCode.NotFound),
+            jwt = jwtService.authorize(jwtService.apiKey)
+        )
+    }
+
+    // --- Roles
+
+    test("listRolesEndpoint returns every recognized role") {
+        runGet(
+            endpoints.listRolesEndpointImpl,
+            "http://test.com/v1/users/list/roles",
+            response =>
+                assertEquals(response.code, StatusCode.Ok)
+                val roles = checkResponse[Seq[String]](response.body)
+                assertEquals(roles, Seq("Admin", "Maint", "ReadOnly", "Locked"))
+                // Every listed role must be one the access checks recognize as itself
+                for role <- roles do assertEquals(UserAccountRoles.fromStoredRole(role).getRoleName, role)
+        )
+    }
+
+    test("listRolesEndpoint needs no login") {
+        runGet(endpoints.listRolesEndpointImpl, "http://test.com/v1/users/list/roles", r => assertEquals(r.code, StatusCode.Ok))
+    }
+
+    test("a user named 'list' is still found by username") {
+        val entity = TestEntityFactory.createUserAccount(UserAccountRoles.READONLY.getRoleName)
+        entity.setUserName("list")
+        userAccountService.create(UserAccount.from(entity)) match
+            case Left(e)  => fail(e.toString)
+            case Right(_) =>
+                runGet(
+                    endpoints.findByUserNameEndpointImpl,
+                    "http://test.com/v1/users/list",
+                    response =>
+                        assertEquals(response.code, StatusCode.Ok)
+                        assertEquals(checkResponse[UserAccountInfo](response.body).username, "list")
+                )
     }

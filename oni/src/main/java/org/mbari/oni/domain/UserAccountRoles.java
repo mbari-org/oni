@@ -63,5 +63,39 @@ public enum UserAccountRoles {
     	return matchingRole;
     }
 
+    /**
+     * The role that a role name stored on a user account grants. This is what access checks use.
+     *
+     * <p>Unlike {@link #getRole(String)}, which matches by prefix and is meant for parsing input, this only recognizes
+     * a role name exactly (ignoring case and surrounding whitespace). Anything that isn't recognized, including null or
+     * blank, is treated as {@link #READONLY}, so a bad or legacy value can never grant more access than read-only.
+     *
+     * @param roleName the role name as stored on the account
+     * @return the matching role, or READONLY if it isn't recognized
+     */
+    public static UserAccountRoles fromStoredRole(String roleName) {
+        return matchExactly(roleName).orElse(READONLY);
+    }
+
+    /**
+     * The role whose name is exactly {@code roleName}, ignoring case and surrounding whitespace. Unlike
+     * {@link #fromStoredRole(String)} there is no fallback: an unrecognized name matches no role.
+     *
+     * @param roleName a role name, e.g. "Admin" or "readonly"
+     * @return the matching role, or empty if there isn't one
+     */
+    public static java.util.Optional<UserAccountRoles> matchExactly(String roleName) {
+        if (roleName == null) {
+            return java.util.Optional.empty();
+        }
+        var trimmed = roleName.trim();
+        for (UserAccountRoles role : values()) {
+            if (role.getRoleName().equalsIgnoreCase(trimmed)) {
+                return java.util.Optional.of(role);
+            }
+        }
+        return java.util.Optional.empty();
+    }
+
 
 }

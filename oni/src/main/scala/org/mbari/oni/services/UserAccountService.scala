@@ -21,7 +21,7 @@ import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.UserAccountEntity
 import org.mbari.oni.jpa.repositories.UserAccountRepository
-import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, OniException, WrappedException}
+import org.mbari.oni.{AccessDenied, AccessDeniedMissingCredentials, ItemNotFound, OniException, WrappedException}
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -48,23 +48,25 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
         )
         attempt.map(_.map(UserAccount.from).toScala)
 
+    /**
+     * Find the accounts that have a role, using the same rule as every access check: each account's effective role (an
+     * unrecognized stored role counts as ReadOnly). That can't be expressed as a database query, so all accounts are
+     * loaded and filtered; there are few enough user accounts for that to be cheap.
+     *
+     * @param role
+     *   A role name, matched exactly but ignoring case. An unrecognized name matches no accounts.
+     */
     def findAllByRole(role: String): Either[Throwable, Seq[UserAccount]] =
-        val attempt = entityManagerFactory.readOnlyTransaction(entityManager =>
-            val repo = UserAccountRepository(entityManager)
-            repo.findAllByRole(role)
-        )
-        attempt.map(
-            _.asScala
-                .toSeq
-                .map(UserAccount.from)
-        )
+        UserAccountRoles.matchExactly(role).toScala match
+            case None            => Right(Nil)
+            case Some(requested) => findAll().map(_.filter(_.effectiveRole == requested))
 
     def deleteByUserName(name: String): Either[Throwable, Unit] =
         entityManagerFactory.transaction(entityManager =>
             val repo = UserAccountRepository(entityManager)
             repo.findByUserName(name).toScala match
                 case Some(entity) => repo.delete(entity)
-                case None         => throw new IllegalArgumentException(s"UserAccount with username ${name} does not exist")
+                case None         => throw ItemNotFound(s"UserAccount with username ${name} does not exist")
         )
 
     def create(userAccount: UserAccount): Either[Throwable, UserAccount] =
@@ -97,9 +99,7 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
                     entityManager.flush()
                     UserAccount.from(entity)
                 case None         =>
-                    throw new IllegalArgumentException(
-                        s"UserAccount with username ${username} does not exist"
-                    )
+                    throw ItemNotFound(s"UserAccount with username ${username} does not exist")
         )
 
     def verifyWriteAccess(userName: Option[String]): Either[OniException, UserAccount] =
@@ -110,6 +110,8 @@ class UserAccountService(entityManagerFactory: EntityManagerFactory):
                         Left(WrappedException(s"An error occurred while finding user account with username ${name}", e))
                     case Right(None)    => Left(AccessDenied(name))
                     case Right(Some(u)) =>
-                        if u.role != UserAccountRoles.READONLY.getRoleName then Right(u)
+                        // Allow-list: only Admin and Maint may write. Anything else (ReadOnly, Locked, or an
+                        // unrecognized role string) is denied.
+                        if u.canWrite then Right(u)
                         else Left(AccessDenied(name))
             case None       => Left(AccessDeniedMissingCredentials)

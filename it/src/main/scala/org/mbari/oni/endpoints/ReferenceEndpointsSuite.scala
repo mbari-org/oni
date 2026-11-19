@@ -25,7 +25,6 @@ import org.mbari.oni.jpa.entities.TestEntityFactory
 import org.mbari.oni.services.ReferenceService
 import sttp.model.StatusCode
 
-import scala.util.Random
 
 trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
@@ -158,10 +157,11 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with E
     test("findReferencesByCitationGlob") {
         val refs     = initRefs(2)
         val citation = refs.head.citation
-        val random   = Random()
-        val start    = random.nextInt(citation.length - 2)
-        val end      = random.nextInt(citation.length - start) + start
-        val glob     = citation.substring(start, end)
+        // Search for the inside of the longest word. Citations are random words of 6+ characters, so this is at least 4
+        // random characters and won't also appear in the other citation. (A random substring could be empty, a single
+        // character or a space, which would match both references.)
+        val word     = citation.split(" ").maxBy(_.length)
+        val glob     = word.substring(1, word.length - 1)
         val dto      = ReferenceQuery(citation = Some(glob))
         runPost(
             endpoints.findReferencesByCitationGlobEndpointImpl,
