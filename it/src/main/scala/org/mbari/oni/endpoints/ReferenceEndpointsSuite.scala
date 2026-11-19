@@ -284,7 +284,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with E
                 endpoints.createReferenceEndpointImpl,
                 "http://test.com/v1/references",
                 dto.stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -299,7 +299,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with E
             runDelete(
                 endpoints.deleteReferenceEndpointImpl,
                 s"http://test.com/v1/references/${ref.id.get}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )

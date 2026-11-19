@@ -552,7 +552,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 endpoints.approveEndpointImpl,
                 s"http://test.com/v1/history/approve/${history.id.get}",
                 "",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -571,7 +571,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 endpoints.rejectEndpointImpl,
                 s"http://test.com/v1/history/reject/${history.id.get}",
                 "",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -603,7 +603,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with End
         runDelete(
             endpoints.deleteEndpointImpl,
             s"http://test.com/v1/history/${history.id.get}",
-            response => assertEquals(response.code, StatusCode.Unauthorized),
+            response => assertEquals(response.code, StatusCode.Forbidden),
             jwt = jwtService.authorize(jwtService.apiKey)
         )
         assert(historyService.findById(history.id.get).isRight, "History record should still exist")
@@ -615,7 +615,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with End
             runDelete(
                 endpoints.deleteEndpointImpl,
                 s"http://test.com/v1/history/${history.id.get}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -646,7 +646,7 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with End
                     runDelete(
                         endpoints.deleteEndpointImpl,
                         s"http://test.com/v1/history/${history.id.get}",
-                        response => assertEquals(response.code, StatusCode.Unauthorized),
+                        response => assertEquals(response.code, StatusCode.Forbidden),
                         jwt = jwt
                     )
                 finally userAccountService.deleteByUserName(user.username)

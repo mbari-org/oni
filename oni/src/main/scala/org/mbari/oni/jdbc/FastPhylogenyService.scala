@@ -40,26 +40,38 @@ class FastPhylogenyService(entityManagerFactory: EntityManagerFactory):
     private var allNodes: Seq[MutableConcept]    = Nil
     private val lock                             = new ReentrantLock();
 
-    def findUp(name: String): Option[Concept] =
-        load()
-        // Hide the children
-        //  do branch walk
-        findMutableNode(name)
-            .map(_.copyUp())
-            .map(_.root())
-            .map(_.toImmutable)
+    def findUp(name: String): Option[Concept] = up(nodeByName(name))
 
-    def findDown(name: String): Option[Concept] =
-        load()
-        // Parent is't seen so we can walk down from this node
-        val mc = findMutableNode(name)
-        mc.map(_.toImmutable)
+    def findUpById(id: Long): Option[Concept] = up(nodeById(id))
 
-    def findSiblings(name: String): Seq[SimpleConcept] =
+    def findDown(name: String): Option[Concept] = down(nodeByName(name))
+
+    def findDownById(id: Long): Option[Concept] = down(nodeById(id))
+
+    def findSiblings(name: String): Seq[SimpleConcept] = siblings(nodeByName(name))
+
+    def findSiblingsById(id: Long): Seq[SimpleConcept] = siblings(nodeById(id))
+
+    // Hide the children and walk the branch up to the root
+    private def up(node: Option[MutableConcept]): Option[Concept] =
+        node.map(_.copyUp()).map(_.root()).map(_.toImmutable)
+
+    // Parent isn't seen so we can walk down from this node
+    private def down(node: Option[MutableConcept]): Option[Concept] =
+        node.map(_.toImmutable)
+
+    private def siblings(node: Option[MutableConcept]): Seq[SimpleConcept] =
+        node.flatMap(n => n.parent.map(p => p.children.map(SimpleConcept.from))).getOrElse(Nil)
+
+    /** Find a node by any of its names, refreshing the cache first if the database has changed */
+    private def nodeByName(name: String): Option[MutableConcept] =
         load()
         findMutableNode(name)
-            .flatMap(n => n.parent.map(p => p.children.map(SimpleConcept.from)))
-            .getOrElse(Nil)
+
+    /** Find a node by concept id, refreshing the cache first if the database has changed */
+    private def nodeById(id: Long): Option[MutableConcept] =
+        load()
+        allNodes.find(_.id.contains(id))
 
     private def findMutableNode(name: String): Option[MutableConcept] =
         allNodes.find(_.names.map(_.name).contains(name))

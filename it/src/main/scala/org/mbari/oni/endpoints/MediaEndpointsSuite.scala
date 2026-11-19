@@ -423,7 +423,7 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with Endpo
             runDelete(
                 endpoints.deleteMediaEndpointImpl,
                 s"http://test.com/v1/media/${media.id.get}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )

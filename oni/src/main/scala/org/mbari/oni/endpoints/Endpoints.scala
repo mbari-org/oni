@@ -23,7 +23,7 @@ import org.mbari.oni.etc.circe.CirceCodecs
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.{AccessException, BadRequestException, NotFoundException}
+import org.mbari.oni.{AccessDeniedMissingCredentials, AccessException, BadRequestException, NotFoundException}
 import sttp.model.StatusCode
 import sttp.model.headers.WWWAuthenticateChallenge
 import sttp.shared.Identity
@@ -87,6 +87,7 @@ trait Endpoints:
     implicit lazy val sPageSeqReference: Schema[Page[Seq[Reference]]]               = Schema.derived[Page[Seq[Reference]]]
     implicit lazy val sRank: Schema[Rank]                                           = Schema.derived[Rank]
     implicit lazy val sUserAccount: Schema[UserAccount]                             = Schema.derived[UserAccount]
+    implicit lazy val sUserAccountInfo: Schema[UserAccountInfo]                     = Schema.derived[UserAccountInfo]
     implicit lazy val sUserAccountCreate: Schema[UserAccountCreate]                 = Schema.derived[UserAccountCreate]
     implicit lazy val sUserAccountUpdate: Schema[UserAccountUpdate]                 = Schema.derived[UserAccountUpdate]
 
@@ -110,7 +111,8 @@ trait Endpoints:
                 oneOfVariant(statusCode(StatusCode.BadRequest).and(jsonBody[BadRequest])),
                 oneOfVariant(statusCode(StatusCode.NotFound).and(jsonBody[NotFound])),
                 oneOfVariant(statusCode(StatusCode.InternalServerError).and(jsonBody[ServerError])),
-                oneOfVariant(statusCode(StatusCode.Unauthorized).and(jsonBody[Unauthorized]))
+                oneOfVariant(statusCode(StatusCode.Unauthorized).and(jsonBody[Unauthorized])),
+                oneOfVariant(statusCode(StatusCode.Forbidden).and(jsonBody[Forbidden]))
             )
         )
 
@@ -150,12 +152,14 @@ trait Endpoints:
         Future(handleErrors(f))
 
     /**
-     * Like [[handleErrors]] but also maps an [[AccessException]] to [[Unauthorized]]. Only use this with endpoints
-     * built from `secureEndpoint`, since `openEndpoint` does not declare an Unauthorized error variant.
+     * Like [[handleErrors]] but also maps access errors: missing credentials become [[Unauthorized]] (401) and any
+     * other [[AccessException]] (a known user who isn't allowed to do this) becomes [[Forbidden]] (403). Only use this
+     * with endpoints built from `secureEndpoint`, since `openEndpoint` does not declare those error variants.
      */
     def handleSecureErrors[T](f: => Either[Throwable, T]): Either[ErrorMsg, T] =
         f match
-            case Left(e: AccessException) => Left(Unauthorized(e.getMessage))
+            case Left(AccessDeniedMissingCredentials) => Left(Unauthorized(AccessDeniedMissingCredentials.getMessage))
+            case Left(e: AccessException)           => Left(Forbidden(e.getMessage))
             case other                    => handleErrors(other)
 
     def handleSecureErrorsAsync[T](f: => Either[Throwable, T])(using
@@ -199,14 +203,14 @@ trait Endpoints:
         jwtOpt: Option[String],
         findUser: String => Either[Throwable, Option[UserAccount]],
         allowed: UserAccount => Boolean
-    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
+    )(using jwtService: JwtService): Either[ErrorMsg, Unit] =
         verifyCurrentUserOrApiKey(jwtOpt, findUser, allowed, allowApiKey = true)
 
     def verifyApiKeyOrUserAsync(
         jwtOpt: Option[String],
         findUser: String => Either[Throwable, Option[UserAccount]],
         allowed: UserAccount => Boolean
-    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, Unit]] =
+    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[ErrorMsg, Unit]] =
         Future(verifyApiKeyOrUser(jwtOpt, findUser, allowed))
 
     /**
@@ -217,14 +221,14 @@ trait Endpoints:
         jwtOpt: Option[String],
         findUser: String => Either[Throwable, Option[UserAccount]],
         allowed: UserAccount => Boolean
-    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
+    )(using jwtService: JwtService): Either[ErrorMsg, Unit] =
         verifyCurrentUserOrApiKey(jwtOpt, findUser, allowed, allowApiKey = false)
 
     def verifyUserAsync(
         jwtOpt: Option[String],
         findUser: String => Either[Throwable, Option[UserAccount]],
         allowed: UserAccount => Boolean
-    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[Unauthorized, Unit]] =
+    )(using jwtService: JwtService, executionContext: ExecutionContext): Future[Either[ErrorMsg, Unit]] =
         Future(verifyUser(jwtOpt, findUser, allowed))
 
     private def verifyCurrentUserOrApiKey(
@@ -232,7 +236,7 @@ trait Endpoints:
         findUser: String => Either[Throwable, Option[UserAccount]],
         allowed: UserAccount => Boolean,
         allowApiKey: Boolean
-    )(using jwtService: JwtService): Either[Unauthorized, Unit] =
+    )(using jwtService: JwtService): Either[ErrorMsg, Unit] =
         jwtOpt match
             case None      => Left(Unauthorized("Missing token"))
             case Some(jwt) =>
@@ -241,18 +245,18 @@ trait Endpoints:
                     // API-key tokens (JwtService.authorize) carry no user name claim
                     case Some(claims) if claims.username == null =>
                         if allowApiKey then Right(())
-                        else Left(Unauthorized("This endpoint requires a user login; API key tokens are not accepted"))
+                        else Left(Forbidden("This endpoint requires a user login; API key tokens are not accepted"))
                     case Some(claims)                            =>
                         findUser(claims.username) match
                             case Right(Some(user)) if allowed(user) => Right(())
                             case Right(Some(user))                  =>
-                                Left(Unauthorized(s"User `${user.username}` is not permitted to do this"))
+                                Left(Forbidden(s"User `${user.username}` is not permitted to do this"))
                             case Right(None)                        =>
                                 Left(Unauthorized(s"User `${claims.username}` does not exist"))
                             case Left(e)                            =>
                                 // Fail closed if we can't verify the user
                                 log.atError.withCause(e).log(s"Unable to look up user `${claims.username}`")
-                                Left(Unauthorized("Unable to verify user"))
+                                Left(ServerError("Unable to verify user"))
 
     def verifyLogin(
         jwtOpt: Option[String]

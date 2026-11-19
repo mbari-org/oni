@@ -36,6 +36,11 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
     private val base    = "names"
     private val tag     = "ConceptName"
 
+    private val updateNameDescription =
+        "Rename it (`newName`, 400 if that name already exists), change its type, or change its author (set " +
+            "`author` to an empty string to remove it). A primary name cannot be changed to another type (400). " +
+            "Requires an administrator or maintainer login. Maintainer changes are applied and recorded as pending history."
+
     val allEndpoint = openEndpoint
         .get
         .in(base)
@@ -57,7 +62,11 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[ConceptNameCreate])
         .out(jsonBody[RawConcept])
         .name("addConceptName")
-        .description("Add a new concept name")
+        .description(
+            "Add a new name (`newName`) to the concept that owns `name`. If `nameType` is primary, the current " +
+                "primary name becomes a former name. Returns 400 if `newName` already exists. Requires an administrator or maintainer login. " +
+                "Maintainer changes are applied and recorded as pending history."
+        )
         .tag(tag)
 
     val addConceptNameEndpointImpl: ServerEndpoint[Any, Future] = addConceptNameEndpoint
@@ -71,7 +80,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[String]("name"))
         .out(jsonBody[RawConcept])
         .name("findConceptName")
-        .description("Find a concept name")
+        .description("Find the concept that owns a concept name")
         .tag(tag)
 
     val findConceptNameEndpointImpl: ServerEndpoint[Any, Future] = findConceptNameEndpoint
@@ -99,7 +108,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ConceptNameUpdate])
             .out(jsonBody[RawConcept])
             .name("updateConceptName")
-            .description("Update a concept name. To remove the author, set it to an empty string")
+            .description("Update a concept name. " + updateNameDescription)
             .tag(tag)
 
     val updateConceptNameEndpointImpl: ServerEndpoint[Any, Future] = updateConceptNameEndpoint
@@ -113,7 +122,10 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[String]("name"))
         .out(jsonBody[RawConcept])
         .name("deleteConceptName")
-        .description("Delete a concept name")
+        .description(
+            "Delete a concept name. Primary names cannot be deleted (400). Requires an administrator or maintainer login. Administrators " +
+                "delete immediately; other users create a pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
     val deleteConceptNameEndpointImpl: ServerEndpoint[Any, Future] = deleteConceptNameEndpoint
@@ -129,7 +141,7 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ConceptNameUpdate])
             .out(jsonBody[RawConcept])
             .name("updateConceptNameById")
-            .description("Update a concept name by id. To remove the author, set it to an empty string")
+            .description("Update a concept name by id. " + updateNameDescription)
             .tag(tag)
 
     val updateConceptNameByIdEndpointImpl: ServerEndpoint[Any, Future] = updateConceptNameByIdEndpoint
@@ -144,8 +156,9 @@ class ConceptNameEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .out(jsonBody[RawConcept])
         .name("deleteConceptNameById")
         .description(
-            "Delete a concept name by id. Primary names cannot be deleted. Administrators delete immediately; " +
-                "other users create a pending delete that must be approved by an administrator."
+            "Delete a concept name by id. Primary names cannot be deleted (400). Requires an administrator or maintainer login. " +
+                "Administrators delete immediately; other users create a pending delete that must be approved by an " +
+                "administrator."
         )
         .tag(tag)
 

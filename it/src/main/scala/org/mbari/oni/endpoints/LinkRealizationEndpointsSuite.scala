@@ -265,7 +265,7 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
             runDelete(
                 endpoints.deleteImpl,
                 s"http://test.com/v1/linkrealizations/${link.id.get}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )

@@ -220,7 +220,10 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 val root                  = init(2, 0)
                 val name                  = root.getPrimaryConceptName.getName
                 val (rankLevel, rankName) = TestEntityFactory.randomRankLevelAndName()
-                val expectedRank          = Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
+                // randomRankLevelAndName can return (None, None) ("no rank"), in which case the concept has no rank
+                val expectedRank          =
+                    if rankLevel.isEmpty && rankName.isEmpty then None
+                    else Some(s"${{ rankLevel.getOrElse("") }}${{ rankName.getOrElse("") }}")
 
                 val conceptCreate = ConceptCreate(
                     "SomeChildConcept",
@@ -465,7 +468,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
             runDelete(
                 endpoints.deleteByIdEndpointImpl,
                 s"http://test.com/v1/concept/id/${child.getId}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -480,7 +483,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
             runDelete(
                 endpoints.deleteByNameEndpointImpl,
                 s"http://test.com/v1/concept/${child.getName}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -508,7 +511,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 endpoints.updateByIdEndpointImpl,
                 s"http://test.com/v1/concept/id/${child.getId}",
                 ConceptUpdate(aphiaId = Some(13579L)).stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -526,7 +529,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 endpoints.updateByNameEndpointImpl,
                 s"http://test.com/v1/concept/${child.getName}",
                 ConceptUpdate(aphiaId = Some(13579L)).stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -557,7 +560,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 endpoints.createEndpointImpl,
                 "http://test.com/v1/concept",
                 ConceptCreate(name, Some(root.getName)).stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -720,7 +723,7 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 endpoints.updateByIdEndpointImpl,
                 s"http://test.com/v1/concept/id/${root.getId}",
                 ConceptUpdate(rankName = Some(""), rankLevel = Some("")).stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -743,5 +746,18 @@ trait ConceptEndpointsSuite extends EndpointsSuite with DataInitializer with End
                 ,
                 jwt = jwt
             )
+        )
+    }
+
+    // --- 401 is for bad credentials; 403 is for a valid login that is not allowed
+
+    test("updateById (invalid token)") {
+        val root = init(2, 0)
+        runPut(
+            endpoints.updateByIdEndpointImpl,
+            s"http://test.com/v1/concept/id/${root.getId}",
+            ConceptUpdate(aphiaId = Some(1L)).stringify,
+            response => assertEquals(response.code, StatusCode.Unauthorized),
+            jwt = Some("not.a.valid.jwt")
         )
     }

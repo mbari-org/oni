@@ -26,7 +26,6 @@ import org.mbari.oni.domain.{
     ReferenceQuery,
     ReferenceUpdate,
     ServerError,
-    Unauthorized,
     UserAccountRoles
 }
 import org.mbari.oni.endpoints.ReferenceEndpoints.DefaultLimit
@@ -52,7 +51,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
     private val userAccountService = UserAccountService(entityManagerFactory)
 
     /** Changes to references require the API key or a user who is currently an administrator or maintainer */
-    private def verifyApiKeyOrWriterAsync(jwtOpt: Option[String]): Future[Either[Unauthorized, Unit]] =
+    private def verifyApiKeyOrWriterAsync(jwtOpt: Option[String]): Future[Either[ErrorMsg, Unit]] =
         verifyApiKeyOrUserAsync(
             jwtOpt,
             userAccountService.findByUserName,
@@ -108,7 +107,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ReferenceQuery])
             .out(jsonBody[Page[Seq[Reference]]])
             .name("findReferencesByCitationGlob")
-            .description("Find references by citation glob")
+            .description("Find references whose citation contains the `citation` text in the request body")
             .tag(tag)
 
     val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Future] =
@@ -136,7 +135,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ReferenceQuery])
             .out(jsonBody[Reference])
             .name("findReferenceByDoi")
-            .description("Find a reference by DOI")
+            .description("Find a reference by the `doi` in the request body. Returns 400 if `doi` is missing")
             .tag(tag)
 
     val findReferenceByDoiEndpointImpl: ServerEndpoint[Any, Future] = findReferenceByDoiEndpoint.serverLogic { doi =>
@@ -158,7 +157,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[Reference])
             .out(jsonBody[Reference])
             .name("createReference")
-            .description("Create a new reference")
+            .description("Create a new reference. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val createReferenceEndpointImpl: ServerEndpoint[Any, Future] = createReferenceEndpoint
@@ -174,7 +173,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ReferenceUpdate])
             .out(jsonBody[Reference])
             .name("updateReference")
-            .description("Update a reference")
+            .description("Update a reference. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val updateReferenceEndpointImpl: ServerEndpoint[Any, Future] = updateReferenceEndpoint
@@ -189,7 +188,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / path[Long]("id"))
             .out(jsonBody[Unit])
             .name("deleteReference")
-            .description("Delete a reference")
+            .description("Delete a reference. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val deleteReferenceEndpointImpl: ServerEndpoint[Any, Future] = deleteReferenceEndpoint
@@ -204,7 +203,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / "add" / path[Long]("id") / "to" / path[String]("concept"))
             .out(jsonBody[Reference])
             .name("addReferenceToConcept")
-            .description("Add a reference to a concept")
+            .description("Add a reference to a concept. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val addConceptEndpointImpl: ServerEndpoint[Any, Future] = addConceptEndpoint
@@ -219,7 +218,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / "remove" / path[Long]("id") / "from" / path[String]("concept"))
             .out(jsonBody[Reference])
             .name("removeReferenceFromConcept")
-            .description("Remove a reference from a concept")
+            .description("Remove a reference from a concept. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val removeConceptEndpointImpl: ServerEndpoint[Any, Future] = removeConceptEndpoint

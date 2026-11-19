@@ -63,7 +63,9 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
             .in(paging)
             .in(
                 query[Option[String]]("sort").description(
-                    "Sort by field and direction, e.g. 'creationTimestamp,asc' or 'processorTimestamp,desc' or 'processorName' (assumed ascending)"
+                    "Sort by field and optional direction (asc or desc), e.g. 'creationTimestamp,desc' or 'creatorName' " +
+                        "(ascending). Common fields: creationTimestamp, creatorName, oldValue, newValue, concept. " +
+                        "Defaults to creationTimestamp ascending. An unknown field returns 400"
                 )
             )
             .out(jsonBody[Page[Seq[ExtendedHistory]]])
@@ -106,7 +108,10 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
             .in(paging)
             .in(
                 query[Option[String]]("sort").description(
-                    "Sort by field and direction, e.g. 'processedTimestamp,asc' or 'concept,desc' or 'concept' (assumed ascending)"
+                    "Sort by field and optional direction (asc or desc), e.g. 'processedTimestamp,desc' or 'concept' " +
+                        "(ascending). Common fields: creationTimestamp, creatorName, oldValue, newValue, concept, " +
+                        "processedTimestamp, processorName. Defaults to creationTimestamp ascending. An unknown field " +
+                        "returns 400"
                 )
             )
             .out(jsonBody[Page[Seq[ExtendedHistory]]])
@@ -128,7 +133,7 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val findByIdEndpoint = openEndpoint
         .get
-        .in(base / path[Long])
+        .in(base / path[Long]("id"))
         .out(jsonBody[ExtendedHistory])
         .name("findHistoryById")
         .description("Find a history record by its id")
@@ -141,10 +146,10 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val findByConceptNameEndpoint = openEndpoint
         .get
-        .in(base / "concept" / path[String])
+        .in(base / "concept" / path[String]("conceptName"))
         .out(jsonBody[Seq[ExtendedHistory]])
         .name("findHistoryByConceptName")
-        .description("Find a history record by its concept name")
+        .description("Find all history records for a concept")
         .tag(tag)
 
     val findByConceptNameEndpointImpl: ServerEndpoint[Any, Future] = findByConceptNameEndpoint
@@ -154,10 +159,10 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val deleteEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
         .delete
-        .in(base / path[Long])
+        .in(base / path[Long]("id"))
         .out(jsonBody[Unit])
         .name("deleteHistory")
-        .description("Delete a history record")
+        .description("Delete a history record. Requires an administrator login; API key tokens are not accepted")
         .tag(tag)
 
     val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
@@ -170,10 +175,13 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val approveEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
         .put
-        .in(base / "approve" / path[Long])
+        .in(base / "approve" / path[Long]("id"))
         .out(jsonBody[ExtendedHistory])
         .name("approveHistory")
-        .description("Approve a history record")
+        .description(
+            "Approve a pending history record. For a pending delete, the item is deleted. Requires an administrator " +
+                "login (403 otherwise)"
+        )
         .tag(tag)
 
     val approveEndpointImpl: ServerEndpoint[Any, Future] = approveEndpoint
@@ -184,10 +192,13 @@ class HistoryEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogeny
 
     val rejectEndpoint: Endpoint[Option[String], Long, ErrorMsg, ExtendedHistory, Any] = secureEndpoint
         .put
-        .in(base / "reject" / path[Long])
+        .in(base / "reject" / path[Long]("id"))
         .out(jsonBody[ExtendedHistory])
         .name("rejectHistory")
-        .description("Reject a history record")
+        .description(
+            "Reject a pending history record and undo the change it describes (e.g. remove a pending addition or " +
+                "restore a previous value). Requires an administrator login (403 otherwise)"
+        )
         .tag(tag)
 
     val rejectEndpointImpl: ServerEndpoint[Any, Future] = rejectEndpoint

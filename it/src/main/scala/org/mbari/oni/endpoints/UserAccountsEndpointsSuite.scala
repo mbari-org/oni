@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{UserAccount, UserAccountRoles, UserAccountUpdate}
+import org.mbari.oni.domain.{UserAccount, UserAccountInfo, UserAccountRoles, UserAccountUpdate}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jdk.Strings
@@ -39,6 +39,14 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 entities.foreach(entity => userAccountService.deleteByUserName(entity.username))
             case Left(error)     => log.atDebug.withCause(error).log("Failed to delete all user account entities")
 
+    /** Responses must never include password hashes (or the related isEncrypted flag) */
+    private def assertNoPasswords(body: Either[String, String]): Unit =
+        body match
+            case Left(error) => fail(s"Expected a successful response but got: $error")
+            case Right(json) =>
+                assert(!json.contains("\"password\""), s"Response contains a password field: $json")
+                assert(!json.contains("\"isEncrypted\""), s"Response contains an isEncrypted field: $json")
+
     def create(n: Int, role: UserAccountRoles = UserAccountRoles.READONLY): Seq[UserAccount] =
         val userAccountService = new UserAccountService(entityManagerFactory)
         val userAccounts       = Seq.newBuilder[UserAccount]
@@ -60,8 +68,9 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             s"http://test.com/v1/users/role/${UserAccountRoles.ADMINISTRATOR.getRoleName}",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[Seq[UserAccount]](response.body)
-                assertEquals(obtained, userAccounts)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[Seq[UserAccountInfo]](response.body)
+                assertEquals(obtained, userAccounts.map(UserAccountInfo.from))
         )
     }
     test("findByUserNameEndpoint") {
@@ -72,8 +81,9 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             s"http://test.com/v1/users/${user.username}",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained, user)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[UserAccountInfo](response.body)
+                assertEquals(obtained, UserAccountInfo.from(user))
         )
     }
 
@@ -84,8 +94,9 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             "http://test.com/v1/users",
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[Seq[UserAccount]](response.body)
-                assertEquals(obtained, userAccounts)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[Seq[UserAccountInfo]](response.body)
+                assertEquals(obtained, userAccounts.map(UserAccountInfo.from))
         )
     }
 
@@ -116,8 +127,12 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             userAccount.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[UserAccountInfo](response.body)
+                assertEquals(
+                    obtained.copy(id = None, lastUpdated = None),
+                    UserAccountInfo.from(userAccount).copy(id = None, lastUpdated = None)
+                )
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
         )
@@ -133,8 +148,12 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             userAccount.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[UserAccountInfo](response.body)
+                assertEquals(
+                    obtained.copy(id = None, lastUpdated = None),
+                    UserAccountInfo.from(userAccount).copy(id = None, lastUpdated = None)
+                )
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
         )
@@ -152,8 +171,12 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             formBody,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[UserAccountInfo](response.body)
+                assertEquals(
+                    obtained.copy(id = None, lastUpdated = None),
+                    UserAccountInfo.from(userAccount).copy(id = None, lastUpdated = None)
+                )
             ,
             jwt = jwtService.authorize(jwtService.apiKey),
             contentType = "application/x-www-form-urlencoded"
@@ -171,8 +194,12 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             formBody,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[UserAccount](response.body)
-                assertEquals(obtained.copy(id = None, password = userAccount.password, lastUpdated = None), userAccount)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[UserAccountInfo](response.body)
+                assertEquals(
+                    obtained.copy(id = None, lastUpdated = None),
+                    UserAccountInfo.from(userAccount).copy(id = None, lastUpdated = None)
+                )
             ,
             jwt = jwtService.authorize(jwtService.apiKey),
             contentType = "application/x-www-form-urlencoded"
@@ -189,7 +216,8 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             update.stringify,
             response =>
                 assertEquals(response.code, StatusCode.Ok)
-                val obtained = checkResponse[UserAccount](response.body)
+                assertNoPasswords(response.body)
+                val obtained = checkResponse[UserAccountInfo](response.body)
                 assertEquals(obtained.role, update.role.getOrElse(""))
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
@@ -223,7 +251,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 endpoints.createEndpointImpl,
                 "http://test.com/v1/users",
                 userAccount.stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -237,7 +265,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 endpoints.createEndpointImpl,
                 "http://test.com/v1/users",
                 userAccount.stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -260,7 +288,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
                 endpoints.updateEndpointImpl,
                 s"http://test.com/v1/users/${user.username}",
                 UserAccountUpdate(role = Some(UserAccountRoles.ADMINISTRATOR.getRoleName)).stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -288,9 +316,26 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
             runDelete(
                 endpoints.deleteByUserNameEndpointImpl,
                 s"http://test.com/v1/users/${user.username}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
         assert(userAccountService.findByUserName(user.username).exists(_.isDefined))
+    }
+
+    test("createEndpoint (token for a deleted user is unauthorized)") {
+        val userAccount = newUserJson()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            // The token is still validly signed, but its user no longer exists
+            val username = jwt.flatMap(jwtService.decode).map(_.username).getOrElse(fail("Could not decode token"))
+            assert(userAccountService.deleteByUserName(username).isRight)
+            runPost(
+                endpoints.createEndpointImpl,
+                "http://test.com/v1/users",
+                userAccount.stringify,
+                response => assertEquals(response.code, StatusCode.Unauthorized),
+                jwt = jwt
+            )
+        )
+        assertEquals(userAccountService.findByUserName(userAccount.username), Right(None))
     }

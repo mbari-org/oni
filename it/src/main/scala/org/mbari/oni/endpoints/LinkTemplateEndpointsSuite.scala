@@ -307,7 +307,7 @@ trait LinkTemplateEndpointsSuite extends EndpointsSuite with DataInitializer wit
             runDelete(
                 endpoints.deleteLinkTemplateImpl,
                 s"http://test.com/v1/linktemplates/${link.id.get}",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )

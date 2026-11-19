@@ -134,7 +134,7 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[LinkRenameToConceptRequest])
             .out(jsonBody[LinkRenameToConceptResponse])
             .name("renameToConcept")
-            .description("Bulk rename all linkTemplate toConcepts")
+            .description("Rename the toConcept of every link template from `old` to `new`. Requires an administrator or maintainer login.")
             .tag(tag)
 
     val renameToConceptImpl: ServerEndpoint[Any, Future] = renameToConcept
@@ -149,7 +149,10 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[LinkCreate])
         .out(jsonBody[ExtendedLink])
         .name("createLinkTemplate")
-        .description("Create a new link template")
+        .description(
+            "Create a new link template on a concept. Requires an administrator or maintainer login. Maintainer changes are applied and " +
+                "recorded as pending history."
+        )
         .tag(tag)
 
     val createLinkTemplateImpl: ServerEndpoint[Any, Future] = createLinkTemplate
@@ -164,7 +167,10 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[LinkUpdate])
         .out(jsonBody[ExtendedLink])
         .name("updateLinkTemplate")
-        .description("Update a link template")
+        .description(
+            "Update a link template. Requires an administrator or maintainer login. Maintainer changes are applied and recorded as pending " +
+                "history."
+        )
         .tag(tag)
 
     val updateLinkTemplateImpl: ServerEndpoint[Any, Future] = updateLinkTemplate
@@ -178,7 +184,10 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[Long]("id"))
         .out(jsonBody[Unit])
         .name("deleteLinkTemplate")
-        .description("Delete a link template")
+        .description(
+            "Delete a link template. Requires an administrator or maintainer login. Administrators delete immediately; other users create " +
+                "a pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
     val deleteLinkTemplateImpl: ServerEndpoint[Any, Future] = deleteLinkTemplate

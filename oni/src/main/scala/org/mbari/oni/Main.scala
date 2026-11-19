@@ -146,19 +146,3 @@ object Main:
 
         Await.result(program, Duration.Inf)
 
-// --- Helidon WeServer
-//        val serverOptions = NimaServerOptions
-//            .customiseInterceptors
-//            .serverLog(None)
-//            .metricsInterceptor(Endpoints.prometheusMetrics.metricsInterceptor())
-//            .options
-//
-//        val handler = NimaServerInterpreter(serverOptions).toHandler(Endpoints.allImpl)
-//
-//        WebServer
-//            .builder()
-//            .writeBufferSize(131072) // Big buffer to handle full kb tree
-//            .routing(builder => builder.any(handler))
-//            .port(port)
-//            .build()
-//            .start()

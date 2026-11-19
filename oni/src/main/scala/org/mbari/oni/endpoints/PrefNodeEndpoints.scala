@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{BadRequest, ErrorMsg, PrefNode, PrefNodeUpdate, Unauthorized}
+import org.mbari.oni.domain.{BadRequest, ErrorMsg, Forbidden, PrefNode, PrefNodeUpdate}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.PrefNodeService
@@ -52,7 +52,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .serverLogic { userAccount => paging =>
             if userAccount.isAdministrator then
                 handleSecureErrorsAsync(service.findAll(paging.limit.getOrElse(100), paging.offset.getOrElse(0)))
-            else Future(Left(Unauthorized("You must be an admin to access this endpoint")))
+            else Future(Left(Forbidden("You must be an admin to access this endpoint")))
         }
 
     val findByNodeNameAndKey: Endpoint[Unit, (String, Option[String]), ErrorMsg, Seq[PrefNode], Any] =
@@ -70,7 +70,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
             )
             .out(jsonBody[Seq[PrefNode]])
             .name("byNodeNameAndKey")
-            .description("Get all prefNode names matching a node name and key")
+            .description("Get the prefNodes with a node name and, optionally, a key")
             .tag(tag)
 
     val findByNodeNameAndKeyImpl: ServerEndpoint[Any, Future] = findByNodeNameAndKey.serverLogic { (name, keyOpt) =>
@@ -109,7 +109,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(oneOfBody(jsonBody[PrefNode], formBody[PrefNode]))
         .out(jsonBody[PrefNode])
         .name("createPrefNode")
-        .description("Create a new prefNode")
+        .description("Create a new prefNode. Accepts a JSON or form body. Requires a valid token (API key or login)")
         .tag(tag)
 
     val createEndpointImpl: ServerEndpoint[Any, Future] =
@@ -128,7 +128,8 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .out(jsonBody[PrefNode])
             .name("updatePrefNode")
             .description(
-                "Update a prefNode. Can be called using form body or json body. If name and key are not in the request body, they must be in the query parameters."
+                "Update a prefNode. Accepts a JSON or form body. If name and key are not in the request body, they " +
+                    "must be in the query parameters (400 otherwise). Requires a valid token (API key or login)"
             )
             .tag(tag)
 
@@ -162,7 +163,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
             )
             .out(jsonBody[Unit])
             .name("deletePrefNode")
-            .description("Delete a prefNode")
+            .description("Delete a prefNode. Requires a valid token (API key or login)")
             .tag(tag)
 
     val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint

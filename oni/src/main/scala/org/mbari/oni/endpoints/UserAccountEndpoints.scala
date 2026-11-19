@@ -17,7 +17,7 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ErrorMsg, NotFound, Unauthorized, UserAccount, UserAccountCreate, UserAccountUpdate}
+import org.mbari.oni.domain.{ErrorMsg, NotFound, UserAccount, UserAccountCreate, UserAccountInfo, UserAccountUpdate}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.services.UserAccountService
@@ -37,29 +37,29 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
     private val tag     = "User Accounts"
 
     /** Changes to user accounts require the API key or a user who is currently an administrator */
-    private def verifyApiKeyOrAdminAsync(jwtOpt: Option[String]): Future[Either[Unauthorized, Unit]] =
+    private def verifyApiKeyOrAdminAsync(jwtOpt: Option[String]): Future[Either[ErrorMsg, Unit]] =
         verifyApiKeyOrUserAsync(jwtOpt, service.findByUserName, _.isAdministrator)
 
     // findAll
-    val findAllEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[UserAccount], Any] =
+    val findAllEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[UserAccountInfo], Any] =
         openEndpoint
             .get
             .in(base)
-            .out(jsonBody[Seq[UserAccount]])
+            .out(jsonBody[Seq[UserAccountInfo]])
             .name("allUserAccounts")
             .description("Get all user accounts")
             .tag(tag)
 
     val findAllEndpointImpl: ServerEndpoint[Any, Future] = findAllEndpoint.serverLogic { _ =>
-        handleErrorsAsync(service.findAll())
+        handleErrorsAsync(service.findAll().map(_.map(UserAccountInfo.from)))
     }
 
     // findByUserName
-    val findByUserNameEndpoint: Endpoint[Unit, String, ErrorMsg, UserAccount, Any] =
+    val findByUserNameEndpoint: Endpoint[Unit, String, ErrorMsg, UserAccountInfo, Any] =
         openEndpoint
             .get
             .in(base / path[String]("name"))
-            .out(jsonBody[UserAccount])
+            .out(jsonBody[UserAccountInfo])
             .name("userAccountByName")
             .description("Find a user account by username")
             .tag(tag)
@@ -68,23 +68,23 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
         Future {
             handleErrors(service.findByUserName(name)).flatMap {
                 case None        => Left(NotFound(s"User account not found: $name"))
-                case Some(value) => Right(value)
+                case Some(value) => Right(UserAccountInfo.from(value))
             }
         }
     }
 
     // findAllByRole
-    val findAllByRoleEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[UserAccount], Any] =
+    val findAllByRoleEndpoint: Endpoint[Unit, String, ErrorMsg, Seq[UserAccountInfo], Any] =
         openEndpoint
             .get
             .in(base / "role" / path[String]("role"))
-            .out(jsonBody[Seq[UserAccount]])
+            .out(jsonBody[Seq[UserAccountInfo]])
             .name("userAccountsByRole")
             .description("Find all user accounts by role")
             .tag(tag)
 
     val findAllByRoleEndpointImpl: ServerEndpoint[Any, Future] = findAllByRoleEndpoint.serverLogic { role =>
-        handleErrorsAsync(service.findAllByRole(role))
+        handleErrorsAsync(service.findAllByRole(role).map(_.map(UserAccountInfo.from)))
     }
 
     // deleteByUserName
@@ -94,7 +94,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / path[String]("name"))
             .out(jsonBody[Unit])
             .name("deleteUserAccount")
-            .description("Delete a user account by username")
+            .description("Delete a user account by username. Requires an API key token or an administrator login.")
             .tag(tag)
 
     val deleteByUserNameEndpointImpl: ServerEndpoint[Any, Future] = deleteByUserNameEndpoint
@@ -104,7 +104,7 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
         }
 
     // create
-    val createEndpoint: Endpoint[Option[String], UserAccountCreate, ErrorMsg, UserAccount, Any] =
+    val createEndpoint: Endpoint[Option[String], UserAccountCreate, ErrorMsg, UserAccountInfo, Any] =
         secureEndpoint
             .post
             .in(base)
@@ -118,32 +118,32 @@ class UserAccountEndpoints(entityManagerFactory: EntityManagerFactory)(using
                     )
                 )
             )
-            .out(jsonBody[UserAccount])
+            .out(jsonBody[UserAccountInfo])
             .name("createUserAccount")
-            .description("Create a new user account")
+            .description("Create a new user account. Accepts a JSON or form body. Requires an API key token or an administrator login.")
             .tag(tag)
 
     val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
         .serverSecurityLogic(jwtOpt => verifyApiKeyOrAdminAsync(jwtOpt))
         .serverLogic { _ => userAccount =>
-            handleSecureErrorsAsync(service.create(userAccount.toUserAccount))
+            handleSecureErrorsAsync(service.create(userAccount.toUserAccount).map(UserAccountInfo.from))
         }
 
     // update
-    val updateEndpoint: Endpoint[Option[String], (String, UserAccountUpdate), ErrorMsg, UserAccount, Any] =
+    val updateEndpoint: Endpoint[Option[String], (String, UserAccountUpdate), ErrorMsg, UserAccountInfo, Any] =
         secureEndpoint
             .put
             .in(base / path[String]("name"))
             .in(jsonBody[UserAccountUpdate])
-            .out(jsonBody[UserAccount])
+            .out(jsonBody[UserAccountInfo])
             .name("updateUserAccount")
-            .description("Update a user account")
+            .description("Update a user account. Requires an API key token or an administrator login.")
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
         .serverSecurityLogic(jwtOpt => verifyApiKeyOrAdminAsync(jwtOpt))
         .serverLogic { _ => (name, userAccountUpdate) =>
-            handleSecureErrorsAsync(service.update(name, userAccountUpdate))
+            handleSecureErrorsAsync(service.update(name, userAccountUpdate).map(UserAccountInfo.from))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

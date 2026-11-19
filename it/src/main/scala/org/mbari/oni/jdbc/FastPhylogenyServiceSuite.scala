@@ -84,3 +84,23 @@ trait FastPhylogenyServiceSuite extends DataInitializer:
         assertEquals(obtained, expected)
 
     }
+
+    test("findUpById, findDownById and findSiblingsById match the by-name lookups") {
+        val root       = init(4, 2)
+        val child      = root.getChildConcepts.iterator().next()
+        val grandChild = child.getChildConcepts.iterator().next()
+        for concept <- Seq(root, child, grandChild) do
+            val name = concept.getPrimaryConceptName.getName
+            val id   = concept.getId.longValue()
+            assertEquals(fastPhylogenyService.findUpById(id), fastPhylogenyService.findUp(name))
+            assertEquals(fastPhylogenyService.findDownById(id), fastPhylogenyService.findDown(name))
+            assertEquals(fastPhylogenyService.findSiblingsById(id), fastPhylogenyService.findSiblings(name))
+        assert(fastPhylogenyService.findUpById(root.getId).isDefined)
+    }
+
+    test("by-id lookups for an unknown id") {
+        init(2, 0)
+        assertEquals(fastPhylogenyService.findUpById(Long.MaxValue), None)
+        assertEquals(fastPhylogenyService.findDownById(Long.MaxValue), None)
+        assertEquals(fastPhylogenyService.findSiblingsById(Long.MaxValue), Nil)
+    }

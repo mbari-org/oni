@@ -160,7 +160,7 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
             runDelete(
                 endpoints.deleteConceptNameEndpointImpl,
                 s"http://test.com/v1/names/$name",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -265,7 +265,7 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
                 endpoints.updateConceptNameByIdEndpointImpl,
                 s"http://test.com/v1/names/id/$primaryId",
                 ConceptNameUpdate(newName = Some(Strings.random(12))).stringify,
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )
@@ -346,7 +346,7 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
             runDelete(
                 endpoints.deleteConceptNameByIdEndpointImpl,
                 s"http://test.com/v1/names/id/$otherId",
-                response => assertEquals(response.code, StatusCode.Unauthorized),
+                response => assertEquals(response.code, StatusCode.Forbidden),
                 jwt = jwt
             )
         )

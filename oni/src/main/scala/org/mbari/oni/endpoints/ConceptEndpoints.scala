@@ -38,12 +38,19 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
     private val base               = "concept"
     private val tag                = "Concept"
 
+    private val updateConceptDescription =
+        "Set `parentName` to move the concept; it cannot be moved under itself or one of its descendants, and the " +
+            "root cannot be given a parent (400). An invalid rank or an aphiaId already used by another concept " +
+            "returns 400. To remove a rank name or level, set it to an empty string; only administrators can remove " +
+            "them (403 otherwise). Requires an administrator or maintainer login. Maintainer changes are applied and recorded as pending " +
+            "history for an administrator to approve or reject."
+
     val allEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[String], Any] = openEndpoint
         .get
         .in(base)
         .out(jsonBody[Seq[String]])
         .name("allConcepts")
-        .description("Get all concept names")
+        .description("Get the names of all concepts (primary and alternate), up to 10,000")
         .tag(tag)
 
     val allEndpointImpl: ServerEndpoint[Any, Future] = allEndpoint.serverLogic { _ =>
@@ -58,7 +65,12 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[ConceptCreate])
         .out(jsonBody[ConceptMetadata])
         .name("createConcept")
-        .description("Create a new concept")
+        .description(
+            "Create a new concept as a child of `parentName`. If `parentName` is omitted the concept is created as the " +
+                "root, which fails with 400 if a root already exists. Returns 400 if the name already exists or the " +
+                "rank is invalid (see /concept/ranks). " + "Requires an administrator or maintainer login. " +
+                "Maintainer changes are applied and recorded as pending history for an administrator to approve or reject."
+        )
         .tag(tag)
 
     val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
@@ -76,7 +88,10 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[String]("name"))
         .out(jsonBody[Unit])
         .name("deleteConcept")
-        .description("Delete a concept")
+        .description(
+            "Delete a concept and all its descendants by name. Requires an administrator or maintainer login. Administrators delete " +
+                "immediately; other users create a pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
     val deleteByNameEndpointImpl: ServerEndpoint[Any, Future] = deleteByNameEndpoint
@@ -95,8 +110,8 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .out(jsonBody[Unit])
         .name("deleteConceptById")
         .description(
-            "Delete a concept and all its descendants by id. Requires write access. Administrators delete immediately; " +
-                "other users create a pending delete that must be approved by an administrator."
+            "Delete a concept and all its descendants by id. Requires an administrator or maintainer login. Administrators delete " +
+                "immediately; other users create a pending delete that must be approved by an administrator."
         )
         .tag(tag)
 
@@ -115,7 +130,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "parent" / path[String]("name"))
         .out(jsonBody[ConceptMetadata])
         .name("findParent")
-        .description("Find the parent of a concept")
+        .description("Find the parent of a concept. Returns 404 for the root concept")
         .tag(tag)
 
     val findParentEndpointImpl: ServerEndpoint[Any, Future] = findParentEndpoint.serverLogic { name =>
@@ -127,7 +142,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "children" / path[String]("name"))
         .out(jsonBody[Seq[ConceptMetadata]])
         .name("findChildren")
-        .description("Find the children of a concept")
+        .description("Find the immediate children of a concept, sorted by name")
         .tag(tag)
 
     val findChildrenEndpointImpl: ServerEndpoint[Any, Future] = findChildrenEndpoint.serverLogic { name =>
@@ -139,7 +154,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[String]("name"))
         .out(jsonBody[ConceptMetadata])
         .name("findByName")
-        .description("Find a concept by name")
+        .description("Find a concept by any of its names (primary or alternate)")
         .tag(tag)
 
     val findByNameImpl: ServerEndpoint[Any, Future] = findByName.serverLogic { name =>
@@ -151,7 +166,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "id" / path[Long]("id"))
         .out(jsonBody[ConceptMetadata])
         .name("findById")
-        .description("Find a concept by id")
+        .description("Find a concept by its database id")
         .tag(tag)
 
     val findByIdImpl: ServerEndpoint[Any, Future] = findById.serverLogic { id =>
@@ -163,7 +178,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "find" / path[String]("name"))
         .out(jsonBody[Seq[ConceptMetadata]])
         .name("findByNameContaining")
-        .description("Find concepts by name containing")
+        .description("Find concepts with a name containing the given text (case-insensitive), sorted by name")
         .tag(tag)
 
     val findByNameContainingImpl: ServerEndpoint[Any, Future] = findByNameContaining.serverLogic { name =>
@@ -187,7 +202,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "ranks")
         .out(jsonBody[Seq[Rank]])
         .name("listValidRanks")
-        .description("List valid ranks")
+        .description("List the valid rank level and rank name combinations")
         .tag(tag)
 
     val listValidRanksImpl: ServerEndpoint[Any, Future] = listValidRanks.serverLogic { _ =>
@@ -204,7 +219,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .out(jsonBody[ConceptMetadata])
             .name("updateConcept")
             .description(
-                "Update a concept. To remove a rank name or level, set it to an empty string. Only administrators can remove rank names and levels."
+                "Update a concept by name. " + updateConceptDescription
             )
             .tag(tag)
 
@@ -226,7 +241,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .out(jsonBody[ConceptMetadata])
             .name("updateConceptById")
             .description(
-                "Update a concept by id. To remove a rank name or level, set it to an empty string. Only administrators can remove rank names and levels."
+                "Update a concept by id. " + updateConceptDescription
             )
             .tag(tag)
 

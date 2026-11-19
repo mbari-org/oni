@@ -97,7 +97,10 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
                 )
             )
             .name("login")
-            .description("Login with username and password")
+            .description(
+                "Log in with HTTP Basic auth (username and password) and receive a JWT. Only administrators and " +
+                    "maintainers can log in"
+            )
             .tag(tag)
 
     val loginEndpointImpl: ServerEndpoint[Any, Future] =

@@ -61,7 +61,10 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         )
         .out(jsonBody[Media])
         .name("createMedia")
-        .description("Create a new media record")
+        .description(
+            "Create a new media record on a concept. Requires an administrator or maintainer login. Maintainer changes are applied and " +
+                "recorded as pending history."
+        )
         .tag(tag)
 
     val createMediaEndpointImpl: ServerEndpoint[Any, Future] = createMediaEndpoint
@@ -88,7 +91,10 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         .in(jsonBody[MediaUpdate])
         .out(jsonBody[Media])
         .name("updateMedia")
-        .description("Update a media record")
+        .description(
+            "Update a media record. Requires an administrator or maintainer login. Changes are applied immediately " +
+                "and are not recorded in the history."
+        )
         .tag(tag)
 
     val updateMediaEndpointImpl: ServerEndpoint[Any, Future] = updateMediaEndpoint
@@ -102,7 +108,10 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         .in(base / path[Long]("id"))
         .out(jsonBody[Unit])
         .name("deleteMedia")
-        .description("Delete a media record")
+        .description(
+            "Delete a media record. Requires an administrator or maintainer login. Administrators delete immediately; other users create a " +
+                "pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
     val deleteMediaEndpointImpl: ServerEndpoint[Any, Future] = deleteMediaEndpoint
