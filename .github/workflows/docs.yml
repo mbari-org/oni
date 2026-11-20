@@ -33,10 +33,15 @@ jobs:
         run: sbt doc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Find docs output path
+        id: find_docs
+        run: |
+          DOCS_DIR=$(find target -type d -name "api" -not -path "*/streams/*" | head -1)
+          echo "path=$DOCS_DIR" >> $GITHUB_OUTPUT
       - name: Upload site
-        uses: actions/upload-pages-artifact@v1.0.1
+        uses: actions/upload-pages-artifact@v3
         with:
-          path: ./target/out/jvm/scala-3.10.1/oni/api
+          path: ${{ steps.find_docs.outputs.path }}
 
   publish_docs:
     needs: generate_docs

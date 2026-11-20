@@ -6,7 +6,7 @@ Global / onChangedBuildSource := ReloadOnSourceChanges
 // set in application.ini
 //Universal / javaOptions += "-J-XX:-UseBASE64Intrinsics"
 
-ThisBuild / javacOptions ++= Seq("-target", "25", "-source", "25")
+ThisBuild / javacOptions ++= Seq("-target", "27", "-source", "27")
 ThisBuild / licenses          := Seq("Apache-2.0" -> uri("http://www.apache.org/licenses/LICENSE-2.0"))
 ThisBuild / organization      := "org.mbari"
 ThisBuild / organizationName  := "Monterey Bay Aquarium Research Institute"
@@ -65,7 +65,7 @@ lazy val oni = project
     .settings(
         // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)
         // Use `show gitCurrentTags` in sbt to update/see the tags
-        dockerBaseImage           := "eclipse-temurin:25",
+        dockerBaseImage           := "eclipse-temurin:27",
         dockerExposedPorts        := Seq(8080),
         dockerUpdateLatest        := true,
         // Set version based on git tag. I use "0.0.0" format (no leading "v", which is the default)

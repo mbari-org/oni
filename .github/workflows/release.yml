@@ -26,9 +26,14 @@ jobs:
       - name: Package and publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_TAG: ${{ github.ref_name }}
         run: |
           sbt 'Docker / stage'
-          cd target/out/jvm/scala-3.10.1/oni/docker/stage
+          STAGE_DIR=$(find target -name "Dockerfile" -not -path "*/streams/*" | head -1 | xargs dirname)
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
           docker buildx create --name dockerbuilder --platform linux/amd64,linux/arm64 --use
-          docker buildx build --platform linux/amd64,linux/arm64 -t mbari/oni:${{ github.ref_name }} -t mbari/oni:latest --push .
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            -t mbari/oni:${IMAGE_TAG} \
+            -t mbari/oni:latest \
+            --push "$STAGE_DIR"
