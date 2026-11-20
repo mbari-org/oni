@@ -158,9 +158,14 @@ trait Endpoints:
      */
     def handleSecureErrors[T](f: => Either[Throwable, T]): Either[ErrorMsg, T] =
         f match
-            case Left(AccessDeniedMissingCredentials) => Left(Unauthorized(AccessDeniedMissingCredentials.getMessage))
-            case Left(e: AccessException)           => Left(Forbidden(e.getMessage))
-            case other                    => handleErrors(other)
+            // The exception's own message reads like a permission denial, so say what's actually wrong
+            case Left(AccessDeniedMissingCredentials) => Left(Unauthorized(MissingCredentialsMessage))
+            case Left(e: AccessException)             => Left(Forbidden(e.getMessage))
+            case other                                => handleErrors(other)
+
+    /** The 401 message when a request that needs a logged-in user or an API key token arrives without one */
+    val MissingCredentialsMessage: String =
+        "Missing credentials: this request requires a valid bearer token from a user login or an API key"
 
     def handleSecureErrorsAsync[T](f: => Either[Throwable, T])(using
         ec: ExecutionContext

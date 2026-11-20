@@ -25,8 +25,7 @@ import org.mbari.oni.domain.{
     Reference,
     ReferenceQuery,
     ReferenceUpdate,
-    ServerError,
-    UserAccountRoles
+    ServerError
 }
 import org.mbari.oni.endpoints.ReferenceEndpoints.DefaultLimit
 import org.mbari.oni.etc.circe.CirceCodecs.given
@@ -52,13 +51,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     /** Changes to references require the API key or a user who is currently an administrator or maintainer */
     private def verifyApiKeyOrWriterAsync(jwtOpt: Option[String]): Future[Either[ErrorMsg, Unit]] =
-        verifyApiKeyOrUserAsync(
-            jwtOpt,
-            userAccountService.findByUserName,
-            u =>
-                u.role == UserAccountRoles.ADMINISTRATOR.getRoleName ||
-                    u.role == UserAccountRoles.MAINTENANCE.getRoleName
-        )
+        verifyApiKeyOrUserAsync(jwtOpt, userAccountService.findByUserName, _.canWrite)
 
     val findReferenceByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Reference, Any] =
         openEndpoint

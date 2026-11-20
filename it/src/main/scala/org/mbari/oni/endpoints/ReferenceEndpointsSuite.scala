@@ -363,3 +363,26 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with E
         )
         assert(referenceService.findById(ref.id.get).toOption.flatten.get.concepts.contains(name))
     }
+
+    test("create (a maintainer whose role is stored in lowercase is allowed)") {
+        // Reference writes use the same rule as every other write check (UserAccount.canWrite), which recognizes role
+        // names regardless of case
+        val password = org.mbari.oni.etc.jdk.Strings.random(12)
+        val username = "lower-maint-" + org.mbari.oni.etc.jdk.Strings.random(8)
+        userAccountService.create(
+            org.mbari.oni.domain.UserAccount(username, password, "maint", isEncrypted = Some(false))
+        ) match
+            case Left(e)     => fail(e.toString)
+            case Right(user) =>
+                try
+                    val jwt = jwtService.login(username, password, user.toEntity)
+                    assert(jwt.isDefined)
+                    runPost(
+                        endpoints.createReferenceEndpointImpl,
+                        "http://test.com/v1/references",
+                        Reference.from(TestEntityFactory.createReference()).stringify,
+                        r => assertEquals(r.code, StatusCode.Ok, r.body.toString),
+                        jwt = jwt
+                    )
+                finally userAccountService.deleteByUserName(username)
+    }

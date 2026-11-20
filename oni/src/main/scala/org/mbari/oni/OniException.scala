@@ -73,7 +73,7 @@ case class ReferenceIdNotFound(id: Long)                   extends Exception(s"R
 case class WrappedException(msg: String, cause: Throwable) extends Exception(msg, cause) with OniException
 
 case object AccessDeniedMissingCredentials
-    extends Exception("I'm sorry, I can not let you do that.")
+    extends Exception("Missing credentials: no user name was provided, so the caller could not be identified")
     with AccessException
 case object MissingRootConcept extends Exception("Root concept is missing") with NotFoundException
 case object RootAlreadyExists  extends Exception("Root concept already exists") with OniException
