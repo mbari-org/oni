@@ -26,8 +26,7 @@ import org.mbari.oni.domain.{
     LinkRenameToConceptRequest,
     LinkRenameToConceptResponse,
     LinkUpdate,
-    Page,
-    ServerError
+    Page
 }
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -135,13 +134,13 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[LinkRenameToConceptRequest])
             .out(jsonBody[LinkRenameToConceptResponse])
             .name("renameToConcept")
-            .description("Bulk rename all linkTemplate toConcepts")
+            .description("Rename the toConcept of every link template from `old` to `new`. Requires an administrator or maintainer login.")
             .tag(tag)
 
     val renameToConceptImpl: ServerEndpoint[Any, Future] = renameToConcept
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => request =>
-            handleErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
+            handleSecureErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
         }
 
     val createLinkTemplate: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -150,13 +149,16 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[LinkCreate])
         .out(jsonBody[ExtendedLink])
         .name("createLinkTemplate")
-        .description("Create a new link template")
+        .description(
+            "Create a new link template on a concept. Requires an administrator or maintainer login. Maintainer changes are applied and " +
+                "recorded as pending history."
+        )
         .tag(tag)
 
     val createLinkTemplateImpl: ServerEndpoint[Any, Future] = createLinkTemplate
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => link =>
-            handleErrorsAsync(service.create(link, userAccount.username))
+            handleSecureErrorsAsync(service.create(link, userAccount.username))
         }
 
     val updateLinkTemplate: Endpoint[Option[String], (Long, LinkUpdate), ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -165,13 +167,16 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[LinkUpdate])
         .out(jsonBody[ExtendedLink])
         .name("updateLinkTemplate")
-        .description("Update a link template")
+        .description(
+            "Update a link template. Requires an administrator or maintainer login. Maintainer changes are applied and recorded as pending " +
+                "history."
+        )
         .tag(tag)
 
     val updateLinkTemplateImpl: ServerEndpoint[Any, Future] = updateLinkTemplate
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (id, link) =>
-            handleErrorsAsync(service.updateById(id, link, userAccount.username))
+            handleSecureErrorsAsync(service.updateById(id, link, userAccount.username))
         }
 
     val deleteLinkTemplate: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
@@ -179,20 +184,16 @@ class LinkTemplateEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[Long]("id"))
         .out(jsonBody[Unit])
         .name("deleteLinkTemplate")
-        .description("Delete a link template")
+        .description(
+            "Delete a link template. Requires an administrator or maintainer login. Administrators delete immediately; other users create " +
+                "a pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
     val deleteLinkTemplateImpl: ServerEndpoint[Any, Future] = deleteLinkTemplate
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            Future {
-                service
-                    .deleteById(id, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        _ => Right(())
-                    )
-            }
+            handleSecureErrorsAsync(service.deleteById(id, userAccount.username).map(_ => ()))
         }
 
     val countAllLinkTemplates: Endpoint[Unit, Unit, ErrorMsg, Count, Any] = openEndpoint

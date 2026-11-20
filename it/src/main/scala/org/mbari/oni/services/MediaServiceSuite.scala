@@ -16,6 +16,8 @@
 
 package org.mbari.oni.services
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.domain.{Media, MediaCreate, MediaTypes, MediaUpdate}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.jdbc.FastPhylogenyService
@@ -23,9 +25,8 @@ import org.mbari.oni.jpa.DataInitializer
 
 import java.net.URI
 
-trait MediaServiceSuite extends DataInitializer with UserAuthMixin:
+trait MediaServiceSuite extends DataInitializer with UserAuthMixin with KnowledgebaseCacheFixture:
 
-    lazy val fastPhylogenyService = FastPhylogenyService(entityManagerFactory)
     lazy val mediaService         = MediaService(entityManagerFactory, fastPhylogenyService)
 
     test("create") {

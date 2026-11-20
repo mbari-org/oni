@@ -42,8 +42,8 @@ trait PrefNodeServiceSuite extends DataInitializer:
     }
 
     test("create duplicate nodeName + prefKey fails") {
-        val name  = "test"
-        val key   = "duplicateKey"
+        val name = "test"
+        val key  = "duplicateKey"
         prefNodeService.create(name, key, "value1") match
             case Left(e)  => fail(e.getMessage)
             case Right(_) =>

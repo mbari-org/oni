@@ -26,8 +26,7 @@ import org.mbari.oni.domain.{
     LinkRenameToConceptRequest,
     LinkRenameToConceptResponse,
     LinkUpdate,
-    Page,
-    ServerError
+    Page
 }
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -53,7 +52,7 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[Long]("id"))
         .out(jsonBody[ExtendedLink])
         .name("findLinkRealizationeById")
-        .description("Find a link realizations by its id")
+        .description("Find a link realization by its id")
         .tag(tag)
 
     val findLinkRealizationByIdImpl: ServerEndpoint[Any, Future] =
@@ -122,13 +121,13 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[LinkRenameToConceptRequest])
             .out(jsonBody[LinkRenameToConceptResponse])
             .name("renameLinkRealizationsToConcept")
-            .description("Bulk rename all linkRealization toConcepts")
+            .description("Rename the toConcept of every link realization from `old` to `new`. Requires an administrator or maintainer login.")
             .tag(tag)
 
     val renameToConceptImpl: ServerEndpoint[Any, Future] = renameToConcept
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => request =>
-            handleErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
+            handleSecureErrorsAsync(service.renameToConcept(request.old, request.`new`, userAccount.username))
         }
 
     val create: Endpoint[Option[String], LinkCreate, ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -137,13 +136,16 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[LinkCreate])
         .out(jsonBody[ExtendedLink])
         .name("createLinkRealization")
-        .description("Create a new link realization")
+        .description(
+            "Create a new link realization on a concept. Requires an administrator or maintainer login. Maintainer changes are applied and " +
+                "recorded as pending history."
+        )
         .tag(tag)
 
     val createImpl: ServerEndpoint[Any, Future] = create
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => link =>
-            handleErrorsAsync(service.create(link, userAccount.username))
+            handleSecureErrorsAsync(service.create(link, userAccount.username))
         }
 
     val update: Endpoint[Option[String], (Long, LinkUpdate), ErrorMsg, ExtendedLink, Any] = secureEndpoint
@@ -152,13 +154,16 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[LinkUpdate])
         .out(jsonBody[ExtendedLink])
         .name("updateLinkRealization")
-        .description("Update a link realization")
+        .description(
+            "Update a link realization. Requires an administrator or maintainer login. Maintainer changes are applied and recorded as " +
+                "pending history."
+        )
         .tag(tag)
 
     val updateImpl: ServerEndpoint[Any, Future] = update
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (id, linkUpdate) =>
-            handleErrorsAsync(service.updateById(id, linkUpdate, userAccount.username))
+            handleSecureErrorsAsync(service.updateById(id, linkUpdate, userAccount.username))
         }
 
     val delete: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
@@ -166,20 +171,16 @@ class LinkRealizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[Long]("id"))
         .out(jsonBody[Unit])
         .name("deleteLinkRealization")
-        .description("Delete a link realization")
+        .description(
+            "Delete a link realization. Requires an administrator or maintainer login. Administrators delete immediately; other users " +
+                "create a pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
     val deleteImpl: ServerEndpoint[Any, Future] = delete
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            Future {
-                service
-                    .deleteById(id, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        _ => Right(())
-                    )
-            }
+            handleSecureErrorsAsync(service.deleteById(id, userAccount.username).map(_ => ()))
         }
 
     val countAllLinkRealizations: Endpoint[Unit, Unit, ErrorMsg, Count, Any] = openEndpoint

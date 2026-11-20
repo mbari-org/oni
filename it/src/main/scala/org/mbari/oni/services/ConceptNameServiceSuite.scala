@@ -23,6 +23,7 @@ import org.mbari.oni.jpa.DataInitializer
 trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
 
     lazy val conceptNameService: ConceptNameService = new ConceptNameService(entityManagerFactory)
+    lazy val historyService: HistoryService         = new HistoryService(entityManagerFactory)
 
 //    override def beforeEach(context: BeforeEach): Unit =
 //        for root <- conceptService.findRoot()
@@ -211,4 +212,92 @@ trait ConceptNameServiceSuite extends DataInitializer with UserAuthMixin:
             case Left(error)       =>
                 fail(error.toString)
 
+    }
+
+    // --- By id
+
+    private def nameIds(rawConcept: RawConcept): (Long, Long) =
+        val primary = rawConcept.names.find(_.nameType == ConceptNameTypes.PRIMARY.getType).flatMap(_.id)
+        val other   = rawConcept.names.find(_.nameType != ConceptNameTypes.PRIMARY.getType).flatMap(_.id)
+        assert(primary.isDefined && other.isDefined, s"Expected primary and non-primary name ids in $rawConcept")
+        (primary.get, other.get)
+
+    test("findById") {
+        val rawRoot        = RawConcept.from(init(3, 3))
+        val (primaryId, _) = nameIds(rawRoot)
+        conceptNameService.findById(primaryId) match
+            case Right(rawConcept) =>
+                assertEquals(rawConcept.id, rawRoot.id)
+                assert(rawConcept.names.flatMap(_.id).contains(primaryId))
+            case Left(error)       => fail(error.toString)
+    }
+
+    test("findById (no match)") {
+        init(2, 0)
+        conceptNameService.findById(Long.MaxValue) match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.ConceptNameIdNotFound], e.toString)
+            case Right(_) => fail("Should not have found a concept name")
+    }
+
+    test("updateNameById") {
+        val rawRoot        = RawConcept.from(init(3, 3))
+        val (primaryId, _) = nameIds(rawRoot)
+        val oldName        = rawRoot.primaryName
+        val newName        = Strings.random(12)
+        val dto            = ConceptNameUpdate(newName = Some(newName), author = Some(Strings.random(5)))
+
+        runWithUserAuth(user => conceptNameService.updateNameById(primaryId, dto, user.username)) match
+            case Right(rawConcept) =>
+                val names   = rawConcept.names.map(_.name)
+                assert(!names.contains(oldName))
+                assert(names.contains(newName))
+                val updated = rawConcept.names.find(_.name == newName).get
+                assertEquals(updated.id, Some(primaryId)) // same row, renamed
+                assertEquals(updated.author, dto.author)
+            case Left(error)       => fail(error.toString)
+
+        // History should record the old -> new name, just like updateName
+        historyService.findByConceptName(newName) match
+            case Right(histories) =>
+                assert(histories.exists(h => h.oldValue.contains(oldName) && h.newValue.contains(newName)))
+            case Left(error)      => fail(error.toString)
+    }
+
+    test("updateNameById (no match)") {
+        init(2, 0)
+        runWithUserAuth(user =>
+            conceptNameService.updateNameById(Long.MaxValue, ConceptNameUpdate(author = Some("x")), user.username)
+        ) match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.ConceptNameIdNotFound], e.toString)
+            case Right(_) => fail("Should not have updated a non-existent concept name")
+    }
+
+    test("deleteNameById") {
+        val rawRoot      = RawConcept.from(init(3, 4))
+        val (_, otherId) = nameIds(rawRoot)
+        val otherName    = rawRoot.names.find(_.id.contains(otherId)).get.name
+
+        runWithUserAuth(user => conceptNameService.deleteNameById(otherId, user.username)) match
+            case Right(rawConcept) =>
+                assert(!rawConcept.names.flatMap(_.id).contains(otherId))
+                assert(conceptNameService.findById(otherId).isLeft)
+                assert(conceptNameService.findByName(otherName).isLeft)
+            case Left(error)       => fail(error.toString)
+    }
+
+    test("deleteNameById (attempt to delete primary name)") {
+        val rawRoot        = RawConcept.from(init(3, 3))
+        val (primaryId, _) = nameIds(rawRoot)
+        runWithUserAuth(user => conceptNameService.deleteNameById(primaryId, user.username)) match
+            case Right(_) => fail("Should not be able to delete a primary name")
+            case Left(e)  =>
+                assert(e.isInstanceOf[org.mbari.oni.InvalidConceptNameChange], e.toString)
+                assert(conceptNameService.findById(primaryId).isRight)
+    }
+
+    test("deleteNameById (no match)") {
+        init(2, 0)
+        runWithUserAuth(user => conceptNameService.deleteNameById(Long.MaxValue, user.username)) match
+            case Left(e)  => assert(e.isInstanceOf[org.mbari.oni.ConceptNameIdNotFound], e.toString)
+            case Right(_) => fail("Should not have deleted a non-existent concept name")
     }

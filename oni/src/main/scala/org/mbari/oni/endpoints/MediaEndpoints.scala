@@ -61,13 +61,16 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         )
         .out(jsonBody[Media])
         .name("createMedia")
-        .description("Create a new media record")
+        .description(
+            "Create a new media record on a concept. Requires an administrator or maintainer login. Maintainer changes are applied and " +
+                "recorded as pending history."
+        )
         .tag(tag)
 
     val createMediaEndpointImpl: ServerEndpoint[Any, Future] = createMediaEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => mediaCreate =>
-            handleErrorsAsync(service.create(mediaCreate, userAccount.username))
+            handleSecureErrorsAsync(service.create(mediaCreate, userAccount.username))
         }
 
     val findMediaByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Media, Any] = openEndpoint
@@ -79,7 +82,7 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         .tag(tag)
 
     val findMediaByIdEndpointImpl: ServerEndpoint[Any, Future] = findMediaByIdEndpoint.serverLogic { id =>
-        handleErrorsAsync(service.findById(id).map(_.getOrElse(throw ItemNotFound(s"Media with ID $id not found"))))
+        handleErrorsAsync(service.findById(id).flatMap(_.toRight(ItemNotFound(s"Media with ID $id not found"))))
     }
 
     val updateMediaEndpoint: Endpoint[Option[String], (Long, MediaUpdate), ErrorMsg, Media, Any] = secureEndpoint
@@ -88,13 +91,16 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         .in(jsonBody[MediaUpdate])
         .out(jsonBody[Media])
         .name("updateMedia")
-        .description("Update a media record")
+        .description(
+            "Update a media record. Requires an administrator or maintainer login. Changes are applied immediately " +
+                "and are not recorded in the history."
+        )
         .tag(tag)
 
     val updateMediaEndpointImpl: ServerEndpoint[Any, Future] = updateMediaEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (id, mediaUpdate) =>
-            handleErrorsAsync(service.update(id, mediaUpdate, userAccount.username))
+            handleSecureErrorsAsync(service.update(id, mediaUpdate, userAccount.username))
         }
 
     val deleteMediaEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
@@ -102,13 +108,16 @@ class MediaEndpoints(entityManagerFactory: EntityManagerFactory, fastPhylogenySe
         .in(base / path[Long]("id"))
         .out(jsonBody[Unit])
         .name("deleteMedia")
-        .description("Delete a media record")
+        .description(
+            "Delete a media record. Requires an administrator or maintainer login. Administrators delete immediately; other users create a " +
+                "pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
     val deleteMediaEndpointImpl: ServerEndpoint[Any, Future] = deleteMediaEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => id =>
-            handleErrorsAsync(service.deleteById(id, userAccount.username))
+            handleSecureErrorsAsync(service.deleteById(id, userAccount.username))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

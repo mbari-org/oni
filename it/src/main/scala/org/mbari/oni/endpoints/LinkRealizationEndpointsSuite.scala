@@ -24,19 +24,19 @@ import org.mbari.oni.domain.{
     LinkRenameToConceptRequest,
     LinkRenameToConceptResponse,
     LinkUpdate,
-    Page
+    Page,
+    UserAccountRoles
 }
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.entities.TestEntityFactory
-import org.mbari.oni.services.UserAuthMixin
 import sttp.model.StatusCode
 
 import scala.jdk.CollectionConverters.*
 
-trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
 
@@ -257,4 +257,95 @@ trait LinkRealizationEndpointsSuite extends EndpointsSuite with DataInitializer 
                 val obtained = checkResponse[ExtendedLink](response.body)
                 assertEquals(obtained, link)
         )
+    }
+
+    test("delete (read-only user is denied)") {
+        val link = createLinkRealizations().head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteImpl,
+                s"http://test.com/v1/linkrealizations/${link.id.get}",
+                response => assertEquals(response.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findLinkRealizationByIdImpl,
+            s"http://test.com/v1/linkrealizations/${link.id.get}",
+            response => assertEquals(response.code, StatusCode.Ok)
+        )
+    }
+
+    test("delete (no match)") {
+        createLinkRealizations()
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runDelete(
+                endpoints.deleteImpl,
+                s"http://test.com/v1/linkrealizations/${Long.MaxValue}",
+                response => assertEquals(response.code, StatusCode.NotFound),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("findLinkRealizationById (no match)") {
+        createLinkRealizations()
+        runGet(
+            endpoints.findLinkRealizationByIdImpl,
+            s"http://test.com/v1/linkrealizations/${Long.MaxValue}",
+            response => assertEquals(response.code, StatusCode.NotFound)
+        )
+    }
+
+    // --- A read-only user holding a still-valid token can't write
+
+    private def assertUnchanged(link: org.mbari.oni.domain.ExtendedLink): Unit =
+        runGet(
+            endpoints.findLinkRealizationByIdImpl,
+            s"http://test.com/v1/linkrealizations/${link.id.get}",
+            r => assertEquals(checkResponse[org.mbari.oni.domain.ExtendedLink](r.body), link, "The link realization was changed")
+        )
+
+    test("create (read-only user is denied)") {
+        val link     = createLinkRealizations().head
+        val linkName = Strings.random(12)
+        withRole(org.mbari.oni.domain.UserAccountRoles.READONLY)(jwt =>
+            runPost(
+                endpoints.createImpl,
+                "http://test.com/v1/linkrealizations",
+                org.mbari.oni.domain.LinkCreate(link.concept, linkName).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        val links = org.mbari.oni.services.LinkRealizationService(entityManagerFactory).findByConcept(link.concept).toOption.get
+        assert(!links.exists(_.linkName == linkName), "The link realization was created")
+    }
+
+    test("update (read-only user is denied)") {
+        val link = createLinkRealizations().head
+        withRole(org.mbari.oni.domain.UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateImpl,
+                s"http://test.com/v1/linkrealizations/${link.id.get}",
+                org.mbari.oni.domain.LinkUpdate(linkValue = Some(Strings.random(12))).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assertUnchanged(link)
+    }
+
+    test("renameToConcept (read-only user is denied)") {
+        val link = createLinkRealizations().head
+        withRole(org.mbari.oni.domain.UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.renameToConceptImpl,
+                "http://test.com/v1/linkrealizations/toconcept/rename",
+                org.mbari.oni.domain.LinkRenameToConceptRequest(link.toConcept, Strings.random(12)).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assertUnchanged(link)
     }

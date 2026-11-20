@@ -16,10 +16,12 @@
 
 package org.mbari.oni.services
 
+import org.mbari.oni.cache.{KnowledgebaseCache, KnowledgebaseCacheFixture}
+
 import io.nats.client.Nats
 import org.mbari.oni.domain.{ConceptNameCreate, ConceptNameTypes, LinkRenameToConceptRequest}
-import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
+import org.mbari.oni.etc.jdk.Strings
 import org.mbari.oni.etc.nats.{NatsConfig, NatsMessage, NatsPublisher, NatsSubscriber}
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.jpa.EntityManagerFactories.*
@@ -66,7 +68,8 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
     private lazy val subscriber =
         val nc         = Nats.connect(natsUrl)
         val dispatcher = nc.createDispatcher(msg =>
-            io.circe.parser
+            io.circe
+                .parser
                 .decode[NatsMessage](new String(msg.getData, StandardCharsets.UTF_8))
                 .foreach(m => received.add(m))
         )
@@ -111,7 +114,10 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
             case Left(e)  => fail(e.toString)
             case Right(_) =>
                 val msg = awaitMessage(m => m.action == "CREATED" && m.dataType == "CONCEPT_NAME")
-                assert(msg.exists(_.id.isDefined), s"No CREATED CONCEPT_NAME message with an id. Got: ${received.asScala}")
+                assert(
+                    msg.exists(_.id.isDefined),
+                    s"No CREATED CONCEPT_NAME message with an id. Got: ${received.asScala}"
+                )
     }
 
     test("a rolled back transaction sends nothing to NATS") {
@@ -139,7 +145,8 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
 
     test("a bulk link rename (which bypasses Hibernate) reaches NATS") {
         val root                = init(3, 10)
-        val allLinkRealizations = root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
+        val allLinkRealizations =
+            root.getDescendants.asScala.flatMap(_.getConceptMetadata.getLinkRealizations.asScala).toSeq
         settle()
         val request             = LinkRenameToConceptRequest(allLinkRealizations.head.getToConcept, Strings.random(10))
         runWithUserAuth(user => linkRealizationService.renameToConcept(request.old, request.`new`, user.username)) match
@@ -164,12 +171,12 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
                 lookups.incrementAndGet()
                 super.findByName(name)
 
-    test("a message from another instance clears the ConceptCache") {
+    test("a message from another instance clears the KnowledgebaseCache") {
         val root    = init(2, 2)
         settle()
         val name    = root.getPrimaryConceptName.getName
         val lookups = new AtomicInteger(0)
-        val cache   = new ConceptCache(countingService(lookups), conceptNameService)
+        val cache   = new KnowledgebaseCache(entityManagerFactory, KnowledgebaseCacheFixture.TestConfig, countingService(lookups), conceptNameService)
         try
             cache.findByName(name)
             cache.findByName(name)
@@ -186,12 +193,12 @@ trait NatsChangeNotificationSuite extends DataInitializer with UserAuthMixin:
         finally cache.close()
     }
 
-    test("a message from this same instance does not clear the ConceptCache again") {
+    test("a message from this same instance does not clear the KnowledgebaseCache again") {
         val root    = init(2, 2)
         settle()
         val name    = root.getPrimaryConceptName.getName
         val lookups = new AtomicInteger(0)
-        val cache   = new ConceptCache(countingService(lookups), conceptNameService)
+        val cache   = new KnowledgebaseCache(entityManagerFactory, KnowledgebaseCacheFixture.TestConfig, countingService(lookups), conceptNameService)
         try
             cache.findByName(name)
             sendFromOtherInstance(NatsMessage.InstanceId)

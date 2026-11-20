@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{PrefNode, PrefNodeUpdate}
+import org.mbari.oni.domain.{PrefNode, PrefNodeUpdate, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jdk.Strings
@@ -26,7 +26,7 @@ import org.mbari.oni.services.{PrefNodeService, UserAuthMixin}
 import org.mbari.oni.util.Reflect
 import sttp.model.StatusCode
 
-trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService          = JwtService("mbari", "foo", "bar")
     lazy val endpoints: PrefNodeEndpoints = PrefNodeEndpoints(entityManagerFactory)
@@ -271,4 +271,54 @@ trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with Us
             case Right(None)           => assert(true)
             case Right(Some(prefNode)) => fail(s"Expected None but got $prefNode")
             case Left(error)           => fail(error.getMessage)
+    }
+
+    test("findAllEndpoint (maintainer is forbidden)") {
+        createNodes(2)
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runGet(
+                endpoints.findAllImpl,
+                "http://test.com/v1/prefs",
+                response => assertEquals(response.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+    }
+
+    // --- Changing preferences requires the API key, an administrator or a maintainer
+
+    private def createPrefAs(jwt: Option[String], expected: StatusCode): PrefNode =
+        val node = PrefNode(s"/test/${Strings.random(10)}", Strings.random(8), Strings.random(8))
+        runPost(
+            endpoints.createEndpointImpl,
+            "http://test.com/v1/prefs",
+            node.stringify,
+            r => assertEquals(r.code, expected, r.body.toString),
+            jwt = jwt
+        )
+        node
+
+    test("createEndpoint (read-only user is forbidden)") {
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            val node = createPrefAs(jwt, StatusCode.Forbidden)
+            assert(service.findByNodeNameAndKey(node.name, node.key).toOption.forall(_.isEmpty), "The pref was created")
+        )
+    }
+
+    test("createEndpoint (maintainer and API key are allowed)") {
+        withRole(UserAccountRoles.MAINTENANCE)(jwt => createPrefAs(jwt, StatusCode.Ok))
+        createPrefAs(jwtService.authorize(jwtService.apiKey), StatusCode.Ok)
+    }
+
+    test("deleteEndpoint (read-only user is forbidden)") {
+        val node = createNodes(1).head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteEndpointImpl,
+                s"http://test.com/v1/prefs?name=${node.name}&key=${node.key}",
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assert(service.findByNodeNameAndKey(node.name, node.key).toOption.exists(_.nonEmpty), "The pref was deleted")
     }

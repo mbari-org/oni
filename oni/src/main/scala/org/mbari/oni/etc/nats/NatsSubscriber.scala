@@ -30,14 +30,14 @@ import scala.util.control.NonFatal
 
 /**
  * Listens to the NATS topic for changes made by other Oni instances and republishes them on the local ChangeBus as
- * remote events, so things like the ConceptCache are cleared on this instance too. Messages sent by this instance
+ * remote events, so things like the KnowledgebaseCache are cleared on this instance too. Messages sent by this instance
  * (identified by instanceId) are ignored since the change has already been handled locally.
  *
  * Messages sent while this instance is disconnected from NATS are lost, so we also publish a catch-all remote event
  * whenever the connection is (re)established. That clears caches that may have missed changes.
  *
- * The connection is made on a background thread, so creating a subscriber never blocks (or fails) if NATS is down.
- * It starts listening as soon as NATS is available. See awaitReady.
+ * The connection is made on a background thread, so creating a subscriber never blocks (or fails) if NATS is down. It
+ * starts listening as soon as NATS is available. See awaitReady.
  *
  * @param instanceId
  *   Messages with this source are ignored. Only overridden in tests, to simulate another instance.
@@ -52,20 +52,21 @@ class NatsSubscriber(val url: String, val topic: String, instanceId: String = Na
             log.atInfo.log(s"NATS $event at '$url'. Clearing caches since changes may have been missed.")
             ChangeBus.publishRemote(Action.UPDATED, DataType.CONCEPT, null)
 
-    private val ready                          = new CountDownLatch(1)
-    private var closed                         = false
+    private val ready                            = new CountDownLatch(1)
+    private var closed                           = false
     @volatile private var connection: Connection = null
-    private var dispatcher: Dispatcher         = null
+    private var dispatcher: Dispatcher           = null
 
-    private val connector = NatsClient.connectInBackground("NatsSubscriber-connect", url, Some(connectionListener)): c =>
-        this.synchronized:
-            if closed then Try(c.close())
-            else
-                connection = c
-                dispatcher = c.createDispatcher(msg => handle(msg))
-                dispatcher.subscribe(topic)
-                Try(c.flush(Duration.ofSeconds(2))) // Make sure the server knows about the subscription
-                ready.countDown()
+    private val connector = NatsClient.connectInBackground("NatsSubscriber-connect", url, Some(connectionListener)):
+        c =>
+            this.synchronized:
+                if closed then Try(c.close())
+                else
+                    connection = c
+                    dispatcher = c.createDispatcher(msg => handle(msg))
+                    dispatcher.subscribe(topic)
+                    Try(c.flush(Duration.ofSeconds(2))) // Make sure the server knows about the subscription
+                    ready.countDown()
 
     /**
      * Waits until we are connected and subscribed.
@@ -110,7 +111,8 @@ object NatsSubscriber:
                 config <- opt
                 if config.enable
             yield
-                log.atInfo.log(s"Listening for changes from other Oni instances on '${config.topic}' at '${config.url}'")
+                log.atInfo
+                    .log(s"Listening for changes from other Oni instances on '${config.topic}' at '${config.url}'")
                 new NatsSubscriber(config.url, config.topic)
         catch
             case NonFatal(e) =>

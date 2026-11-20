@@ -30,7 +30,8 @@ trait UserAccountServiceSuite extends DataInitializer:
             case Right(obtained) =>
                 assertEquals(obtained.username, expected.username)
                 assertNotEquals(obtained.password, expected.password)
-                assertEquals(obtained.role, expected.role)
+                // Roles are reported by their canonical name: "admin" is recognized as Admin
+                assertEquals(obtained.role, UserAccountRoles.ADMINISTRATOR.getRoleName)
                 assert(obtained.id.isDefined)
                 assert(obtained.lastUpdated.isDefined)
     }
@@ -57,7 +58,8 @@ trait UserAccountServiceSuite extends DataInitializer:
             updated <- userAccountService.update("test2", update)
         yield
             assertEquals(updated.username, "test2")
-            assertEquals(updated.role, "plebeian")
+            // An unrecognized role is treated, and reported, as ReadOnly
+            assertEquals(updated.role, UserAccountRoles.READONLY.getRoleName)
             assertEquals(updated.affiliation, Some("MBARI"))
             assertNotEquals(updated.password, original.password)
             assertNotEquals(updated.password, created.password)
@@ -124,4 +126,95 @@ trait UserAccountServiceSuite extends DataInitializer:
                 val obtainedUsernames = obtained.map(_.username).sorted
                 for e <- expectedUsernames
                 do assert(obtainedUsernames.contains(e))
+    }
+
+    // --- verifyWriteAccess is an allow-list: only Admin and Maint may write
+
+    private def writeAccessFor(role: String): Boolean =
+        val entity = org.mbari.oni.jpa.entities.TestEntityFactory.createUserAccount(role)
+        val user   = userAccountService.create(UserAccount.from(entity)).toOption.get
+        try userAccountService.verifyWriteAccess(Some(user.username)).isRight
+        finally userAccountService.deleteByUserName(user.username)
+
+    test("verifyWriteAccess allows administrators and maintainers") {
+        assert(writeAccessFor(UserAccountRoles.ADMINISTRATOR.getRoleName))
+        assert(writeAccessFor(UserAccountRoles.MAINTENANCE.getRoleName))
+    }
+
+    test("verifyWriteAccess denies read-only and locked users") {
+        assert(!writeAccessFor(UserAccountRoles.READONLY.getRoleName))
+        assert(!writeAccessFor(UserAccountRoles.LOCKED.getRoleName), "Locked users must not be able to write")
+    }
+
+    test("verifyWriteAccess recognizes role names regardless of case") {
+        assert(writeAccessFor("admin"))
+        assert(writeAccessFor("MAINT"))
+        assert(!writeAccessFor("readonly"))
+    }
+
+    test("verifyWriteAccess treats unrecognized roles as ReadOnly") {
+        assert(!writeAccessFor("banana"))
+        assert(!writeAccessFor("Maintenance"))
+        assert(!writeAccessFor(""))
+    }
+
+    test("an account stored with an unrecognized role is reported as ReadOnly") {
+        val entity = org.mbari.oni.jpa.entities.TestEntityFactory.createUserAccount("banana")
+        val user   = userAccountService.create(UserAccount.from(entity)).toOption.get
+        try
+            assertEquals(
+                userAccountService.findByUserName(user.username).toOption.flatten.map(_.role),
+                Some(UserAccountRoles.READONLY.getRoleName)
+            )
+        finally userAccountService.deleteByUserName(user.username)
+    }
+
+    test("verifyWriteAccess denies unknown and missing users") {
+        assert(userAccountService.verifyWriteAccess(Some("no-such-user-" + System.nanoTime())).isLeft)
+        assert(userAccountService.verifyWriteAccess(None).isLeft)
+    }
+
+    // --- findAllByRole uses each account's effective role
+
+    private def usernamesWithRole(role: String): Set[String] =
+        userAccountService.findAllByRole(role).fold(e => fail(e.getMessage), _.map(_.username).toSet)
+
+    private def withStoredRoles(roles: String*)(fn: Seq[String] => Unit): Unit =
+        val created = roles.map(role =>
+            val entity = org.mbari.oni.jpa.entities.TestEntityFactory.createUserAccount(role)
+            userAccountService.create(UserAccount.from(entity)).toOption.get.username
+        )
+        try fn(created)
+        finally created.foreach(userAccountService.deleteByUserName)
+
+    test("findAllByRole lists accounts with an unrecognized stored role under ReadOnly") {
+        withStoredRoles("ReadOnly", "banana", "", "Maintenance") { case Seq(readOnly, banana, blank, maintenance) =>
+            val obtained = usernamesWithRole(UserAccountRoles.READONLY.getRoleName)
+            for name <- Seq(readOnly, banana, blank, maintenance) do assert(obtained.contains(name), name)
+            assert(!usernamesWithRole(UserAccountRoles.MAINTENANCE.getRoleName).contains(maintenance))
+        }
+    }
+
+    test("findAllByRole recognizes stored roles regardless of case") {
+        withStoredRoles("admin", "Admin") { case Seq(lower, canonical) =>
+            val admins = usernamesWithRole(UserAccountRoles.ADMINISTRATOR.getRoleName)
+            assert(admins.contains(lower) && admins.contains(canonical))
+            assert(!usernamesWithRole(UserAccountRoles.READONLY.getRoleName).contains(lower))
+        }
+    }
+
+    test("findAllByRole matches the requested role exactly, ignoring case") {
+        withStoredRoles("Maint") { case Seq(maint) =>
+            assert(usernamesWithRole("maint").contains(maint))
+            assert(usernamesWithRole(" MAINT ").contains(maint))
+            assert(!usernamesWithRole("Ma").contains(maint), "Prefixes are not role names")
+        }
+    }
+
+    test("findAllByRole returns nothing for an unrecognized requested role") {
+        withStoredRoles("banana") { _ =>
+            // Must not fall back to ReadOnly, which would list every read-only account
+            assertEquals(usernamesWithRole("banana"), Set.empty[String])
+            assertEquals(usernamesWithRole("%"), Set.empty[String])
+        }
     }

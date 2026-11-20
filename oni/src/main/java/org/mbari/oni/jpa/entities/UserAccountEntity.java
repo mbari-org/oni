@@ -47,7 +47,6 @@ import org.mbari.oni.jpa.*;
                 query = "SELECT c FROM UserAccount c WHERE c.lastName = :lastName"),
         @NamedQuery(name = "UserAccount.findByAffiliation",
                 query = "SELECT c FROM UserAccount c WHERE c.affiliation LIKE :affiliation"),
-        @NamedQuery(name = "UserAccount.findByRole", query = "SELECT c FROM UserAccount c WHERE c.role LIKE :role"),
         @NamedQuery(name = "UserAccount.findAll", query = "SELECT c FROM UserAccount c")
 
 })
@@ -178,16 +177,25 @@ public class UserAccountEntity implements Serializable, IPersistentObject, IOpti
         return hash;
     }
 
+    /** The role this account actually has. An unrecognized stored role counts as READONLY. */
+    public UserAccountRoles getEffectiveRole() {
+        return UserAccountRoles.fromStoredRole(role);
+    }
+
     public boolean isAdministrator() {
-        return UserAccountRoles.ADMINISTRATOR.getRoleName().equals(role);
+        return getEffectiveRole() == UserAccountRoles.ADMINISTRATOR;
     }
 
     public boolean isMaintainer() {
-        return UserAccountRoles.MAINTENANCE.getRoleName().equals(role);
+        return getEffectiveRole() == UserAccountRoles.MAINTENANCE;
     }
 
     public boolean isReadOnly() {
-        return UserAccountRoles.READONLY.getRoleName().equals(role);
+        return getEffectiveRole() == UserAccountRoles.READONLY;
+    }
+
+    public boolean isLocked() {
+        return getEffectiveRole() == UserAccountRoles.LOCKED;
     }
 
     public void setAffiliation(String affiliation) {

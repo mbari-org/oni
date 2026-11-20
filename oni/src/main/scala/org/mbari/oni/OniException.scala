@@ -29,6 +29,9 @@ trait BadRequestException      extends OniException
 case class AccessDenied(user: String)
     extends Exception(s"I'm sorry `$user`, I can not let you do that.")
     with AccessException
+case class AdministratorRequired(user: String, action: String)
+    extends Exception(s"User `$user` must be an administrator to $action")
+    with AccessException
 case class AphiaIdNotFound(aphiaId: Long) extends Exception(s"AphiaId `$aphiaId` was not found") with NotFoundException
 
 case class ChildConceptNotFound(parentName: String, childName: String)
@@ -36,9 +39,18 @@ case class ChildConceptNotFound(parentName: String, childName: String)
     with ConceptNotFoundException
 case class ConceptNameAlreadyExists(name: String)
     extends Exception(s"Concept name `$name` already exists")
-    with OniException
+    with BadRequestException
 case class ConceptNameNotFound(name: String)
     extends Exception(s"Concept name `$name` was not found")
+    with ConceptNotFoundException
+case class ConceptNameIdNotFound(id: Long)
+    extends Exception(s"Concept name with id `$id` was not found")
+    with ConceptNotFoundException
+case class InvalidConceptNameChange(msg: String)           extends Exception(msg) with BadRequestException
+case class InvalidConceptChange(msg: String)               extends Exception(msg) with BadRequestException
+case class InvalidRank(msg: String)                        extends Exception(msg) with BadRequestException
+case class ConceptIdNotFound(id: Long)
+    extends Exception(s"Concept with id `$id` was not found")
     with ConceptNotFoundException
 case class HistoryHasBeenPreviouslyProcessed(id: Long)
     extends Exception(s"History with id `$id` has already been processed")
@@ -61,7 +73,7 @@ case class ReferenceIdNotFound(id: Long)                   extends Exception(s"R
 case class WrappedException(msg: String, cause: Throwable) extends Exception(msg, cause) with OniException
 
 case object AccessDeniedMissingCredentials
-    extends Exception("I'm sorry, I can not let you do that.")
+    extends Exception("Missing credentials: no user name was provided, so the caller could not be identified")
     with AccessException
 case object MissingRootConcept extends Exception("Root concept is missing") with NotFoundException
 case object RootAlreadyExists  extends Exception("Root concept already exists") with OniException

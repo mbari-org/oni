@@ -61,6 +61,9 @@ object CirceCodecs:
     given Decoder[Unauthorized] = deriveDecoder
     given Encoder[Unauthorized] = deriveEncoder
 
+    given Decoder[Forbidden] = deriveDecoder
+    given Encoder[Forbidden] = deriveEncoder
+
     // --- Domain Objects ---
     given Decoder[AuthorizationSC] = deriveDecoder
     given Encoder[AuthorizationSC] = deriveEncoder
@@ -175,6 +178,9 @@ object CirceCodecs:
 
     given Decoder[UserAccount] = deriveDecoder
     given Encoder[UserAccount] = deriveEncoder
+
+    given Decoder[UserAccountInfo] = deriveDecoder
+    given Encoder[UserAccountInfo] = deriveEncoder
 
     given Decoder[UserAccountCreate] = deriveDecoder
     given Encoder[UserAccountCreate] = deriveEncoder

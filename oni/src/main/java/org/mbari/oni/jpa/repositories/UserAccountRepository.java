@@ -52,10 +52,6 @@ public class UserAccountRepository extends Repository {
         return findByNamedQuery("UserAccount.findByLastName", Map.of("lastName", lastName));
     }
 
-    public Collection<UserAccountEntity> findAllByRole(String role) {
-        return findByNamedQuery("UserAccount.findByRole", Map.of("role", role));
-    }
-
     /**
      * Search for the matching username
      * @param userName The username to search for

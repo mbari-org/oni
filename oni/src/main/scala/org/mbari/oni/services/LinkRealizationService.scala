@@ -26,10 +26,10 @@ import org.mbari.oni.domain.{
     LinkUpdate,
     LinkUtilities
 }
-import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 import org.mbari.oni.jpa.EntityManagerFactories.*
 import org.mbari.oni.jpa.entities.{HistoryEntity, HistoryEntityFactory, LinkRealizationEntity, UserAccountEntity}
 import org.mbari.oni.jpa.repositories.{ConceptRepository, LinkRealizationRepository}
+import org.mbari.oni.jpa.{ChangeBus, ChangeEvent}
 import org.mbari.oni.{ConceptNameNotFound, ItemNotFound, LinkRealizationIdNotFound}
 
 import scala.jdk.CollectionConverters.*
@@ -201,7 +201,7 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
                             history.approveBy(userEntity.getUserName)
                             linkRealization.getConceptMetadata.removeLinkRealization(linkRealization)
                             entityManager.remove(linkRealization)
-                    case None                  => throw new IllegalArgumentException(s"Link with id ${id} does not exist")
+                    case None                  => throw LinkRealizationIdNotFound(id)
             )
 
         for
@@ -215,17 +215,20 @@ class LinkRealizationService(entityManagerFactory: EntityManagerFactory):
         userName: String
     ): Either[Throwable, LinkRenameToConceptResponse] =
         def txn(userEntity: UserAccountEntity): Either[Throwable, LinkRenameToConceptResponse] =
-            entityManagerFactory.transaction(entityManager =>
-                val query = entityManager.createNamedQuery("LinkRealization.updateToConcept")
-                query.setParameter(1, newConcept)
-                query.setParameter(2, oldConcept)
-                val n     = query.executeUpdate()
-                LinkRenameToConceptResponse(oldConcept, newConcept, n)
-            ).map(response =>
-                // Native bulk updates skip Hibernate's entity lifecycle, so notify explicitly (after commit)
-                if response.count > 0 then ChangeBus.publish(ChangeEvent.Action.UPDATED, ChangeEvent.DataType.LINK_REALIZATION, null)
-                response
-            )
+            entityManagerFactory
+                .transaction(entityManager =>
+                    val query = entityManager.createNamedQuery("LinkRealization.updateToConcept")
+                    query.setParameter(1, newConcept)
+                    query.setParameter(2, oldConcept)
+                    val n     = query.executeUpdate()
+                    LinkRenameToConceptResponse(oldConcept, newConcept, n)
+                )
+                .map(response =>
+                    // Native bulk updates skip Hibernate's entity lifecycle, so notify explicitly (after commit)
+                    if response.count > 0 then
+                        ChangeBus.publish(ChangeEvent.Action.UPDATED, ChangeEvent.DataType.LINK_REALIZATION, null)
+                    response
+                )
 
         for
             user     <- userAccountService.verifyWriteAccess(Option(userName))

@@ -75,13 +75,15 @@ class ReferenceService(entityManagerFactory: EntityManagerFactory):
                             s"A Reference with DOI '${doi}' already exists"
                         )
                 )
-            val entity = reference.toEntity
+            val entity      = reference.toEntity
             entity.setId(null) // just in case. Hibernate requires that this is null for inserts
-            reference.concepts.foreach(name =>
-                conceptRepo.findByName(name).toScala match
-                    case None          => throw new IllegalArgumentException(s"Concept with name '${name}' not found")
-                    case Some(concept) => concept.getConceptMetadata.addReference(entity)
-            )
+            reference
+                .concepts
+                .foreach(name =>
+                    conceptRepo.findByName(name).toScala match
+                        case None          => throw new IllegalArgumentException(s"Concept with name '${name}' not found")
+                        case Some(concept) => concept.getConceptMetadata.addReference(entity)
+                )
             repo.create(entity)
             Reference.from(entity)
         )

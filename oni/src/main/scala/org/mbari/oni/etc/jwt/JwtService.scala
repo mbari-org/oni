@@ -84,7 +84,10 @@ case class JwtService(issuer: String, apiKey: String, signingSecret: String):
     def login(name: String, pwd: String, entity: UserAccountEntity): Option[String] =
         if name == entity.getUserName
             && entity.authenticate(pwd)
-            && (entity.isAdministrator || entity.isMaintainer)
+            // Every role except Locked can log in. ReadOnly users need a token to update their own account; what a
+            // token allows is decided per endpoint from the user's current role, not by being able to log in.
+            // An unrecognized stored role counts as ReadOnly (see UserAccountRoles.fromStoredRole).
+            && (entity.isAdministrator || entity.isMaintainer || entity.isReadOnly)
         then
             val now      = Instant.now()
             val tomorrow = now.plus(1, ChronoUnit.DAYS)

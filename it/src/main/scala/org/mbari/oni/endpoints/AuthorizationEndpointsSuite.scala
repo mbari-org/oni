@@ -108,8 +108,34 @@ trait AuthorizationEndpointsSuite extends DatabaseFunSuite with EndpointsSuite:
                     .send(backendStub)
                     .join
 
-                response.body match
-                    case Left(e)     =>
-                    // this is expected. READONLY users cannot login
-                    case Right(body) =>
-                        fail("READONLY user should not be able to login")
+                // READONLY users can log in so they can update their own account
+                assertEquals(response.code, StatusCode.Ok)
+                val token = response.body.flatMap(b => decode[AuthorizationSC](b).left.map(_.getMessage))
+                assert(token.exists(t => jwtService.verify(t.access_token)), s"No valid token in ${response.body}")
+
+    /** Creates a user with the given stored role and tries to log in as them */
+    private def loginWithStoredRole(username: String, role: String): Response[Either[String, String]] =
+        val password = "SuperSecretPassword"
+        UserAccountService(entityManagerFactory).create(
+            UserAccount(username, password, role, isEncrypted = Some(false))
+        ) match
+            case Left(e)  => fail(e.getMessage)
+            case Right(_) =>
+                val credentials = Base64.getEncoder.encodeToString(s"$username:$password".getBytes)
+                basicRequest
+                    .post(uri"http://test.com/v1/auth/login")
+                    .header("Authorization", s"BASIC $credentials")
+                    .send(newBackendStub(authorizationEndpoints.loginEndpointImpl))
+                    .join
+
+    test("login (LOCKED users cannot log in)"):
+        val response = loginWithStoredRole("lockedUser1", UserAccountRoles.LOCKED.getRoleName)
+        assertEquals(response.code, StatusCode.Unauthorized)
+
+    test("login (an unrecognized role logs in as ReadOnly)"):
+        val response = loginWithStoredRole("oddRoleUser1", "banana")
+        assertEquals(response.code, StatusCode.Ok)
+        val claims   = response.body.toOption.flatMap(b => decode[AuthorizationSC](b).toOption).flatMap(t =>
+            jwtService.decode(t.access_token)
+        )
+        assertEquals(claims.map(_.role), Some(UserAccountRoles.READONLY.getRoleName))

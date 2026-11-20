@@ -27,11 +27,11 @@ class TestRepositorySuite extends munit.FunSuite:
     test("read") {
         // val url  = getClass.getResource("/kb/kb-dump.json.zip")
         val resourcePath = TestResources.path("/kb/kb-dump.json.zip")
-        val path = resourcePath
+        val path         = resourcePath
         assert(Files.exists(path))
-        val opt  = TestRepository.read(path);
+        val opt          = TestRepository.read(path);
         assert(opt.isDefined)
-        val root = opt.get
-        val tree = root.stringify
+        val root         = opt.get
+        val tree         = root.stringify
         Files.write(Paths.get("target/kb-dump.json"), tree.getBytes)
     }

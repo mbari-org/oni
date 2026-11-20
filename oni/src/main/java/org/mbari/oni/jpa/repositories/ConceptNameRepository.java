@@ -47,6 +47,11 @@ public class ConceptNameRepository extends Repository {
         return names.stream().findFirst();
     }
 
+    public Optional<ConceptNameEntity> findById(final Long id) {
+        List<ConceptNameEntity> names = findByNamedQuery("ConceptName.findById", Map.of("id", id));
+        return names.stream().findFirst();
+    }
+
     public Collection<ConceptNameEntity> findAll(int limit, int offset) {
         return findByNamedQuery("ConceptName.findAll", limit, offset);
     }

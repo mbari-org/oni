@@ -16,7 +16,7 @@
 
 package org.mbari.oni.endpoints
 
-import org.mbari.oni.domain.{Page, Reference, ReferenceQuery, ReferenceUpdate}
+import org.mbari.oni.domain.{Page, Reference, ReferenceQuery, ReferenceUpdate, UserAccountRoles}
 import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.etc.jdk.Loggers.given
 import org.mbari.oni.etc.jwt.JwtService
@@ -25,9 +25,8 @@ import org.mbari.oni.jpa.entities.TestEntityFactory
 import org.mbari.oni.services.ReferenceService
 import sttp.model.StatusCode
 
-import scala.util.Random
 
-trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
+trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with EndpointsAuthMixin:
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
 
@@ -158,10 +157,11 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
     test("findReferencesByCitationGlob") {
         val refs     = initRefs(2)
         val citation = refs.head.citation
-        val random   = Random()
-        val start    = random.nextInt(citation.length - 2)
-        val end      = random.nextInt(citation.length - start) + start
-        val glob     = citation.substring(start, end)
+        // Search for the inside of the longest word. Citations are random words of 6+ characters, so this is at least 4
+        // random characters and won't also appear in the other citation. (A random substring could be empty, a single
+        // character or a space, which would match both references.)
+        val word     = citation.split(" ").maxBy(_.length)
+        val glob     = word.substring(1, word.length - 1)
         val dto      = ReferenceQuery(citation = Some(glob))
         runPost(
             endpoints.findReferencesByCitationGlobEndpointImpl,
@@ -247,4 +247,142 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer:
             ,
             jwt = jwtService.authorize(jwtService.apiKey)
         )
+    }
+
+    // --- Authorization: API key, administrator, or maintainer
+
+    test("create (maintainer login)") {
+        val dto = Reference.from(TestEntityFactory.createReference())
+        withRole(UserAccountRoles.MAINTENANCE)(jwt =>
+            runPost(
+                endpoints.createReferenceEndpointImpl,
+                "http://test.com/v1/references",
+                dto.stringify,
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("create (administrator login)") {
+        val dto = Reference.from(TestEntityFactory.createReference())
+        withRole(UserAccountRoles.ADMINISTRATOR)(jwt =>
+            runPost(
+                endpoints.createReferenceEndpointImpl,
+                "http://test.com/v1/references",
+                dto.stringify,
+                response => assertEquals(response.code, StatusCode.Ok),
+                jwt = jwt
+            )
+        )
+    }
+
+    test("create (read-only user is denied)") {
+        val dto = Reference.from(TestEntityFactory.createReference())
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPost(
+                endpoints.createReferenceEndpointImpl,
+                "http://test.com/v1/references",
+                dto.stringify,
+                response => assertEquals(response.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        referenceService.findAll(10000, 0) match
+            case Right(refs) => assert(refs.isEmpty)
+            case Left(error) => fail(error.toString)
+    }
+
+    test("delete (read-only user is denied)") {
+        val ref = initRefs(1).head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteReferenceEndpointImpl,
+                s"http://test.com/v1/references/${ref.id.get}",
+                response => assertEquals(response.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        referenceService.findById(ref.id.get) match
+            case Right(Some(_)) => ()
+            case other          => fail(s"Reference should still exist: $other")
+    }
+
+    test("create (no token)") {
+        runPost(
+            endpoints.createReferenceEndpointImpl,
+            "http://test.com/v1/references",
+            Reference.from(TestEntityFactory.createReference()).stringify,
+            response => assertEquals(response.code, StatusCode.Unauthorized)
+        )
+    }
+
+    // --- A read-only user holding a still-valid token can't write
+
+    test("update (read-only user is denied)") {
+        val ref = initRefs(1).head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateReferenceEndpointImpl,
+                s"http://test.com/v1/references/${ref.id.get}",
+                ReferenceUpdate(citation = Some("changed by a read-only user")).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assertEquals(referenceService.findById(ref.id.get).toOption.flatten.map(_.citation), Some(ref.citation))
+    }
+
+    test("addConcept (read-only user is denied)") {
+        val ref  = initRefs(1).head
+        val name = init(2, 0).getPrimaryConceptName.getName
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.addConceptEndpointImpl,
+                s"http://test.com/v1/references/add/${ref.id.get}/to/$name",
+                "",
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assert(!referenceService.findById(ref.id.get).toOption.flatten.get.concepts.contains(name))
+    }
+
+    test("removeConcept (read-only user is denied)") {
+        val ref  = initRefs(1).head
+        val name = init(2, 0).getPrimaryConceptName.getName
+        assert(referenceService.addConcept(ref.id.get, name).isRight)
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.removeConceptEndpointImpl,
+                s"http://test.com/v1/references/remove/${ref.id.get}/from/$name",
+                "",
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assert(referenceService.findById(ref.id.get).toOption.flatten.get.concepts.contains(name))
+    }
+
+    test("create (a maintainer whose role is stored in lowercase is allowed)") {
+        // Reference writes use the same rule as every other write check (UserAccount.canWrite), which recognizes role
+        // names regardless of case
+        val password = org.mbari.oni.etc.jdk.Strings.random(12)
+        val username = "lower-maint-" + org.mbari.oni.etc.jdk.Strings.random(8)
+        userAccountService.create(
+            org.mbari.oni.domain.UserAccount(username, password, "maint", isEncrypted = Some(false))
+        ) match
+            case Left(e)     => fail(e.toString)
+            case Right(user) =>
+                try
+                    val jwt = jwtService.login(username, password, user.toEntity)
+                    assert(jwt.isDefined)
+                    runPost(
+                        endpoints.createReferenceEndpointImpl,
+                        "http://test.com/v1/references",
+                        Reference.from(TestEntityFactory.createReference()).stringify,
+                        r => assertEquals(r.code, StatusCode.Ok, r.body.toString),
+                        jwt = jwt
+                    )
+                finally userAccountService.deleteByUserName(username)
     }

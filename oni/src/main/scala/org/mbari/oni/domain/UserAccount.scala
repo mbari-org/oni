@@ -71,7 +71,17 @@ case class UserAccount(
         entity.setId(id.map(_.asInstanceOf[java.lang.Long]).orNull)
         entity
 
-    lazy val isAdministrator: Boolean = role == UserAccountRoles.ADMINISTRATOR.getRoleName
+    /** The role this account actually has. An unrecognized role counts as ReadOnly. */
+    lazy val effectiveRole: UserAccountRoles = UserAccountRoles.fromStoredRole(role)
+
+    lazy val isAdministrator: Boolean = effectiveRole == UserAccountRoles.ADMINISTRATOR
+
+    lazy val isMaintainer: Boolean = effectiveRole == UserAccountRoles.MAINTENANCE
+
+    lazy val isLocked: Boolean = effectiveRole == UserAccountRoles.LOCKED
+
+    /** Only administrators and maintainers may change data. ReadOnly, Locked and unrecognized roles may not. */
+    lazy val canWrite: Boolean = isAdministrator || isMaintainer
 
     def toFormBody: String =
         // Example: username=lchrobak&password=changeme&role=User&first_name=Laura&last_name=Chrobak&affiliation=MBARI&email=lchrobak%40mbari.org
@@ -91,7 +101,8 @@ object UserAccount:
     def from(userAccount: UserAccountEntity): UserAccount = UserAccount(
         userAccount.getUserName,
         userAccount.getEncryptedPassword,
-        userAccount.getRole,
+        // Report the role the account actually has: an unrecognized stored role is ReadOnly
+        UserAccountRoles.fromStoredRole(userAccount.getRole).getRoleName,
         Option(userAccount.getAffiliation),
         Option(userAccount.getFirstName),
         Option(userAccount.getLastName),

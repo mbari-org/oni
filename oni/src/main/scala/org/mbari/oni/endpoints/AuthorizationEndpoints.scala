@@ -97,7 +97,11 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
                 )
             )
             .name("login")
-            .description("Login with username and password")
+            .description(
+                "Log in with HTTP Basic auth (username and password) and receive a JWT. Any user except a Locked " +
+                    "user can log in. What the token allows depends on the user's role: read-only users can only " +
+                    "update their own account"
+            )
             .tag(tag)
 
     val loginEndpointImpl: ServerEndpoint[Any, Future] =
@@ -116,7 +120,7 @@ class AuthorizationEndpoints(entityManagerFactory: EntityManagerFactory)(using
                             .login(usernamePassword.username, usernamePassword.password.getOrElse(""), entity)
                             .toRight(
                                 Unauthorized(
-                                    "Unable to login. Check your username and password and verify that you are an administrator or maintainer"
+                                    "Unable to login. Check your username and password, and that your account is not locked"
                                 )
                             )
                 yield AuthorizationSC.bearer(jwt)

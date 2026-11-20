@@ -1,5 +1,5 @@
 import sbt.*
-object Dependencies {
+object Dependencies:
 
     lazy val auth0                   = "com.auth0"                      % "java-jwt"                   % "4.6.2"
     val caffeineVersion              = "3.3.1"
@@ -10,12 +10,12 @@ object Dependencies {
     lazy val circeGeneric            = "io.circe"                      %% "circe-generic"              % circeVersion
     lazy val circeParser             = "io.circe"                      %% "circe-parser"               % circeVersion
     lazy val commonsCodec            = "commons-codec"                  % "commons-codec"              % "1.23.0"
-    val flywayVersion                = "13.12.1"
+    val flywayVersion                = "13.13.0"
     lazy val flywayCore              = "org.flywaydb"                   % "flyway-core"                % flywayVersion
     lazy val flywaySqlserver         = "org.flywaydb"                   % "flyway-sqlserver"           % flywayVersion
     lazy val flywayPostgres          = "org.flywaydb"                   % "flyway-database-postgresql" % flywayVersion
     lazy val gson                    = "com.google.code.gson"           % "gson"                       % "2.15.0"
-    val hibernateVersion             = "7.4.14.Final"
+    val hibernateVersion             = "7.4.17.Final"
     lazy val hibernateCore           = "org.hibernate.orm"              % "hibernate-core"             % hibernateVersion
     lazy val hibernateJCache         = "org.hibernate"                  % "hibernate-jcache"           % hibernateVersion
     lazy val hibernateEnvers         = "org.hibernate.orm"              % "hibernate-envers"           % hibernateVersion
@@ -23,9 +23,9 @@ object Dependencies {
     lazy val hikariCp                = "com.zaxxer"                     % "HikariCP"                   % "7.1.0"
     lazy val jansi                   = "org.fusesource.jansi"           % "jansi"                      % "2.4.3"
     lazy val jaspyt                  = "org.jasypt"                     % "jasypt"                     % "1.9.3"
-    lazy val jnats                   = "io.nats"                        % "jnats"                      % "2.26.4"
+    lazy val jnats                   = "io.nats"                        % "jnats"                      % "2.27.0"
     lazy val junit                   = "junit"                          % "junit"                      % "4.13.2"
-    lazy val logback                 = "ch.qos.logback"                 % "logback-classic"            % "1.6.6"
+    lazy val logback                 = "ch.qos.logback"                 % "logback-classic"            % "1.6.8"
     lazy val mssqlserver             = "com.microsoft.sqlserver"        % "mssql-jdbc"                 % "13.6.2.jre11"
     lazy val munit                   = "org.scalameta"                 %% "munit"                      % "1.3.6"
     lazy val oracle                  = "com.oracle.ojdbc"               % "ojdbc8"                     % "19.3.0.0"
@@ -47,5 +47,4 @@ object Dependencies {
     lazy val testcontainersSqlserver = "org.testcontainers"             % "testcontainers-mssqlserver" % testcontainersVersion
     lazy val testcontainersOracle    = "org.testcontainers"             % "testcontainers-oracle-xe"   % testcontainersVersion
     lazy val testcontainersPostgres  = "org.testcontainers"             % "testcontainers-postgresql"  % testcontainersVersion
-    lazy val typesafeConfig          = "com.typesafe"                   % "config"                     % "1.4.9"
-}
+    lazy val typesafeConfig          = "com.typesafe"                   % "config"                     % "1.4.10"

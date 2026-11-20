@@ -17,10 +17,10 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{BadRequest, ErrorMsg, PrefNode, PrefNodeUpdate, Unauthorized}
+import org.mbari.oni.domain.{BadRequest, ErrorMsg, Forbidden, PrefNode, PrefNodeUpdate}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.PrefNodeService
+import org.mbari.oni.services.{PrefNodeService, UserAccountService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
@@ -32,7 +32,16 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
     executionContext: ExecutionContext
 ) extends Endpoints:
 
-    private val service = PrefNodeService(entityManagerFactory)
+    private val service            = PrefNodeService(entityManagerFactory)
+    private val userAccountService = UserAccountService(entityManagerFactory)
+
+    /**
+     * Changing preferences requires the API key or a user who can currently write (an administrator or maintainer).
+     * Any valid token used to be enough, but read-only users can now log in, and that must not let them change
+     * preferences.
+     */
+    private def verifyApiKeyOrWriterAsync(jwtOpt: Option[String]): Future[Either[ErrorMsg, Unit]] =
+        verifyApiKeyOrUserAsync(jwtOpt, userAccountService.findByUserName, _.canWrite)
 
     private val base = "prefs"
     private val tag  = "Preferences"
@@ -51,8 +60,8 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => paging =>
             if userAccount.isAdministrator then
-                handleErrorsAsync(service.findAll(paging.limit.getOrElse(100), paging.offset.getOrElse(0)))
-            else Future(Left(Unauthorized("You must be an admin to access this endpoint")))
+                handleSecureErrorsAsync(service.findAll(paging.limit.getOrElse(100), paging.offset.getOrElse(0)))
+            else Future(Left(Forbidden("You must be an admin to access this endpoint")))
         }
 
     val findByNodeNameAndKey: Endpoint[Unit, (String, Option[String]), ErrorMsg, Seq[PrefNode], Any] =
@@ -70,7 +79,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
             )
             .out(jsonBody[Seq[PrefNode]])
             .name("byNodeNameAndKey")
-            .description("Get all prefNode names matching a node name and key")
+            .description("Get the prefNodes with a node name and, optionally, a key")
             .tag(tag)
 
     val findByNodeNameAndKeyImpl: ServerEndpoint[Any, Future] = findByNodeNameAndKey.serverLogic { (name, keyOpt) =>
@@ -109,13 +118,13 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(oneOfBody(jsonBody[PrefNode], formBody[PrefNode]))
         .out(jsonBody[PrefNode])
         .name("createPrefNode")
-        .description("Create a new prefNode")
+        .description("Create a new prefNode. Accepts a JSON or form body. Requires an API key token or an administrator or maintainer login")
         .tag(tag)
 
     val createEndpointImpl: ServerEndpoint[Any, Future] =
         createEndpoint
-            .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
-            .serverLogic { _ => prefNode => handleErrorsAsync(service.create(prefNode)) }
+            .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
+            .serverLogic { _ => prefNode => handleSecureErrorsAsync(service.create(prefNode)) }
 
     val updateEndpoint
         : Endpoint[Option[String], (Option[String], Option[String], PrefNodeUpdate), ErrorMsg, PrefNode, Any] =
@@ -128,13 +137,14 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .out(jsonBody[PrefNode])
             .name("updatePrefNode")
             .description(
-                "Update a prefNode. Can be called using form body or json body. If name and key are not in the request body, they must be in the query parameters."
+                "Update a prefNode. Accepts a JSON or form body. If name and key are not in the request body, they " +
+                    "must be in the query parameters (400 otherwise). Requires an API key token or an administrator or maintainer login"
             )
             .tag(tag)
 
     val updateEndpointImpl: ServerEndpoint[Any, Future] =
         updateEndpoint
-            .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+            .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
             .serverLogic { _ => (nameOpt, keyOpt, prefNodeUpdate) =>
                 val name  = prefNodeUpdate.name.orElse(nameOpt)
                 val key   = prefNodeUpdate.key.orElse(keyOpt)
@@ -143,7 +153,7 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
                     Future(Left(BadRequest("A name and key must be provided in order to update a preference.")))
                 else
                     val prefNode = PrefNode(name.get, key.get, value)
-                    handleErrorsAsync(service.update(prefNode))
+                    handleSecureErrorsAsync(service.update(prefNode))
             }
 
     val deleteEndpoint: Endpoint[Option[String], (String, String), ErrorMsg, Unit, Any] =
@@ -162,12 +172,12 @@ class PrefNodeEndpoints(entityManagerFactory: EntityManagerFactory)(using
             )
             .out(jsonBody[Unit])
             .name("deletePrefNode")
-            .description("Delete a prefNode")
+            .description("Delete a prefNode. Requires an API key token or an administrator or maintainer login")
             .tag(tag)
 
     val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
-        .serverLogic { _ => (name, key) => handleErrorsAsync(service.delete(name, key)) }
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
+        .serverLogic { _ => (name, key) => handleSecureErrorsAsync(service.delete(name, key)) }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(
         findByPrefix,

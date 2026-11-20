@@ -16,14 +16,13 @@
 
 package org.mbari.oni.etc.nats
 
-import org.mbari.oni.etc.circe.CirceCodecs.{*, given}
 import org.mbari.oni.jpa.ChangeEvent
 
 import java.util.UUID
 
 /**
- * A minimal message describing a committed change. It is used to tell other services that something changed so they
- * can refresh (e.g. invalidate a cache) without sending the entire record. The receiving service queries Oni for the
+ * A minimal message describing a committed change. It is used to tell other services that something changed so they can
+ * refresh (e.g. invalidate a cache) without sending the entire record. The receiving service queries Oni for the
  * current state.
  *
  * @param action
@@ -41,8 +40,6 @@ case class NatsMessage(
     id: Option[String] = None,
     source: Option[String] = None
 )
-
-
 
 object NatsMessage:
 

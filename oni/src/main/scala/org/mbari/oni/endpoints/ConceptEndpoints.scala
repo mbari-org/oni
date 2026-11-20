@@ -17,33 +17,39 @@
 package org.mbari.oni.endpoints
 
 import jakarta.persistence.EntityManagerFactory
-import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, ErrorMsg, Rank, ServerError}
+import org.mbari.oni.domain.{ConceptCreate, ConceptMetadata, ConceptUpdate, ErrorMsg, Rank}
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.{ConceptCache, ConceptNameService, ConceptService, RankValidator}
+import org.mbari.oni.cache.KnowledgebaseCache
+import org.mbari.oni.services.{ConceptService, RankValidator}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
+class ConceptEndpoints(entityManagerFactory: EntityManagerFactory, conceptCache: KnowledgebaseCache)(using
     jwtService: JwtService,
     executionContext: ExecutionContext
 ) extends Endpoints:
 
-    private val service            = ConceptService(entityManagerFactory)
-    private val conceptNameService = ConceptNameService(entityManagerFactory)
-    private val conceptCache       = ConceptCache(service, conceptNameService)
+    private val service = ConceptService(entityManagerFactory)
     private val base               = "concept"
     private val tag                = "Concept"
+
+    private val updateConceptDescription =
+        "Set `parentName` to move the concept; it cannot be moved under itself or one of its descendants, and the " +
+            "root cannot be given a parent (400). An invalid rank or an aphiaId already used by another concept " +
+            "returns 400. To remove a rank name or level, set it to an empty string; only administrators can remove " +
+            "them (403 otherwise). Requires an administrator or maintainer login. Maintainer changes are applied and recorded as pending " +
+            "history for an administrator to approve or reject."
 
     val allEndpoint: Endpoint[Unit, Unit, ErrorMsg, Seq[String], Any] = openEndpoint
         .get
         .in(base)
         .out(jsonBody[Seq[String]])
         .name("allConcepts")
-        .description("Get all concept names")
+        .description("Get the names of all concepts (primary and alternate), up to 10,000")
         .tag(tag)
 
     val allEndpointImpl: ServerEndpoint[Any, Future] = allEndpoint.serverLogic { _ =>
@@ -58,41 +64,52 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(jsonBody[ConceptCreate])
         .out(jsonBody[ConceptMetadata])
         .name("createConcept")
-        .description("Create a new concept")
+        .description(
+            "Create a new concept as a child of `parentName`. If `parentName` is omitted the concept is created as the " +
+                "root, which fails with 400 if a root already exists. Returns 400 if the name already exists or the " +
+                "rank is invalid (see /concept/ranks). " + "Requires an administrator or maintainer login. " +
+                "Maintainer changes are applied and recorded as pending history for an administrator to approve or reject."
+        )
         .tag(tag)
 
     val createEndpointImpl: ServerEndpoint[Any, Future] = createEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => conceptCreate =>
-            handleErrorsAsync(service.create(conceptCreate, userAccount.username))
-                .andThen(v =>
-                    conceptCache.clear()
-                    v
-                )
+            handleSecureErrorsAsync(service.create(conceptCreate, userAccount.username))
         }
 
-    val deleteEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] = secureEndpoint
+    val deleteByNameEndpoint: Endpoint[Option[String], String, ErrorMsg, Unit, Any] = secureEndpoint
         .delete
         .in(base / path[String]("name"))
         .out(jsonBody[Unit])
         .name("deleteConcept")
-        .description("Delete a concept")
+        .description(
+            "Delete a concept and all its descendants by name. Requires an administrator or maintainer login. Administrators delete " +
+                "immediately; other users create a pending delete that must be approved by an administrator."
+        )
         .tag(tag)
 
-    val deleteEndpointImpl: ServerEndpoint[Any, Future] = deleteEndpoint
+    val deleteByNameEndpointImpl: ServerEndpoint[Any, Future] = deleteByNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => name =>
-            Future(
-                service
-                    .delete(name, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        _ => Right(())
-                    )
-            ).andThen(v =>
-                conceptCache.clear()
-                v
-            )
+            handleSecureErrorsAsync(service.deleteByName(name, userAccount.username).map(_ => ()))
+        }
+
+    val deleteByIdEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] = secureEndpoint
+        .delete
+        .in(base / "id" / path[Long]("id"))
+        .out(jsonBody[Unit])
+        .name("deleteConceptById")
+        .description(
+            "Delete a concept and all its descendants by id. Requires an administrator or maintainer login. Administrators delete " +
+                "immediately; other users create a pending delete that must be approved by an administrator."
+        )
+        .tag(tag)
+
+    val deleteByIdEndpointImpl: ServerEndpoint[Any, Future] = deleteByIdEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => id =>
+            handleSecureErrorsAsync(service.deleteById(id, userAccount.username).map(_ => ()))
         }
 
     val findParentEndpoint: Endpoint[Unit, String, ErrorMsg, ConceptMetadata, Any] = openEndpoint
@@ -100,7 +117,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "parent" / path[String]("name"))
         .out(jsonBody[ConceptMetadata])
         .name("findParent")
-        .description("Find the parent of a concept")
+        .description("Find the parent of a concept. Returns 404 for the root concept")
         .tag(tag)
 
     val findParentEndpointImpl: ServerEndpoint[Any, Future] = findParentEndpoint.serverLogic { name =>
@@ -112,7 +129,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "children" / path[String]("name"))
         .out(jsonBody[Seq[ConceptMetadata]])
         .name("findChildren")
-        .description("Find the children of a concept")
+        .description("Find the immediate children of a concept, sorted by name")
         .tag(tag)
 
     val findChildrenEndpointImpl: ServerEndpoint[Any, Future] = findChildrenEndpoint.serverLogic { name =>
@@ -124,11 +141,23 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / path[String]("name"))
         .out(jsonBody[ConceptMetadata])
         .name("findByName")
-        .description("Find a concept by name")
+        .description("Find a concept by any of its names (primary or alternate)")
         .tag(tag)
 
     val findByNameImpl: ServerEndpoint[Any, Future] = findByName.serverLogic { name =>
         handleErrorsAsync(conceptCache.findByName(name))
+    }
+
+    val findById: Endpoint[Unit, Long, ErrorMsg, ConceptMetadata, Any] = openEndpoint
+        .get
+        .in(base / "id" / path[Long]("id"))
+        .out(jsonBody[ConceptMetadata])
+        .name("findById")
+        .description("Find a concept by its database id")
+        .tag(tag)
+
+    val findByIdImpl: ServerEndpoint[Any, Future] = findById.serverLogic { id =>
+        handleErrorsAsync(service.findById(id))
     }
 
     val findByNameContaining: Endpoint[Unit, String, ErrorMsg, Seq[ConceptMetadata], Any] = openEndpoint
@@ -136,7 +165,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "find" / path[String]("name"))
         .out(jsonBody[Seq[ConceptMetadata]])
         .name("findByNameContaining")
-        .description("Find concepts by name containing")
+        .description("Find concepts with a name containing the given text (case-insensitive), sorted by name")
         .tag(tag)
 
     val findByNameContainingImpl: ServerEndpoint[Any, Future] = findByNameContaining.serverLogic { name =>
@@ -160,7 +189,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         .in(base / "ranks")
         .out(jsonBody[Seq[Rank]])
         .name("listValidRanks")
-        .description("List valid ranks")
+        .description("List the valid rank level and rank name combinations")
         .tag(tag)
 
     val listValidRanksImpl: ServerEndpoint[Any, Future] = listValidRanks.serverLogic { _ =>
@@ -169,7 +198,7 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         }))
     }
 
-    val updateEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
+    val updateByNameEndpoint: Endpoint[Option[String], (String, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
         secureEndpoint
             .put
             .in(base / path[String]("name"))
@@ -177,25 +206,32 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .out(jsonBody[ConceptMetadata])
             .name("updateConcept")
             .description(
-                "Update a concept. To remove a rank name or level, set it to an empty string. Only administrators can remove rank names and levels."
+                "Update a concept by name. " + updateConceptDescription
             )
             .tag(tag)
 
-    val updateEndpointImpl: ServerEndpoint[Any, Future] = updateEndpoint
+    val updateByNameEndpointImpl: ServerEndpoint[Any, Future] = updateByNameEndpoint
         .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
         .serverLogic { userAccount => (name, conceptUpdate) =>
-            Future(
-                service
-                    .update(name, conceptUpdate, userAccount.username)
-                    .fold(
-                        error => Left(ServerError(error.getMessage)),
-                        concept => Right(concept)
-                    )
+            handleSecureErrorsAsync(service.updateByName(name, conceptUpdate, userAccount.username))
+        }
+
+    val updateByIdEndpoint: Endpoint[Option[String], (Long, ConceptUpdate), ErrorMsg, ConceptMetadata, Any] =
+        secureEndpoint
+            .put
+            .in(base / "id" / path[Long]("id"))
+            .in(jsonBody[ConceptUpdate])
+            .out(jsonBody[ConceptMetadata])
+            .name("updateConceptById")
+            .description(
+                "Update a concept by id. " + updateConceptDescription
             )
-                .andThen(v =>
-                    conceptCache.clear()
-                    v
-                )
+            .tag(tag)
+
+    val updateByIdEndpointImpl: ServerEndpoint[Any, Future] = updateByIdEndpoint
+        .serverSecurityLogic(jwtOpt => verifyLoginAsync(jwtOpt))
+        .serverLogic { userAccount => (id, conceptUpdate) =>
+            handleSecureErrorsAsync(service.updateById(id, conceptUpdate, userAccount.username))
         }
 
     override val all: List[Endpoint[?, ?, ?, ?, ?]] = List(
@@ -205,10 +241,13 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findByNameContaining,
         listValidRanks,
         findByName,
+        findById,
         allEndpoint,
         createEndpoint,
-        deleteEndpoint,
-        updateEndpoint
+        deleteByNameEndpoint,
+        deleteByIdEndpoint,
+        updateByNameEndpoint,
+        updateByIdEndpoint
     )
 
     override val allImpl: List[ServerEndpoint[Any, Future]] = List(
@@ -218,8 +257,11 @@ class ConceptEndpoints(entityManagerFactory: EntityManagerFactory)(using
         findByNameContainingImpl,
         listValidRanksImpl,
         findByNameImpl,
+        findByIdImpl,
         allEndpointImpl,
         createEndpointImpl,
-        deleteEndpointImpl,
-        updateEndpointImpl
+        deleteByNameEndpointImpl,
+        deleteByIdEndpointImpl,
+        updateByNameEndpointImpl,
+        updateByIdEndpointImpl
     )

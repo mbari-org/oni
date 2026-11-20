@@ -30,7 +30,7 @@ import org.mbari.oni.domain.{
 import org.mbari.oni.endpoints.ReferenceEndpoints.DefaultLimit
 import org.mbari.oni.etc.circe.CirceCodecs.given
 import org.mbari.oni.etc.jwt.JwtService
-import org.mbari.oni.services.ReferenceService
+import org.mbari.oni.services.{ReferenceService, UserAccountService}
 import sttp.tapir.json.circe.*
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.{Endpoint, *}
@@ -46,6 +46,12 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
 
     private val base = "references"
     private val tag  = "References"
+
+    private val userAccountService = UserAccountService(entityManagerFactory)
+
+    /** Changes to references require the API key or a user who is currently an administrator or maintainer */
+    private def verifyApiKeyOrWriterAsync(jwtOpt: Option[String]): Future[Either[ErrorMsg, Unit]] =
+        verifyApiKeyOrUserAsync(jwtOpt, userAccountService.findByUserName, _.canWrite)
 
     val findReferenceByIdEndpoint: Endpoint[Unit, Long, ErrorMsg, Reference, Any] =
         openEndpoint
@@ -94,7 +100,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ReferenceQuery])
             .out(jsonBody[Page[Seq[Reference]]])
             .name("findReferencesByCitationGlob")
-            .description("Find references by citation glob")
+            .description("Find references whose citation contains the `citation` text in the request body")
             .tag(tag)
 
     val findReferencesByCitationGlobEndpointImpl: ServerEndpoint[Any, Future] =
@@ -122,7 +128,7 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ReferenceQuery])
             .out(jsonBody[Reference])
             .name("findReferenceByDoi")
-            .description("Find a reference by DOI")
+            .description("Find a reference by the `doi` in the request body. Returns 400 if `doi` is missing")
             .tag(tag)
 
     val findReferenceByDoiEndpointImpl: ServerEndpoint[Any, Future] = findReferenceByDoiEndpoint.serverLogic { doi =>
@@ -144,13 +150,13 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[Reference])
             .out(jsonBody[Reference])
             .name("createReference")
-            .description("Create a new reference")
+            .description("Create a new reference. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val createReferenceEndpointImpl: ServerEndpoint[Any, Future] = createReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => reference =>
-            handleErrorsAsync(service.create(reference))
+            handleSecureErrorsAsync(service.create(reference))
         }
 
     val updateReferenceEndpoint: Endpoint[Option[String], (Long, ReferenceUpdate), ErrorMsg, Reference, Any] =
@@ -160,13 +166,13 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(jsonBody[ReferenceUpdate])
             .out(jsonBody[Reference])
             .name("updateReference")
-            .description("Update a reference")
+            .description("Update a reference. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val updateReferenceEndpointImpl: ServerEndpoint[Any, Future] = updateReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => (id, referenceUpdate) =>
-            handleErrorsAsync(service.updateById(id, referenceUpdate))
+            handleSecureErrorsAsync(service.updateById(id, referenceUpdate))
         }
 
     val deleteReferenceEndpoint: Endpoint[Option[String], Long, ErrorMsg, Unit, Any] =
@@ -175,13 +181,13 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / path[Long]("id"))
             .out(jsonBody[Unit])
             .name("deleteReference")
-            .description("Delete a reference")
+            .description("Delete a reference. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val deleteReferenceEndpointImpl: ServerEndpoint[Any, Future] = deleteReferenceEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => id =>
-            handleErrorsAsync(service.deleteById(id))
+            handleSecureErrorsAsync(service.deleteById(id))
         }
 
     val addConceptEndpoint: Endpoint[Option[String], (Long, String), ErrorMsg, Reference, Any] =
@@ -190,13 +196,13 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / "add" / path[Long]("id") / "to" / path[String]("concept"))
             .out(jsonBody[Reference])
             .name("addReferenceToConcept")
-            .description("Add a reference to a concept")
+            .description("Add a reference to a concept. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val addConceptEndpointImpl: ServerEndpoint[Any, Future] = addConceptEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => (id, concept) =>
-            handleErrorsAsync(service.addConcept(id, concept))
+            handleSecureErrorsAsync(service.addConcept(id, concept))
         }
 
     val removeConceptEndpoint: Endpoint[Option[String], (Long, String), ErrorMsg, Reference, Any] =
@@ -205,13 +211,13 @@ class ReferenceEndpoints(entityManagerFactory: EntityManagerFactory)(using
             .in(base / "remove" / path[Long]("id") / "from" / path[String]("concept"))
             .out(jsonBody[Reference])
             .name("removeReferenceFromConcept")
-            .description("Remove a reference from a concept")
+            .description("Remove a reference from a concept. Requires an API key token or an administrator or maintainer login.")
             .tag(tag)
 
     val removeConceptEndpointImpl: ServerEndpoint[Any, Future] = removeConceptEndpoint
-        .serverSecurityLogic(jwtOpt => verifyAsync(jwtOpt))
+        .serverSecurityLogic(jwtOpt => verifyApiKeyOrWriterAsync(jwtOpt))
         .serverLogic { _ => (id, concept) =>
-            handleErrorsAsync(service.removeConcept(id, concept))
+            handleSecureErrorsAsync(service.removeConcept(id, concept))
         }
 
     override def all: List[Endpoint[?, ?, ?, ?, ?]] = List(

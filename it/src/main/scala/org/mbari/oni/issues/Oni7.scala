@@ -16,17 +16,18 @@
 
 package org.mbari.oni.issues
 
+import org.mbari.oni.cache.KnowledgebaseCacheFixture
+
 import org.mbari.oni.endpoints.{EndpointsSuite, HistoryEndpoints}
 import org.mbari.oni.etc.jwt.JwtService
 import org.mbari.oni.jdbc.FastPhylogenyService
 import org.mbari.oni.jpa.DataInitializer
 import org.mbari.oni.services.{HistoryService, UserAuthMixin}
 
-trait Oni7 extends EndpointsSuite with DataInitializer with UserAuthMixin:
+trait Oni7 extends EndpointsSuite with DataInitializer with UserAuthMixin with KnowledgebaseCacheFixture:
 
     given jwtService: JwtService = JwtService("mbari", "foo", "bar")
 
-    lazy val fastPhylogenyService               = new FastPhylogenyService(entityManagerFactory)
     lazy val historyService                     = new HistoryService(entityManagerFactory)
     lazy val historyEndpoints: HistoryEndpoints = HistoryEndpoints(entityManagerFactory, fastPhylogenyService)
     private val password                        = "foofoofoo"
