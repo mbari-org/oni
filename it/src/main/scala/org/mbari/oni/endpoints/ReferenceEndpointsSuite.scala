@@ -277,7 +277,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with E
         )
     }
 
-    test("create (demoted read-only user is denied)") {
+    test("create (read-only user is denied)") {
         val dto = Reference.from(TestEntityFactory.createReference())
         withRole(UserAccountRoles.READONLY)(jwt =>
             runPost(
@@ -293,7 +293,7 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with E
             case Left(error) => fail(error.toString)
     }
 
-    test("delete (demoted read-only user is denied)") {
+    test("delete (read-only user is denied)") {
         val ref = initRefs(1).head
         withRole(UserAccountRoles.READONLY)(jwt =>
             runDelete(
@@ -315,4 +315,51 @@ trait ReferenceEndpointsSuite extends EndpointsSuite with DataInitializer with E
             Reference.from(TestEntityFactory.createReference()).stringify,
             response => assertEquals(response.code, StatusCode.Unauthorized)
         )
+    }
+
+    // --- A read-only user holding a still-valid token can't write
+
+    test("update (read-only user is denied)") {
+        val ref = initRefs(1).head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateReferenceEndpointImpl,
+                s"http://test.com/v1/references/${ref.id.get}",
+                ReferenceUpdate(citation = Some("changed by a read-only user")).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assertEquals(referenceService.findById(ref.id.get).toOption.flatten.map(_.citation), Some(ref.citation))
+    }
+
+    test("addConcept (read-only user is denied)") {
+        val ref  = initRefs(1).head
+        val name = init(2, 0).getPrimaryConceptName.getName
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.addConceptEndpointImpl,
+                s"http://test.com/v1/references/add/${ref.id.get}/to/$name",
+                "",
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assert(!referenceService.findById(ref.id.get).toOption.flatten.get.concepts.contains(name))
+    }
+
+    test("removeConcept (read-only user is denied)") {
+        val ref  = initRefs(1).head
+        val name = init(2, 0).getPrimaryConceptName.getName
+        assert(referenceService.addConcept(ref.id.get, name).isRight)
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.removeConceptEndpointImpl,
+                s"http://test.com/v1/references/remove/${ref.id.get}/from/$name",
+                "",
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assert(referenceService.findById(ref.id.get).toOption.flatten.get.concepts.contains(name))
     }

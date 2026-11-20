@@ -415,3 +415,42 @@ trait ConceptNameEndpointsSuite extends EndpointsSuite with DataInitializer with
             )
         )
     }
+
+    // --- A read-only user holding a still-valid token can't write
+
+    test("addConceptName (read-only user is denied)") {
+        val rawRoot = RawConcept.from(init(2, 0))
+        val newName = Strings.random(16)
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPost(
+                endpoints.addConceptNameEndpointImpl,
+                "http://test.com/v1/names",
+                ConceptNameCreate(rawRoot.primaryName, newName, ConceptNameTypes.SYNONYM.getType).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameEndpointImpl,
+            s"http://test.com/v1/names/$newName",
+            r => assertEquals(r.code, StatusCode.NotFound, "The concept name was added")
+        )
+    }
+
+    test("updateConceptName by name (read-only user is denied)") {
+        val rawRoot = RawConcept.from(init(2, 0))
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateConceptNameEndpointImpl,
+                s"http://test.com/v1/names/${rawRoot.primaryName}",
+                ConceptNameUpdate(newName = Some(Strings.random(16))).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findConceptNameEndpointImpl,
+            s"http://test.com/v1/names/${rawRoot.primaryName}",
+            r => assertEquals(r.code, StatusCode.Ok, "The concept name was renamed")
+        )
+    }

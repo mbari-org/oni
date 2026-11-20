@@ -455,3 +455,42 @@ trait MediaEndpointsSuite extends EndpointsSuite with DataInitializer with Endpo
             response => assertEquals(response.code, StatusCode.NotFound)
         )
     }
+
+    // --- A read-only user holding a still-valid token can't write
+
+    test("createMedia (read-only user is denied)") {
+        val name = createMedia().head.conceptName.get
+        val url  = URI.create(s"https://www.mbari.org/test/${Strings.random(12)}.png").toURL
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPost(
+                endpoints.createMediaEndpointImpl,
+                "http://test.com/v1/media",
+                MediaCreate(name, url).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.mediaForConceptEndpointImpl,
+            s"http://test.com/v1/media/search/concept/$name",
+            r => assert(!checkResponse[Seq[Media]](r.body).exists(_.url == url), "The media was created")
+        )
+    }
+
+    test("updateMedia (read-only user is denied)") {
+        val media = createMedia().head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(
+                endpoints.updateMediaEndpointImpl,
+                s"http://test.com/v1/media/${media.id.get}",
+                MediaUpdate(caption = Some(Strings.random(12))).stringify,
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        runGet(
+            endpoints.findMediaByIdEndpointImpl,
+            s"http://test.com/v1/media/${media.id.get}",
+            r => assertEquals(checkResponse[Media](r.body), media, "The media was changed")
+        )
+    }

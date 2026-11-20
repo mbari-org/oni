@@ -258,7 +258,7 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
         assertEquals(userAccountService.findByUserName(userAccount.username), Right(None))
     }
 
-    test("createEndpoint (demoted read-only user is denied)") {
+    test("createEndpoint (read-only user is denied)") {
         val userAccount = newUserJson()
         withRole(UserAccountRoles.READONLY)(jwt =>
             runPost(
@@ -511,4 +511,65 @@ trait UserAccountsEndpointsSuite extends EndpointsSuite with DataInitializer wit
                         assertEquals(response.code, StatusCode.Ok)
                         assertEquals(checkResponse[UserAccountInfo](response.body).username, "list")
                 )
+    }
+
+    // --- End to end: a read-only user logs in and can only update their own account
+
+    test("a read-only user can log in, update their own account, and nothing else") {
+        val password = Strings.random(12)
+        val username = "readonly-" + Strings.random(8)
+        assert(
+            userAccountService
+                .create(UserAccount(username, password, UserAccountRoles.READONLY.getRoleName, isEncrypted = Some(false)))
+                .isRight
+        )
+
+        // Log in through the real login endpoint
+        import org.mbari.oni.etc.sdk.Futures.*
+        val authEndpoints = AuthorizationEndpoints(entityManagerFactory)
+        val credentials   = java.util.Base64.getEncoder.encodeToString(s"$username:$password".getBytes)
+        val loginResponse = sttp.client3.basicRequest
+            .post(sttp.model.Uri.unsafeParse("http://test.com/v1/auth/login"))
+            .header("Authorization", s"BASIC $credentials")
+            .send(newBackendStub(authEndpoints.loginEndpointImpl))
+            .join
+        assertEquals(loginResponse.code, StatusCode.Ok)
+        val jwt = loginResponse.body.toOption
+            .flatMap(b => io.circe.parser.decode[org.mbari.oni.domain.AuthorizationSC](b).toOption)
+            .map(_.access_token)
+        assert(jwt.isDefined)
+
+        // Can update their own account
+        runPut(
+            endpoints.updateEndpointImpl,
+            s"http://test.com/v1/users/$username",
+            UserAccountUpdate(email = Some("me@mbari.org")).stringify,
+            r => assertEquals(r.code, StatusCode.Ok),
+            jwt = jwt
+        )
+        // Can't make themselves a maintainer
+        runPut(
+            endpoints.updateEndpointImpl,
+            s"http://test.com/v1/users/$username",
+            UserAccountUpdate(role = Some(UserAccountRoles.MAINTENANCE.getRoleName)).stringify,
+            r => assertEquals(r.code, StatusCode.Forbidden),
+            jwt = jwt
+        )
+        // Can't create accounts or update anyone else
+        runPost(
+            endpoints.createEndpointImpl,
+            "http://test.com/v1/users",
+            newUserJson().stringify,
+            r => assertEquals(r.code, StatusCode.Forbidden),
+            jwt = jwt
+        )
+        val other = create(1).head
+        runPut(
+            endpoints.updateEndpointImpl,
+            s"http://test.com/v1/users/${other.username}",
+            UserAccountUpdate(email = Some("x@mbari.org")).stringify,
+            r => assertEquals(r.code, StatusCode.Forbidden),
+            jwt = jwt
+        )
+        assertEquals(storedRole(username), Some(UserAccountRoles.READONLY.getRoleName))
     }

@@ -664,3 +664,21 @@ trait HistoryEndpointsSuite extends EndpointsSuite with DataInitializer with End
         )
         assert(historyService.findById(history.id.get).isRight, "History record should still exist")
     }
+
+    // --- A read-only user holding a still-valid token can't approve, reject or delete history
+
+    test("approve, reject and delete (read-only user is denied)") {
+        val history = pendingHistory()
+        val id      = history.id.get
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runPut(endpoints.approveEndpointImpl, s"http://test.com/v1/history/approve/$id", "",
+                r => assertEquals(r.code, StatusCode.Forbidden, "approve"), jwt = jwt)
+            runPut(endpoints.rejectEndpointImpl, s"http://test.com/v1/history/reject/$id", "",
+                r => assertEquals(r.code, StatusCode.Forbidden, "reject"), jwt = jwt)
+            runDelete(endpoints.deleteEndpointImpl, s"http://test.com/v1/history/$id",
+                r => assertEquals(r.code, StatusCode.Forbidden, "delete"), jwt = jwt)
+        )
+        historyService.findById(id) match
+            case Left(e)  => fail(s"The history record was deleted: $e")
+            case Right(h) => assert(h.processedTimestamp.isEmpty, "The history record was processed")
+    }

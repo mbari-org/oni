@@ -284,3 +284,41 @@ trait PrefNodeEndpointsSuite extends EndpointsSuite with DataInitializer with En
             )
         )
     }
+
+    // --- Changing preferences requires the API key, an administrator or a maintainer
+
+    private def createPrefAs(jwt: Option[String], expected: StatusCode): PrefNode =
+        val node = PrefNode(s"/test/${Strings.random(10)}", Strings.random(8), Strings.random(8))
+        runPost(
+            endpoints.createEndpointImpl,
+            "http://test.com/v1/prefs",
+            node.stringify,
+            r => assertEquals(r.code, expected, r.body.toString),
+            jwt = jwt
+        )
+        node
+
+    test("createEndpoint (read-only user is forbidden)") {
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            val node = createPrefAs(jwt, StatusCode.Forbidden)
+            assert(service.findByNodeNameAndKey(node.name, node.key).toOption.forall(_.isEmpty), "The pref was created")
+        )
+    }
+
+    test("createEndpoint (maintainer and API key are allowed)") {
+        withRole(UserAccountRoles.MAINTENANCE)(jwt => createPrefAs(jwt, StatusCode.Ok))
+        createPrefAs(jwtService.authorize(jwtService.apiKey), StatusCode.Ok)
+    }
+
+    test("deleteEndpoint (read-only user is forbidden)") {
+        val node = createNodes(1).head
+        withRole(UserAccountRoles.READONLY)(jwt =>
+            runDelete(
+                endpoints.deleteEndpointImpl,
+                s"http://test.com/v1/prefs?name=${node.name}&key=${node.key}",
+                r => assertEquals(r.code, StatusCode.Forbidden),
+                jwt = jwt
+            )
+        )
+        assert(service.findByNodeNameAndKey(node.name, node.key).toOption.exists(_.nonEmpty), "The pref was deleted")
+    }

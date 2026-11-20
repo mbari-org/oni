@@ -33,10 +33,10 @@ trait EndpointsAuthMixin extends UserAuthMixin:
     /**
      * Create a temporary user with the given role, run `f` with a JWT for that user, then delete the user.
      *
-     * `JwtService.login` only issues tokens to administrators and maintainers. To get a token for any other role
-     * (ReadOnly, Locked) the user is logged in as a maintainer and then demoted. This mirrors a real scenario (a user
-     * demoted while holding a still-valid token) and makes sure the request reaches the access checks instead of being
-     * rejected for a missing token.
+     * Administrators, maintainers and read-only users log in normally. Locked users can't log in, so to get a token for
+     * one the user is logged in as a maintainer and then locked. That mirrors a real scenario (a user locked while
+     * holding a still-valid token) and makes sure the request reaches the access checks instead of being rejected for a
+     * missing token.
      */
     def withRole(role: UserAccountRoles)(f: Option[String] => Unit): Unit =
         withRoleAccount(role)((_, jwt) => f(jwt))
@@ -44,7 +44,7 @@ trait EndpointsAuthMixin extends UserAuthMixin:
     /** Like [[withRole]], but `f` also receives the temporary user's username. */
     def withRoleAccount(role: UserAccountRoles)(f: (String, Option[String]) => Unit): Unit =
         val password  = Strings.random(12)
-        val canLogin  = role == UserAccountRoles.ADMINISTRATOR || role == UserAccountRoles.MAINTENANCE
+        val canLogin  = role != UserAccountRoles.LOCKED
         val loginRole = if canLogin then role else UserAccountRoles.MAINTENANCE
         val entity    = TestEntityFactory.createUserAccount(loginRole.getRoleName, password)
 
